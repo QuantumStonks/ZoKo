@@ -121,7 +121,7 @@ async function history() {
   const rows = data.decisions;
   if (!Array.isArray(rows)) throw new Error('Invalid request history response.');
   if (!rows.length) { empty($('#decision-history'), 'No decisions yet.', 'Make your first purchase in the decision lab.', '≋'); return; }
-  $('#decision-history').replaceChildren(table(['Request', 'Status', 'Seller', 'Price', 'Created', 'Receipt'], rows.map((receipt) => { const button = node('button', 'Inspect ↗', 'text-button'); button.addEventListener('click', () => busy(button, () => inspectReceipt(receipt.id))); return [node('span', short(receipt.id), 'table-id'), statusTag(receipt.status), receipt.sellerId, `${money(receipt.priceNanos)} XEC`, when(receipt.createdAt), button]; })));
+  $('#decision-history').replaceChildren(table(['Request', 'Status', 'Seller', 'Quoted price', 'Created', 'Receipt'], rows.map((receipt) => { const button = node('button', 'Inspect ↗', 'text-button'); button.addEventListener('click', () => busy(button, () => inspectReceipt(receipt.id))); return [node('span', short(receipt.id), 'table-id'), statusTag(receipt.status), receipt.sellerId, `${money(receipt.priceNanos)} XEC`, when(receipt.createdAt), button]; })));
 }
 async function withdrawals() {
   requireBuyer(); const epoch = state.epoch; const { data } = await api('/v1/withdrawals'); if (epoch !== state.epoch) return;

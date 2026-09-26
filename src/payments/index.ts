@@ -68,7 +68,8 @@ function publicWithdrawal(row: WithdrawalRow) {
     amountNanos: row.amount_nanos,
     maxFeeNanos: row.max_fee_nanos,
     feeNanos: row.fee_nanos,
-    reservedNanos: (BigInt(row.amount_nanos) + BigInt(row.max_fee_nanos)).toString(),
+    reservedNanos: ['settled', 'failed'].includes(row.status) ? '0' : (BigInt(row.amount_nanos) + BigInt(row.max_fee_nanos)).toString(),
+    maximumDebitNanos: (BigInt(row.amount_nanos) + BigInt(row.max_fee_nanos)).toString(),
     status: row.status,
     txid: row.txid,
     lastError: row.last_error,
@@ -275,10 +276,7 @@ export class Payments {
     try { indexed = await this.chronik.tx(id); }
     catch (error) {
       if (error instanceof ChronikHttpError && error.httpStatus === 404 && confirmations < 0) {
-        await transaction(this.db, async tx => {
-          const credited = await tx.query<{ account_id: string }>("UPDATE payments_deposits SET status='reorg_review',confirmations=$3,updated_at=now() WHERE network=$1 AND txid=$2 AND credited_at IS NOT NULL RETURNING account_id", [this.config.network, id, confirmations]);
-          for (const row of credited.rows) await tx.query('UPDATE accounts SET disabled=true WHERE id=$1', [row.account_id]);
-        });
+        await this.quarantineCredited(id, confirmations);
         return true;
       }
       throw error;
@@ -341,14 +339,14 @@ export class Payments {
     return !pending;
   }
 
-  private async quarantineCredited(id: string): Promise<void> {
+  private async quarantineCredited(id: string, confirmations?: number): Promise<void> {
     await transaction(this.db, async tx => {
       const credited = await tx.query<{ account_id: string }>('SELECT DISTINCT account_id FROM payments_deposits WHERE network=$1 AND txid=$2 AND credited_at IS NOT NULL ORDER BY account_id', [this.config.network, id]);
       const ids = credited.rows.map(row => row.account_id);
       if (!ids.length) return;
       await tx.query('SELECT id FROM accounts WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE', [ids]);
       await tx.query('UPDATE accounts SET disabled=true WHERE id=ANY($1::uuid[])', [ids]);
-      await tx.query("UPDATE payments_deposits SET status='reorg_review',updated_at=now() WHERE network=$1 AND txid=$2 AND credited_at IS NOT NULL", [this.config.network, id]);
+      await tx.query("UPDATE payments_deposits SET status='reorg_review',confirmations=COALESCE($3,confirmations),updated_at=now() WHERE network=$1 AND txid=$2 AND credited_at IS NOT NULL", [this.config.network, id, confirmations ?? null]);
     });
   }
 
@@ -360,6 +358,11 @@ export class Payments {
     if (typeof idempotencyKey !== 'string' || !/^[\x21-\x7e]{1,128}$/.test(idempotencyKey)) throw new PaymentError('idempotency_key_required', 'Use a nonempty Idempotency-Key of at most 128 ASCII characters', 400);
     const maxFee = parseNanos(this.config.maxFeeNanos, 'maxFeeNanos');
     requireAtoms(maxFee);
+    const replay = await this.db.query<WithdrawalRow>('SELECT * FROM payments_withdrawals WHERE account_id=$1 AND idempotency_key=$2', [accountId, idempotencyKey]);
+    if (replay.rows[0]) {
+      if (replay.rows[0].address !== destination || BigInt(replay.rows[0].amount_nanos) !== amount) throw new PaymentError('idempotency_conflict', 'Idempotency-Key was already used for a different withdrawal', 409);
+      return publicWithdrawal(replay.rows[0]);
+    }
     await this.preflight();
     return transaction(this.db, async tx => {
       await this.bindWallet(tx);

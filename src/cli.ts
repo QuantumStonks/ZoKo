@@ -88,7 +88,7 @@ async function jsonFile(path: string, maxBytes = 65_536): Promise<unknown> {
 function output(value: unknown): void { process.stdout.write(`${JSON.stringify(value, null, 2)}\n`); }
 function purchasePolicy(flags: Flags): PurchasePolicy {
   const policy: PurchasePolicy = { maxPriceNanos: parseXec(requireFlag(flags, 'max-price')) };
-  const latency = numberFlag(flags, 'latency-ms', 1, 120_000, true);
+  const latency = numberFlag(flags, 'latency-ms', 100, 60_000, true);
   const confidence = numberFlag(flags, 'confidence', 0, 1);
   if (latency !== undefined) policy.maxLatencyMs = latency;
   if (confidence !== undefined) policy.minConfidence = confidence;
