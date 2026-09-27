@@ -95,6 +95,10 @@ function errorCode(error: unknown): string {
   return error instanceof PaymentError ? error.code : 'payment_processing_error';
 }
 
+function contradictsCreditedEvidence(error: unknown): boolean {
+  return error instanceof PaymentError && ['payment_source_mismatch', 'deposit_identity_conflict'].includes(error.code);
+}
+
 export class Payments {
   private readonly rpc: AbcRpc;
   private readonly gateways: ChronikGateway[];
@@ -257,10 +261,26 @@ export class Payments {
     await this.preflight();
     const account = await this.db.query<{ deposit_address: string | null }>('SELECT deposit_address FROM accounts WHERE id=$1', [accountId]);
     if (!account.rows[0]?.deposit_address) throw new PaymentError('deposit_address_required', 'Create your assigned deposit address before making or claiming a deposit', 409);
+    // A public txid is not authorization to operate on another customer's
+    // deposit. Establish the claimant's matching output before queuing changes.
+    const owned = await this.db.query('SELECT 1 FROM payments_deposits WHERE network=$1 AND txid=$2 AND account_id=$3 LIMIT 1', [this.config.network, id, accountId]);
+    if (!owned.rowCount) {
+      const indexed = await this.chronik.tx(id);
+      const expectedScript = addressScript(account.rows[0].deposit_address, this.config.network);
+      if (!indexed.outputs.some(output => output.outputScript === expectedScript)) throw new PaymentError('deposit_not_owned', 'This transaction has no output to your assigned deposit address', 404);
+    }
     // Queue before fetching. A timeout cannot make this claim disappear permanently.
-    await this.db.query('INSERT INTO payments_deposit_txs(network,txid) VALUES ($1,$2) ON CONFLICT(network,txid) DO UPDATE SET pending=true,next_check_at=now()', [this.config.network, id]);
-    try { await this.observeDeposit(id); }
-    catch (error) { await this.quarantineCredited(id); throw error; }
+    const queued = await this.db.query<{ revision: string }>(`INSERT INTO payments_deposit_txs(network,txid) VALUES ($1,$2)
+      ON CONFLICT(network,txid) DO UPDATE SET pending=true,next_check_at=now(),updated_at=GREATEST(clock_timestamp(),payments_deposit_txs.updated_at+interval '1 microsecond')
+      RETURNING updated_at::text AS revision`, [this.config.network, id]);
+    try {
+      const complete = await this.observeDeposit(id);
+      await this.db.query("UPDATE payments_deposit_txs SET pending=$3,last_error=NULL,next_check_at=now()+interval '15 seconds' WHERE network=$1 AND txid=$2 AND updated_at=$4::timestamptz", [this.config.network, id, !complete, queued.rows[0]!.revision]);
+    } catch (error) {
+      if (contradictsCreditedEvidence(error)) await this.quarantineCredited(id);
+      this.state = { ...this.state, ready: false, lastError: errorCode(error) };
+      throw error;
+    }
     const result = await this.db.query('SELECT txid,vout,amount_nanos AS "amountNanos",status,confirmations,avalanche_finalized AS "avalancheFinalized",credited_at AS "creditedAt" FROM payments_deposits WHERE network=$1 AND txid=$2 AND account_id=$3 ORDER BY vout', [this.config.network, id, accountId]);
     if (result.rows.length === 0) throw new PaymentError('deposit_not_owned', 'This transaction has no output to your assigned deposit address', 404);
     return { txid: id, deposits: result.rows };
@@ -396,16 +416,20 @@ export class Payments {
       locked = lock.rows[0]?.locked === true;
       if (!locked) return;
       await this.syncWalletHistory(client);
-      const pending = await client.query<{ txid: string }>('SELECT txid FROM payments_deposit_txs WHERE network=$1 AND pending AND next_check_at<=now() ORDER BY next_check_at,created_at LIMIT 100', [this.config.network]);
+      const pending = await client.query<{ txid: string; revision: string }>('SELECT txid,updated_at::text AS revision FROM payments_deposit_txs WHERE network=$1 AND pending AND next_check_at<=now() ORDER BY next_check_at,created_at LIMIT 100', [this.config.network]);
       for (const row of pending.rows) {
         try {
           const complete = await this.observeDeposit(row.txid);
-          await client.query("UPDATE payments_deposit_txs SET pending=$3,next_check_at=now()+interval '15 seconds',last_error=NULL,updated_at=now() WHERE network=$1 AND txid=$2", [this.config.network, row.txid, !complete]);
+          await client.query("UPDATE payments_deposit_txs SET pending=$3,next_check_at=now()+interval '15 seconds',last_error=NULL WHERE network=$1 AND txid=$2 AND updated_at=$4::timestamptz", [this.config.network, row.txid, !complete, row.revision]);
         } catch (error) {
-          await this.quarantineCredited(row.txid);
-          await client.query("UPDATE payments_deposit_txs SET next_check_at=now()+interval '30 seconds',last_error=$3,updated_at=now() WHERE network=$1 AND txid=$2", [this.config.network, row.txid, errorCode(error)]);
+          if (contradictsCreditedEvidence(error)) await this.quarantineCredited(row.txid);
+          await client.query("UPDATE payments_deposit_txs SET next_check_at=now()+interval '30 seconds',last_error=$3 WHERE network=$1 AND txid=$2 AND updated_at=$4::timestamptz", [this.config.network, row.txid, errorCode(error), row.revision]);
         }
       }
+      const unresolvedCredits = await client.query<{ unresolved: boolean }>(`SELECT EXISTS(
+        SELECT 1 FROM payments_deposit_txs t JOIN payments_deposits d ON d.network=t.network AND d.txid=t.txid
+        WHERE t.network=$1 AND t.pending AND d.status='credited') AS unresolved`, [this.config.network]);
+      if (unresolvedCredits.rows[0]?.unresolved) throw new PaymentError('credited_deposit_unverified', 'Outgoing payments wait until previously credited deposits have been reverified');
       await this.restoreInputLocks(client);
       const withdrawals = await client.query<WithdrawalRow>('SELECT * FROM payments_withdrawals WHERE network=$1 AND status=ANY($2::text[]) ORDER BY created_at LIMIT 10', [this.config.network, OPEN_STATUSES]);
       for (const withdrawal of withdrawals.rows) await this.processWithdrawal(client, withdrawal);
@@ -430,7 +454,7 @@ export class Payments {
     const lastblock = txid(result.lastblock);
     // The cursor and all discovered IDs commit together. Verification can be retried later.
     await inTransaction(client, async tx => {
-      if (ids.length) await tx.query('INSERT INTO payments_deposit_txs(network,txid) SELECT $1,unnest($2::text[]) ON CONFLICT(network,txid) DO UPDATE SET pending=true,next_check_at=now(),updated_at=now()', [this.config.network, ids]);
+      if (ids.length) await tx.query("INSERT INTO payments_deposit_txs(network,txid) SELECT $1,unnest($2::text[]) ON CONFLICT(network,txid) DO UPDATE SET pending=true,next_check_at=now(),updated_at=GREATEST(clock_timestamp(),payments_deposit_txs.updated_at+interval '1 microsecond')", [this.config.network, ids]);
       await tx.query('INSERT INTO payments_state(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=now()', [key, JSON.stringify({ blockHash: lastblock })]);
     });
   }

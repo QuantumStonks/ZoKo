@@ -61,6 +61,14 @@ export async function auditLedger(db: Db): Promise<unknown> {
   const reserved = await tx.query(`SELECT b.account_id,b.day,b.reserved::text,COALESCE(d.expected,0)::text AS expected FROM budgets b LEFT JOIN
       (SELECT account_id,budget_day,sum(price_nanos) AS expected FROM decisions WHERE status='running' GROUP BY account_id,budget_day) d
       ON b.account_id=d.account_id AND b.day=d.budget_day WHERE b.reserved<>COALESCE(d.expected,0)`);
-  return {ok:total.rows[0].total==='0' && !mismatches.rowCount && !reserved.rowCount,totalNanos:total.rows[0].total,walletMismatches:mismatches.rows,budgetMismatches:reserved.rows};
+  const reservations = await tx.query(`WITH held AS (
+      SELECT account_id,price_nanos AS amount FROM decisions WHERE status='running'
+      UNION ALL SELECT account_id,amount_nanos+max_fee_nanos FROM payments_withdrawals
+        WHERE status IN ('requested','preparing','signed','broadcast','manual_review')
+    ), expected AS (SELECT account_id,sum(amount) AS amount FROM held GROUP BY account_id)
+    SELECT a.id AS account_id,w.balance::text AS actual,COALESCE(e.amount,0)::text AS expected
+    FROM accounts a JOIN wallets w ON w.id='reserved:'||a.id
+    LEFT JOIN expected e ON e.account_id=a.id WHERE w.balance<>COALESCE(e.amount,0)`);
+  return {ok:total.rows[0].total==='0' && !mismatches.rowCount && !reserved.rowCount && !reservations.rowCount,totalNanos:total.rows[0].total,walletMismatches:mismatches.rows,budgetMismatches:reserved.rows,reservationMismatches:reservations.rows};
   });
 }

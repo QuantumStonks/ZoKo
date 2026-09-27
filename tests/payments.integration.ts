@@ -68,7 +68,7 @@ interface Harness {
   wallets: Map<string, Record<string, unknown>>;
   indexed: Map<string, IndexedTx>;
   calls: { method: string; params: unknown[] }[];
-  state: { chain: string; tokenIndex: boolean; finalized: boolean; broadcastFails: boolean; ownsWallet: boolean; history: string[]; spendable: unknown[] };
+  state: { chain: string; tokenIndex: boolean; finalized: boolean; broadcastFails: boolean; ownsWallet: boolean; transactionUnavailable: boolean; history: string[]; spendable: unknown[] };
 }
 
 interface TestInternals {
@@ -86,7 +86,7 @@ function harness(db: Db): Harness {
   const payments = new Payments(db, config);
   const wallets = new Map<string, Record<string, unknown>>(), indexed = new Map<string, IndexedTx>();
   const calls: Harness['calls'] = [];
-  const state: Harness['state'] = { chain: 'main', tokenIndex: true, finalized: true, broadcastFails: true, ownsWallet: true, history: [], spendable: [] };
+  const state: Harness['state'] = { chain: 'main', tokenIndex: true, finalized: true, broadcastFails: true, ownsWallet: true, transactionUnavailable: false, history: [], spendable: [] };
   const probe: IndexedTx = {
     ...chainFixture(encodeCashAddress('ecash', 'p2pkh', '01'.repeat(20)), 546n * NANOS_PER_ATOM).indexed,
     txid: tokenId, tokenStatus: 'TOKEN_STATUS_NORMAL',
@@ -128,6 +128,7 @@ function harness(db: Db): Harness {
       case 'getavalancheinfo': return { ready_to_poll: true };
       case 'getblockhash': return params[0] === 0 ? genesisHash : blockHash;
       case 'gettransaction': {
+        if (state.transactionUnavailable) throw new PaymentError('wallet_rpc_unavailable', 'Controlled transient transaction lookup failure');
         const value = wallets.get(String(params[0])); if (!value) throw new RpcError(-5, method); return value;
       }
       case 'isfinaltransaction': return state.finalized;
@@ -200,6 +201,8 @@ describe('Payment persistence and chain-evidence invariants with real PostgreSQL
     const payout = chainFixture(recipient, 30n * XEC, source.id, {
       address: encodeCashAddress('ecash', 'p2pkh', randomBytes(20).toString('hex')), nanos: 9n * XEC,
     });
+    payout.indexed.inputs[0]!.sats = source.indexed.outputs[0]!.sats;
+    payout.indexed.inputs[0]!.outputScript = source.indexed.outputs[0]!.outputScript;
     h.indexed.set(source.id, source.indexed); h.indexed.set(payout.id, payout.indexed);
     const response = await h.payments.requestWithdrawal(owner.id, recipient, (30n * XEC).toString(), key) as { id: string };
     await db.query(`UPDATE payments_withdrawals SET status='signed',signed_hex=$2,funded_hex=$2,txid=$3,
@@ -216,12 +219,25 @@ describe('Payment persistence and chain-evidence invariants with real PostgreSQL
     assert.equal(entries.rows[0].count, 1);
   });
 
-  test('a foreign transaction claim credits the script owner and never the claimant', async () => {
+  test('a foreign transaction claim cannot queue or credit another account\'s deposit', async () => {
     const h = harness(db), owner = await account(), claimant = await account(), deposit = chainFixture(owner.address, 50n * XEC);
     addChain(h, deposit);
     await assert.rejects(h.payments.claimDeposit(claimant.id, deposit.id), isPaymentError('deposit_not_owned'));
-    assert.deepEqual(await balance(owner.id), { available: 50n * XEC, reserved: 0n });
+    assert.deepEqual(await balance(owner.id), { available: 0n, reserved: 0n });
     assert.deepEqual(await balance(claimant.id), { available: 0n, reserved: 0n });
+    assert.equal((await db.query('SELECT txid FROM payments_deposit_txs WHERE txid=$1', [deposit.id])).rowCount, 0);
+    await h.payments.claimDeposit(owner.id, deposit.id);
+    assert.deepEqual(await balance(owner.id), { available: 50n * XEC, reserved: 0n });
+  });
+
+  test('foreign claims during a wallet outage cannot disable a credited depositor', async () => {
+    const h = harness(db), owner = await account(), claimant = await account(), deposit = chainFixture(owner.address, 50n * XEC);
+    addChain(h, deposit); await h.payments.claimDeposit(owner.id, deposit.id);
+    h.state.transactionUnavailable = true; h.calls.length = 0;
+    await assert.rejects(h.payments.claimDeposit(claimant.id, deposit.id), isPaymentError('deposit_not_owned'));
+    assert.equal((await db.query('SELECT disabled FROM accounts WHERE id=$1', [owner.id])).rows[0].disabled, false);
+    assert.equal(h.calls.some(call => call.method === 'gettransaction'), false);
+    assert.deepEqual(await balance(owner.id), { available: 50n * XEC, reserved: 0n });
   });
 
   test('confirmation and dual-source Avalanche finality gates must all pass before credit', async () => {
@@ -362,5 +378,25 @@ describe('Payment persistence and chain-evidence invariants with real PostgreSQL
     const client = await db.connect();
     try { await (h.payments as unknown as TestInternals).restoreInputLocks(client); } finally { client.release(); }
     assert.ok(h.calls.some(call => call.method === 'lockunspent' && call.params[0] === false && JSON.stringify(call.params[1]) === JSON.stringify([{ txid: payout.source.id, vout: 0 }])));
+  });
+
+  test('transient revalidation failure preserves account access and credit while pausing queued payouts', async () => {
+    const h = harness(db), owner = await account(), deposit = chainFixture(owner.address, 100n * XEC);
+    addChain(h, deposit); await h.payments.claimDeposit(owner.id, deposit.id);
+    const request = await h.payments.requestWithdrawal(owner.id, owner.address, (30n * XEC).toString(), randomUUID()) as { id: string };
+    // Other cases have independent chain adapters; isolate this worker's queue
+    // without touching any ledger history or previously asserted balances.
+    await db.query('UPDATE payments_deposit_txs SET pending=false WHERE txid<>$1', [deposit.id]);
+    h.state.transactionUnavailable = true;
+    await assert.rejects(h.payments.claimDeposit(owner.id, deposit.id), isPaymentError('wallet_rpc_unavailable'));
+    h.calls.length = 0;
+    try { await h.payments.sync(); } catch (error) { assert.ok(error instanceof PaymentError); }
+    const ownerRow = await db.query('SELECT disabled FROM accounts WHERE id=$1', [owner.id]);
+    assert.equal(ownerRow.rows[0].disabled, false);
+    assert.equal((await db.query('SELECT pending FROM payments_deposit_txs WHERE txid=$1', [deposit.id])).rows[0].pending, true);
+    assert.equal((await db.query('SELECT status FROM payments_deposits WHERE txid=$1', [deposit.id])).rows[0].status, 'credited');
+    assert.equal((await withdrawalRow(request.id)).status, 'requested');
+    assert.equal(h.calls.some(call => ['listunspent', 'signrawtransactionwithwallet', 'sendrawtransaction'].includes(call.method)), false);
+    assert.deepEqual(await balance(owner.id), { available: 60n * XEC, reserved: 40n * XEC });
   });
 });

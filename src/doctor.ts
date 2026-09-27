@@ -1,5 +1,5 @@
 import { readConfig } from './config.js';
-import { createDb } from './db.js';
+import { createDb, auditLedger } from './db.js';
 import { decrypt, validateEndpoint } from './security.js';
 import { Payments } from './payments/index.js';
 import { restrictedProviderFetch, closeProviderConnections } from './provider-network.js';
@@ -72,21 +72,10 @@ async function main(): Promise<void> {
     if (migration.rows[0].version !== 1) throw new Error('Unsupported schema version');
     databaseReady = true;
     add('database', 'pass', 'PostgreSQL 16+ is reachable and schema version 1 is installed.');
-    // One statement provides one MVCC snapshot even while the application is active.
-    const ledger = await db.query(`
-      WITH deltas AS (
-        SELECT to_wallet AS wallet,amount AS delta FROM transfers
-        UNION ALL SELECT from_wallet,-amount FROM transfers
-      ), expected AS (SELECT wallet,sum(delta) AS balance FROM deltas GROUP BY wallet)
-      SELECT (SELECT COALESCE(sum(balance),0)::text FROM wallets) AS total,
-        (SELECT count(*)::int FROM wallets w LEFT JOIN expected e ON e.wallet=w.id
-          WHERE w.balance<>COALESCE(e.balance,0)) AS mismatches,
-        (SELECT count(*)::int FROM budgets b LEFT JOIN
-          (SELECT account_id,budget_day,sum(price_nanos) AS amount FROM decisions WHERE status='running' GROUP BY account_id,budget_day) d
-          ON d.account_id=b.account_id AND d.budget_day=b.day WHERE b.reserved<>COALESCE(d.amount,0)) AS budget_mismatches
-    `);
-    const sound = ledger.rows[0].total === '0' && ledger.rows[0].mismatches === 0 && ledger.rows[0].budget_mismatches === 0;
-    add('ledger', sound ? 'pass' : 'fail', sound ? 'Wallet balances reconcile to the journal and all decision budget reservations reconcile.' : 'Ledger reconciliation failed; keep the API stopped and investigate the audit.');
+    const ledger = await auditLedger(db) as { ok: boolean };
+    add('ledger', ledger.ok ? 'pass' : 'fail', ledger.ok
+      ? 'Wallet journal, decision budgets, and all decision/withdrawal reservations reconcile.'
+      : 'Ledger reconciliation failed; keep the API stopped and investigate the audit.');
     const sellers = await db.query('SELECT endpoint,api_key_encrypted,model FROM sellers WHERE enabled=true');
     if (!sellers.rowCount) add('sellers', 'fail', 'No enabled seller is registered. Start the service with TYPESAFE_API_KEY configured or register a real seller as admin.');
     else {
