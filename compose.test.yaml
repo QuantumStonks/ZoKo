@@ -1,0 +1,17 @@
+name: zoko-tests
+services:
+  database:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: zoko
+      POSTGRES_PASSWORD: zoko_test_only
+      POSTGRES_DB: zoko_test
+    ports:
+      - "127.0.0.1:54329:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U zoko -d zoko_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 30

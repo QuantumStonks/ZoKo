@@ -1,0 +1,15 @@
+{
+	email {$ACME_EMAIL}
+	admin off
+}
+
+{$ZOKO_DOMAIN} {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy api:3000 {
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 70s
+		}
+	}
+}
