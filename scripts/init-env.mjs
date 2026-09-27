@@ -74,7 +74,7 @@ try {
     finally { await file.close(); }
     await syncDirectory();
     console.log(`Created ${fileURLToPath(envPath)} with fresh independent service secrets.`);
-    console.log('Set your domain and Typesafe API key. Back up the generated service wallet seed, database and encryption key before funding. Use your personal Cashtab wallet only to send to a deposit address.');
+    console.log('Set your domain, commission and approved seller-agent hostnames. No platform inference credentials or default offers are required. Back up the service wallet seed, database and encryption key before funding. Use your personal Cashtab wallet only to send to a deposit address.');
   }
 } catch (error) {
   if (error?.code === 'EEXIST') console.error('.env already exists; its secrets were preserved. Use --add-wallet only to add a missing service seed.');

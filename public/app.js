@@ -1,8 +1,8 @@
 import { cashtabFunding, createFundingRequest, parseFundingAmount, depositKey, observeDeposits, pollFunding } from '/cashtab.js';
 
 const $ = (selector) => document.querySelector(selector);
-const state = { token: null, role: null, me: null, sellers: [], quote: null, purchase: null, withdrawal: null, funding: null, epoch: 0, running: false };
-const titles = { overview: 'Overview', playground: 'Decision lab', wallet: 'Wallet', activity: 'Activity', operator: 'Operator' };
+const state = { token: null, role: null, me: null, sellers: [], ownOffers: [], offersAfter: null, offersNext: null, offersGeneration: 0, quote: null, purchase: null, withdrawal: null, funding: null, epoch: 0, running: false };
+const titles = { overview: 'Overview', playground: 'Buyer lab', seller: 'Seller offers', wallet: 'Wallet', activity: 'Activity', operator: 'Operator' };
 const terminal = (status) => !['pending', 'queued', 'calling', 'running', 'reserved'].includes(status);
 const node = (tag, text, className) => { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; };
 const json = (value) => JSON.stringify(value, null, 2);
@@ -46,7 +46,7 @@ async function busy(button, task, messageTarget) {
   try { await task(); } catch (error) { if (messageTarget) message(messageTarget, errorText(error), true); else toast(errorText(error)); }
   finally { button.disabled = false; }
 }
-function requireBuyer() { if (!state.token || state.role !== 'buyer') throw new Error('Connect a buyer or seller account to continue.'); }
+function requireBuyer() { if (!state.token || state.role !== 'buyer') throw new Error('Connect an agent account to continue. It can buy decisions and publish offers.'); }
 function requireAdmin() { if (!state.token || state.role !== 'admin') throw new Error('Connect with an operator token to continue.'); }
 function empty(target, heading, description, glyph = '◈') { const wrap = node('div', undefined, 'empty-state compact'); wrap.append(node('span', glyph, 'empty-glyph'), node('h3', heading), node('p', description)); target.replaceChildren(wrap); }
 function details(entries) { const list = node('dl', undefined, 'details-list'); for (const [label, value] of entries) { const row = node('div'); row.append(node('dt', label), node('dd', String(value ?? '—'))); list.append(row); } return list; }
@@ -60,9 +60,10 @@ $('#connect-button').addEventListener('click', () => { $('#disconnect-button').h
 async function health() {
   const checks = await Promise.allSettled([api('/health/live', { token: null, timeout: 8000 }), api('/health/ready', { token: null, timeout: 10000 })]);
   const live = checks[0].status === 'fulfilled'; const ready = checks[1].status === 'fulfilled';
+  const tradingReady = ready && checks[1].value.data.tradingReady !== false;
   const target = $('#service-status'); target.className = `status-pill ${ready ? 'healthy' : 'unhealthy'}`;
-  target.replaceChildren(node('i'), document.createTextNode(ready ? 'Service ready' : live ? 'Service needs attention' : 'Service unavailable'));
-  target.title = ready ? 'The server readiness probe passed.' : 'The readiness probe has not passed. Check the operator runbook.';
+  target.replaceChildren(node('i'), document.createTextNode(ready ? (tradingReady ? 'Marketplace ready' : 'Awaiting seller offers') : live ? 'Service needs attention' : 'Service unavailable'));
+  target.title = ready ? (tradingReady ? 'Infrastructure is ready and approved seller offers are available.' : 'Infrastructure is ready. Trading starts when an approved seller offer is available.') : 'The readiness probe has not passed. Check the operator runbook.';
 }
 async function catalog() {
   const { data } = await api('/v1/catalog', { token: null });
@@ -74,7 +75,7 @@ async function catalog() {
   $('#seller-filter').firstChild.value = '';
   for (const seller of state.sellers) { if (!seller.available) continue; const option = node('option', `${seller.name} · ${money(seller.priceNanos)} XEC`); option.value = seller.id; $('#seller-filter').append(option); }
   $('#seller-filter').value = oldFilter;
-  if (!state.sellers.length) { empty($('#catalog'), 'Your first seller starts here.', 'An operator can register a provider to publish its live offer.'); return; }
+  if (!state.sellers.length) { empty($('#catalog'), 'The market is waiting for seller agents.', 'Connect an agent account to submit an offer. Approved offers appear here.'); return; }
   $('#catalog').replaceChildren(...state.sellers.map((seller) => {
     const card = node('article', undefined, 'seller-card');
     const top = node('div', undefined, 'seller-card-top'); top.append(node('span', (seller.name?.[0] ?? 'Z').toUpperCase(), 'seller-icon'), node('span', seller.available ? 'AVAILABLE' : 'UNAVAILABLE', `badge ${seller.available ? 'available' : 'unavailable'}`));
@@ -89,6 +90,65 @@ async function catalog() {
     return card;
   }));
 }
+function ownOfferCard(offer) {
+  if (!offer || typeof offer.id !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(offer.id) || typeof offer.enabled !== 'boolean' || typeof offer.paused !== 'boolean') throw new Error('The server returned an invalid seller offer.');
+  const card = node('article', undefined, 'panel owned-offer');
+  const heading = node('div', undefined, 'panel-heading');
+  heading.append(node('h2', offer.name), node('span', offer.enabled ? 'APPROVED' : 'NOT APPROVED', `badge ${offer.enabled ? 'available' : 'unavailable'}`));
+  const commission = Number.isInteger(offer.commissionBps) && offer.commissionBps >= 0 && offer.commissionBps <= 10000 ? `${(offer.commissionBps / 100).toFixed(2).replace(/\.?0+$/, '')}%` : '—';
+  card.append(heading, details([['Offer ID', offer.id], ['Endpoint', offer.endpoint], ['Model', offer.model], ['Current price', `${money(offer.priceNanos)} XEC`], ['Marketplace commission', commission], ['Seller account', offer.payoutAccountId], ['Seller pause', offer.paused ? 'Paused' : 'Not paused']]));
+  if (!offer.enabled) card.append(node('p', 'This offer is not approved for the buyer catalog. The operator controls approval; your pause setting is separate.', 'form-note'));
+  const form = node('form', undefined, 'own-offer-form');
+  const priceId = `own-price-${offer.id}`, credentialId = `own-key-${offer.id}`, pausedId = `own-paused-${offer.id}`;
+  const priceLabel = node('label', 'Price per decision · XEC'); priceLabel.htmlFor = priceId;
+  const price = node('input'); price.id = priceId; price.required = true; price.inputMode = 'decimal'; price.value = money(offer.priceNanos).replaceAll(',', ''); price.autocomplete = 'off';
+  const credentialLabel = node('label', 'Rotate endpoint API key'); credentialLabel.htmlFor = credentialId;
+  const credential = node('input'); credential.id = credentialId; credential.type = 'password'; credential.autocomplete = 'off'; credential.maxLength = 4096; credential.placeholder = 'Leave empty to keep the current key'; credential.spellcheck = false;
+  const pausedLabel = node('label', undefined, 'checkbox-label'); pausedLabel.htmlFor = pausedId;
+  const paused = node('input'); paused.id = pausedId; paused.type = 'checkbox'; paused.checked = offer.paused; pausedLabel.append(paused, document.createTextNode('Pause this offer for new purchases'));
+  const save = node('button', 'Save offer settings', 'button outline full'); save.type = 'submit';
+  form.append(priceLabel, price, credentialLabel, credential, pausedLabel, save);
+  form.addEventListener('submit', (event) => {
+    event.preventDefault(); void busy(save, async () => {
+      requireBuyer(); const priceNanos = parseMoney(price.value); if (BigInt(priceNanos) <= 0n) throw new Error('An offer price must be positive.');
+      const changes = { priceNanos, paused: paused.checked, ...(credential.value ? { apiKey: credential.value } : {}) };
+      const epoch = state.epoch; price.disabled = true; credential.disabled = true; paused.disabled = true;
+      try {
+        const { data } = await api(`/v1/seller/offers/${encodeURIComponent(offer.id)}`, { method: 'PATCH', body: changes });
+        if (epoch !== state.epoch) return;
+        credential.value = ''; state.ownOffers = state.ownOffers.map((existing) => existing.id === data.id ? data : existing); card.replaceWith(ownOfferCard(data));
+        toast('Offer settings saved.'); await catalog();
+      } finally { price.disabled = false; credential.disabled = false; paused.disabled = false; }
+    });
+  });
+  card.append(form); return card;
+}
+async function loadOffers(after = state.offersAfter) {
+  requireBuyer(); const epoch = state.epoch, generation = ++state.offersGeneration;
+  const { data } = await api(`/v1/seller/offers?limit=100${after ? `&after=${encodeURIComponent(after)}` : ''}`);
+  if (epoch !== state.epoch || generation !== state.offersGeneration) return;
+  if (!Array.isArray(data.offers) || !(data.nextCursor === null || typeof data.nextCursor === 'string')) throw new Error('The server returned an invalid offer page.');
+  state.ownOffers = data.offers; state.offersAfter = after; state.offersNext = data.nextCursor;
+  if (data.offers.length) $('#owned-offers').replaceChildren(...data.offers.map(ownOfferCard));
+  else empty($('#owned-offers'), 'No offers on this page.', 'Submit your agent endpoint below to create a seller-owned offer.', '◇');
+  $('#offer-page-note').textContent = `Showing ${data.offers.length} ${data.offers.length === 1 ? 'offer' : 'offers'}${after ? ' after the selected cursor' : ''}.`;
+  $('#offers-first').hidden = !after; $('#offers-next').hidden = !data.nextCursor;
+  message('#offer-list-message', '');
+}
+$('#refresh-offers').addEventListener('click', () => void busy($('#refresh-offers'), () => loadOffers(), '#offer-list-message'));
+$('#offers-first').addEventListener('click', () => void busy($('#offers-first'), () => loadOffers(null), '#offer-list-message'));
+$('#offers-next').addEventListener('click', () => { if (state.offersNext) void busy($('#offers-next'), () => loadOffers(state.offersNext), '#offer-list-message'); });
+$('#offer-form').addEventListener('submit', (event) => {
+  event.preventDefault(); void busy($('#submit-offer'), async () => {
+    requireBuyer(); const priceNanos = parseMoney($('#offer-price').value); if (BigInt(priceNanos) <= 0n) throw new Error('An offer price must be positive.');
+    const endpoint = $('#offer-endpoint').value.trim(), parsed = new URL(endpoint);
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.hash) throw new Error('Use an HTTPS agent endpoint without URL credentials or a fragment.');
+    const body = { id: $('#offer-id').value.trim(), name: $('#offer-name').value.trim(), endpoint, model: $('#offer-model').value.trim(), priceNanos, apiKey: $('#offer-api-key').value };
+    const epoch = state.epoch; const { data } = await api('/v1/seller/offers', { method: 'POST', body }); if (epoch !== state.epoch) return;
+    $('#offer-form').reset(); message('#offer-message', `Offer ${data.id} was submitted for operator approval. Earnings belong to your connected account. It will enter the buyer catalog after approval and while unpaused.`);
+    await loadOffers(null);
+  }, '#offer-message');
+});
 function renderAccount() {
   const data = state.me;
   if (!data) {
@@ -247,10 +307,10 @@ async function overview() { requireAdmin(); const epoch = state.epoch; const { d
 async function refreshBuyer() { const results = await Promise.allSettled([loadMe(), history(), withdrawals(), deposits()]); results.forEach((result) => { if (result.status === 'rejected') toast(errorText(result.reason)); }); }
 function clearSession() {
   resetFunding();
-  state.token = null; state.role = null; state.me = null; state.quote = null; state.purchase = null; state.withdrawal = null; state.epoch++; state.running = false;
-  $('#receipt-dialog').close(); $('#withdrawal-dialog').close(); $('#withdrawal-button').textContent = 'Review withdrawal →'; $('#connection-token').value = ''; $('#seller-api-key').value = ''; $('#new-account-secret').textContent = ''; $('#new-account-result').hidden = true; $('#operator-overview').textContent = ''; $('#audit-log').textContent = 'Select “Load audit log” to retrieve recent entries.'; $('#receipt-json').textContent = ''; $('#connect-button').textContent = 'Connect account ↗'; $('#operator-content').hidden = true; $('#operator-gate').hidden = false; $('#purchase-button').hidden = true; $('#resume-button').hidden = true; $('#quote-button').disabled = false;
+  state.token = null; state.role = null; state.me = null; state.ownOffers = []; state.offersAfter = null; state.offersNext = null; state.quote = null; state.purchase = null; state.withdrawal = null; state.epoch++; state.running = false;
+  $('#seller-content').hidden = true; $('#seller-access-gate').hidden = false; $('#refresh-offers').disabled = true; $('#offer-api-key').value = ''; $('#owned-offers').replaceChildren(); $('#offers-first').hidden = true; $('#offers-next').hidden = true; $('#offer-page-note').textContent = ''; $('#receipt-dialog').close(); $('#withdrawal-dialog').close(); $('#withdrawal-button').textContent = 'Review withdrawal →'; $('#connection-token').value = ''; $('#seller-api-key').value = ''; $('#new-account-secret').textContent = ''; $('#new-account-result').hidden = true; $('#operator-overview').textContent = ''; $('#audit-log').textContent = 'Select “Load audit log” to retrieve recent entries.'; $('#receipt-json').textContent = ''; $('#connect-button').textContent = 'Connect account ↗'; $('#operator-content').hidden = true; $('#operator-gate').hidden = false; $('#purchase-button').hidden = true; $('#resume-button').hidden = true; $('#quote-button').disabled = false;
   empty($('#deposit-history'), 'No account connected.', 'Connect to retrieve verified and pending deposits.', '▱'); empty($('#decision-history'), 'Your request history lives here.', 'Connect an account to retrieve its decisions.', '≋'); empty($('#withdrawal-history'), 'No account connected.', 'Connect to retrieve your withdrawal history.', '▱'); empty($('#quote-result'), 'Know the cost before the call.', 'Your eligible seller, exact price and expiry will appear here.', '⌁'); empty($('#decision-result'), 'Ready when you are.', 'Validated answers and the server receipt appear after execution.', '⌘');
-  for (const id of ['#decision-message', '#deposit-message', '#withdrawal-message', '#account-message', '#seller-message', '#admin-update-message']) message(id, '');
+  for (const id of ['#decision-message', '#deposit-message', '#withdrawal-message', '#account-message', '#seller-message', '#admin-update-message', '#offer-message', '#offer-list-message']) message(id, '');
   renderAccount();
 }
 $('#connect-form').addEventListener('submit', (event) => {
@@ -262,7 +322,7 @@ $('#connect-form').addEventListener('submit', (event) => {
     $('#connect-button').textContent = role === 'admin' ? 'Operator connected' : data.account.name;
     $('#connect-dialog').close(); $('#connection-token').value = '';
     if (role === 'admin') { $('#operator-content').hidden = false; $('#operator-gate').hidden = true; $('#operator-overview').textContent = json(data); location.hash = 'operator'; }
-    else { state.me = data; renderAccount(); await refreshBuyer(); }
+    else { state.me = data; renderAccount(); $('#seller-content').hidden = false; $('#seller-access-gate').hidden = true; $('#refresh-offers').disabled = false; await Promise.all([refreshBuyer(), loadOffers(null).catch((error) => message('#offer-list-message', errorText(error), true))]); }
     toast('Account connected. Token held in this tab only.');
   }, '#connect-message');
 });
@@ -386,9 +446,9 @@ $('#confirm-withdrawal').addEventListener('click', () => void busy($('#confirm-w
 $('#account-form').addEventListener('submit', (event) => { event.preventDefault(); void busy($('#account-form button[type="submit"]'), async () => { requireAdmin(); const sellers = $('#account-sellers').value.split(',').map((value) => value.trim()).filter(Boolean); const { data } = await api('/v1/admin/accounts', { method: 'POST', body: { name: $('#account-name').value.trim(), dailyLimitNanos: parseMoney($('#account-daily').value), maxPriceNanos: parseMoney($('#account-max').value), ...(sellers.length ? { allowedSellers: sellers } : {}) } }); $('#new-account-secret').textContent = json(data); $('#new-account-result').hidden = false; await overview(); }, '#account-message'); });
 $('#copy-account-secret').addEventListener('click', () => void navigator.clipboard.writeText($('#new-account-secret').textContent).then(() => toast('Issued credentials copied. Store them securely.')).catch(() => toast('Copy unavailable. Select and copy the credentials manually.')));
 $('#clear-account-secret').addEventListener('click', () => { $('#new-account-secret').textContent = ''; $('#new-account-result').hidden = true; });
-$('#seller-form').addEventListener('submit', (event) => { event.preventDefault(); void busy($('#seller-form button[type="submit"]'), async () => { requireAdmin(); const body = { id: $('#seller-id').value.trim(), name: $('#seller-name').value.trim(), endpoint: $('#seller-endpoint').value.trim(), apiKey: $('#seller-api-key').value, model: $('#seller-model').value.trim(), priceNanos: parseMoney($('#seller-price').value), enabled: true, ...($('#seller-payout').value.trim() ? { payoutAccountId: $('#seller-payout').value.trim() } : {}) }; const { data } = await api('/v1/admin/sellers', { method: 'POST', body }); $('#seller-api-key').value = ''; message('#seller-message', json(data)); await Promise.all([overview(), catalog()]); }, '#seller-message'); });
+$('#seller-form').addEventListener('submit', (event) => { event.preventDefault(); void busy($('#seller-form button[type="submit"]'), async () => { requireAdmin(); const body = { id: $('#seller-id').value.trim(), name: $('#seller-name').value.trim(), endpoint: $('#seller-endpoint').value.trim(), apiKey: $('#seller-api-key').value, model: $('#seller-model').value.trim(), priceNanos: parseMoney($('#seller-price').value), enabled: true, payoutAccountId: $('#seller-payout').value.trim() }; const { data } = await api('/v1/admin/sellers', { method: 'POST', body }); $('#seller-api-key').value = ''; message('#seller-message', json(data)); await Promise.all([overview(), catalog()]); }, '#seller-message'); });
 $('#admin-update-form').addEventListener('submit', (event) => { event.preventDefault(); void busy($('#admin-update-form button'), async () => { requireAdmin(); let patch; try { patch = JSON.parse($('#admin-patch').value); } catch { throw new Error('Policy update must be valid JSON.'); } if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('Policy update must be a JSON object.'); const resource = $('#admin-resource').value; const { data } = await api(`/v1/admin/${resource}/${encodeURIComponent($('#admin-resource-id').value.trim())}`, { method: 'PATCH', body: patch }); message('#admin-update-message', json(data)); await Promise.all([overview(), catalog()]); }, '#admin-update-message'); });
-$('#admin-resource').addEventListener('change', () => { $('#admin-patch').placeholder = $('#admin-resource').value === 'accounts' ? '{"disabled":true}' : '{"enabled":false}'; });
+$('#admin-resource').addEventListener('change', () => { $('#admin-patch').placeholder = $('#admin-resource').value === 'accounts' ? '{"disabled":true}' : '{"enabled":true}'; });
 $('#refresh-audit').addEventListener('click', () => void busy($('#refresh-audit'), async () => { requireAdmin(); const { data } = await api('/v1/admin/audit'); $('#audit-log').textContent = json(data); }));
 $('#refresh-overview').addEventListener('click', () => void busy($('#refresh-overview'), overview));
 $('#refresh-history').addEventListener('click', () => void busy($('#refresh-history'), history));

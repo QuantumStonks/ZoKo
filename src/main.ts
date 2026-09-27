@@ -11,7 +11,6 @@ let stopping=false,working=false;
 try {
   await migrate(db);
   const market=new Market(db,config),payments=new Payments(db,config.payments);
-  await market.seed();
   const app=await buildServer(config,db,payments);
   // An upstream outage keeps readiness false; the control plane remains available for diagnosis.
   try { await payments.preflight(); } catch { app.log.error('eCash preflight failed; paid operations remain unavailable'); }

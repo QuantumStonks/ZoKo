@@ -2,50 +2,13 @@ import { readConfig } from './config.js';
 import { createDb, auditLedger } from './db.js';
 import { decrypt, validateEndpoint } from './security.js';
 import { Payments } from './payments/index.js';
-import { restrictedProviderFetch, closeProviderConnections } from './provider-network.js';
 import { SCHEMA_VERSION } from './migration.js';
 
 interface Check { name: string; status: 'pass' | 'fail' | 'warning'; message: string }
 
-/** Authenticated metadata read only: never invokes paid inference. */
-async function checkTypesafe(apiKey: string): Promise<string[]> {
-  const response = await restrictedProviderFetch('https://api.typesafe.ai/v1/models', {
-    headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
-    redirect: 'error', signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok) {
-    await response.body?.cancel();
-    throw new Error(`Typesafe metadata endpoint returned HTTP ${response.status}.`);
-  }
-  if (!response.body) throw new Error('Typesafe returned no metadata.');
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let bytes = 0;
-  try {
-    for (;;) {
-      const next = await reader.read();
-      if (next.done) break;
-      bytes += next.value.length;
-      if (bytes > 262_144) throw new Error('Typesafe metadata exceeded the response limit.');
-      chunks.push(next.value);
-    }
-  } finally {
-    await reader.cancel().catch(() => {});
-    reader.releaseLock();
-  }
-  const payload: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-  if (!payload || typeof payload !== 'object' || !('models' in payload) || !Array.isArray(payload.models)) throw new Error('Typesafe returned an unexpected model metadata schema.');
-  const names = payload.models.map((model: unknown) => {
-    if (!model || typeof model !== 'object' || !('name' in model) || typeof model.name !== 'string') throw new Error('Typesafe returned an invalid model entry.');
-    return model.name;
-  });
-  if (names.length === 0) throw new Error('Typesafe model metadata is empty.');
-  return names;
-}
-
 async function main(): Promise<void> {
   if (process.argv.includes('--help')) {
-    console.log('Usage: npm run doctor\nRead-only configuration, PostgreSQL schema/ledger, dedicated service wallet identity, hosted Chronik and provider metadata checks. No migrations, address assignments, signatures, inference or broadcasts are created.');
+    console.log('Usage: npm run doctor\nRead-only configuration, PostgreSQL schema/ledger, account and seller ownership, stored seller credentials, endpoint policy, service wallet identity and hosted Chronik checks. No seller endpoints are called. No migrations, address assignments, signatures, inference or broadcasts are created.');
     return;
   }
   if (process.argv.length > 2) throw new Error('Unsupported doctor arguments; use --help.');
@@ -59,16 +22,16 @@ async function main(): Promise<void> {
     const legacy = error && typeof error === 'object' && 'code' in error && error.code === 'obsolete_node_configuration';
     add('configuration', 'fail', legacy
       ? 'Obsolete ABC_* configuration is present. Follow the legacy-wallet migration procedure in docs/ecash.md; preserve existing funded payment state and its original wallet.'
-      : 'Invalid or missing configuration. Compare .env with .env.example; secrets were not printed.');
+      : 'Invalid or missing configuration. Compare .env with .env.example and remove obsolete TYPESAFE_API_KEY, TYPESAFE_MODEL and ZOKO_JEV_PRICE_NANOS bootstrap settings; secrets were not printed.');
     console.log(JSON.stringify({ ok: false, checks }, null, 2));
     process.exitCode = 1;
     return;
   }
   if (!config.production) add('deployment', 'warning', 'NODE_ENV is not production; this configuration is for development.');
+  add('business_model', 'pass', `Agent-to-agent marketplace; the platform retains ${config.platformFeeBps} basis points of each successful sale and the owning seller account receives the remainder. No platform inference service is provisioned.`);
   const db = createDb(config.databaseUrl);
   db.on('error', () => {});
   let databaseReady = false;
-  let typesafeCredential: string | undefined = config.jevApiKey;
   try {
     const version = await db.query('SHOW server_version_num');
     if (Number(version.rows[0].server_version_num) < 160000) throw new Error('Unsupported PostgreSQL version');
@@ -80,19 +43,33 @@ async function main(): Promise<void> {
     add('ledger', ledger.ok ? 'pass' : 'fail', ledger.ok
       ? 'Wallet journal, decision budgets, and all decision/withdrawal reservations reconcile.'
       : 'Ledger reconciliation failed; keep the API stopped and investigate the audit.');
-    const sellers = await db.query('SELECT endpoint,api_key_encrypted,model FROM sellers WHERE enabled=true');
-    if (!sellers.rowCount) add('sellers', 'fail', 'No enabled seller is registered. Start the service with TYPESAFE_API_KEY configured or register a real seller as admin.');
-    else {
-      for (const seller of sellers.rows) {
-        const endpoint = validateEndpoint(seller.endpoint, config.providerHosts);
-        const key = decrypt(seller.api_key_encrypted, config.encryptionKey);
-        if (!key) throw new Error('Empty seller credential');
-        if (new URL(endpoint).hostname === 'api.typesafe.ai') typesafeCredential = key;
-      }
-      add('sellers', 'pass', `${sellers.rowCount} enabled seller credential envelope(s) decrypt and endpoints meet the allowlist.`);
-    }
   } catch {
-    add('database_setup', 'fail', 'Database, schema, or stored seller verification failed. Start once to apply migrations; verify DATABASE_URL and the original encryption key.');
+    add('database_setup', 'fail', 'Database, schema or ledger verification failed. Start once to apply migrations; verify DATABASE_URL and the installed release.');
+  }
+  if (databaseReady) {
+    try {
+      const accounts = await db.query('SELECT count(*)::integer AS total,count(*) FILTER (WHERE NOT disabled)::integer AS active FROM accounts');
+      const account = accounts.rows[0];
+      add('accounts', account.active > 0 ? 'pass' : 'warning', account.active > 0
+        ? `${account.active} active agent account(s) out of ${account.total} total. Buyer and seller agents authenticate with their own account keys.`
+        : 'No active agent accounts exist. Use the operator console or account API to issue buyer and seller keys.');
+      const sellers = await db.query(`SELECT s.endpoint,s.api_key_encrypted,s.paused,s.payout_account_id,a.id AS owner_id,a.disabled AS owner_disabled
+        FROM sellers s LEFT JOIN accounts a ON a.id=s.payout_account_id WHERE s.enabled`);
+      let active = 0;
+      for (const seller of sellers.rows) {
+        if (!seller.payout_account_id || !seller.owner_id) throw new Error('Approved seller has no owning account');
+        validateEndpoint(seller.endpoint, config.providerHosts);
+        const key = decrypt(seller.api_key_encrypted, config.encryptionKey);
+        if (!key || key.length > 4096 || /[^\x21-\x7e]/.test(key)) throw new Error('Invalid seller credential');
+        if (!seller.paused && !seller.owner_disabled) active++;
+      }
+      if (sellers.rowCount) add('seller_configuration', 'pass', `${sellers.rowCount} approved offer(s) have owning accounts, decryptable credentials and endpoints permitted by the exact hostname allowlist.`);
+      add('trading', active > 0 ? 'pass' : 'warning', active > 0
+        ? `${active} approved, unpaused offer(s) have active seller owners. Actual endpoint availability and paid execution require a separate acceptance purchase.`
+        : 'Trading is unavailable: no approved, unpaused offer has an active seller owner. The empty marketplace can remain healthy; allow a reviewed endpoint host, let its seller account publish an offer, then approve it.');
+    } catch {
+      add('seller_configuration', 'fail', 'Account ownership, stored seller credentials or endpoint policy failed verification. Check approval records, the exact hostname allowlist and the original encryption key.');
+    }
   }
   try {
     if (!databaseReady) add('payments', 'fail', 'Wallet preflight requires an initialized database.');
@@ -108,18 +85,9 @@ async function main(): Promise<void> {
       ? 'This database contains legacy node-wallet payment state. Preserve the original deployment and reconcile it using docs/ecash.md; a new service seed cannot convert its funds or pending payments.'
       : `Service wallet or hosted Chronik verification failed (${code}). Verify the original service seed, network, hosted endpoint and finality settings.`);
   }
-  if (typesafeCredential) {
-    try {
-      const models = await checkTypesafe(typesafeCredential);
-      add('typesafe', 'pass', `Authenticated model metadata is reachable (${models.length} published aliases). Pinned model names may be absent from this alias list; no paid inference was performed.`);
-    } catch {
-      add('typesafe', 'fail', 'Typesafe authenticated model metadata failed. Check the credential and outbound HTTPS connectivity.');
-    }
-  } else add('typesafe', 'warning', 'No Typesafe credential was available for a metadata check. Custom providers require their own acceptance test.');
   await db.end();
-  await closeProviderConnections();
   const ok = checks.every(check => check.status !== 'fail');
-  console.log(JSON.stringify({ ok, checks, scope: 'Read-only infrastructure checks. Paid inference and on-chain deposit/withdrawal acceptance require explicit transactions.' }, null, 2));
+  console.log(JSON.stringify({ ok, checks, scope: 'Read-only marketplace infrastructure checks, with no seller endpoint calls. Paid seller execution and on-chain deposit/withdrawal acceptance require explicit transactions.' }, null, 2));
   if (!ok) process.exitCode = 1;
 }
 

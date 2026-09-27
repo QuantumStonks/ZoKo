@@ -4,6 +4,36 @@ import type { ProviderResult } from './provider.js';
 
 /** Integer nanoXEC at every wire boundary. One XEC is 1,000,000,000 nanoXEC. */
 export type NanoXec = string;
+/** An agent-owned offer. Credentials are write-only and never included here. */
+export interface SellerOffer {
+  id: string;
+  name: string;
+  endpoint: string;
+  model: string;
+  priceNanos: NanoXec;
+  payoutAccountId: string;
+  enabled: boolean;
+  paused: boolean;
+  /** Current marketplace commission in basis points; quotes snapshot their rate. */
+  commissionBps: number;
+}
+export interface RegisterSellerOfferInput {
+  id: string;
+  name: string;
+  endpoint: string;
+  apiKey: string;
+  model: string;
+  priceNanos: NanoXec;
+}
+export interface UpdateSellerOfferInput {
+  priceNanos?: NanoXec;
+  apiKey?: string;
+  paused?: boolean;
+}
+export interface SellerOffersPage {
+  offers: SellerOffer[];
+  nextCursor: string | null;
+}
 export interface DepositRecord {
   txid: string;
   vout: number;
@@ -106,6 +136,18 @@ function duration(value: number | undefined, fallback: number, name: string): nu
 function validateKey(key: string): void {
   if (!/^[A-Za-z0-9._:-]{8,128}$/.test(key)) throw new TypeError('Idempotency key must be 8–128 ASCII letters, numbers, periods, underscores, colons or hyphens.');
 }
+function validateOfferId(id: string): void {
+  if (!/^[a-z0-9][a-z0-9_-]{0,63}$/.test(id)) throw new TypeError('Offer ID must be 1–64 lowercase letters, digits, underscores or hyphens, starting with a letter or digit.');
+}
+function validateOfferPrice(price: string): void {
+  if (typeof price !== 'string' || !/^[1-9]\d{0,29}$/.test(price)) throw new TypeError('Offer price must be a positive nanoXEC integer string with at most 30 digits.');
+}
+function validateOfferCredential(apiKey: string): void {
+  if (typeof apiKey !== 'string' || apiKey.length < 1 || apiKey.length > 4096) throw new TypeError('Agent endpoint API key must contain 1–4096 characters.');
+}
+function rejectUnknownFields(input: object, allowed: string[]): void {
+  if (Object.keys(input).some((key) => !allowed.includes(key))) throw new TypeError('Offer ownership, payout account, approval and endpoint identity cannot be changed through seller controls.');
+}
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw signal.reason ?? new Error('Operation aborted.');
 }
@@ -196,6 +238,36 @@ export class ZokoClient {
 
   me<T = unknown>(signal?: AbortSignal): Promise<T> { return this.request<T>('GET', '/v1/me', undefined, { signal }); }
   catalog<T = unknown>(signal?: AbortSignal): Promise<T> { return this.request<T>('GET', '/v1/catalog', undefined, { signal }); }
+  /** List only the offers owned by this ordinary agent account. */
+  listOffers(options: { limit?: number; after?: string; signal?: AbortSignal } = {}): Promise<SellerOffersPage> {
+    const limit = options.limit ?? 100;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new RangeError('Offer page limit must be between 1 and 100.');
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (options.after !== undefined) { validateOfferId(options.after); query.set('after', options.after); }
+    return this.request('GET', `/v1/seller/offers?${query}`, undefined, { signal: options.signal });
+  }
+  /** Submit an agent's offer for operator approval. No mutation retry is performed. */
+  registerOffer(input: RegisterSellerOfferInput, signal?: AbortSignal): Promise<SellerOffer> {
+    rejectUnknownFields(input, ['id', 'name', 'endpoint', 'apiKey', 'model', 'priceNanos']);
+    validateOfferId(input.id);
+    validateOfferPrice(input.priceNanos);
+    validateOfferCredential(input.apiKey);
+    if (typeof input.name !== 'string' || !input.name.trim() || input.name.trim().length > 120) throw new TypeError('Offer name must contain 1–120 characters.');
+    if (typeof input.model !== 'string' || !input.model || input.model.length > 100) throw new TypeError('An exact agent model identifier of 1–100 characters is required.');
+    const endpoint = new URL(input.endpoint);
+    if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.hash || input.endpoint.length > 2048) throw new TypeError('An agent offer requires a credential-free HTTPS endpoint without a fragment.');
+    return this.request('POST', '/v1/seller/offers', input, { signal });
+  }
+  /** Adjust your price, rotate your endpoint credential, or pause your own offer. */
+  updateOffer(id: string, changes: UpdateSellerOfferInput, signal?: AbortSignal): Promise<SellerOffer> {
+    validateOfferId(id);
+    rejectUnknownFields(changes, ['priceNanos', 'apiKey', 'paused']);
+    if (changes.priceNanos !== undefined) validateOfferPrice(changes.priceNanos);
+    if (changes.apiKey !== undefined) validateOfferCredential(changes.apiKey);
+    if (changes.paused !== undefined && typeof changes.paused !== 'boolean') throw new TypeError('Offer paused state must be a boolean.');
+    if (changes.priceNanos === undefined && changes.apiKey === undefined && changes.paused === undefined) throw new TypeError('At least one offer change is required.');
+    return this.request('PATCH', `/v1/seller/offers/${encodeURIComponent(id)}`, changes, { signal });
+  }
   /** Payment evidence from Zoko's verifier, scoped to this API key's account. */
   deposits(options: { txid?: string; limit?: number; signal?: AbortSignal } = {}): Promise<{ deposits: DepositRecord[] }> {
     const limit=options.limit??100;

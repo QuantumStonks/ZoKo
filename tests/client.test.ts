@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AmbiguousDecisionError, ZokoApiError, ZokoClient, formatXec, parseXec } from '../src/client.js';
+import { AmbiguousDecisionError, ZokoApiError, ZokoClient, formatXec, parseXec, type RegisterSellerOfferInput, type UpdateSellerOfferInput } from '../src/client.js';
 import type { DecisionInput } from '../src/protocol.js';
 
 const input: DecisionInput = { state: 'The package was delivered with a damaged screen.', questions: { damaged: { type: 'noul', instructions: 'Is the item described as damaged?' } } };
@@ -81,4 +81,66 @@ test('interrupted post carries recovery information and never silently re-quotes
   const client = new ZokoClient({ baseUrl: 'https://zoko.example', apiKey: 'test-key', fetch: fetcher });
   await assert.rejects(client.execute('quote-1', input, 'interrupted-purchase-001', controller.signal), (error: unknown) => error instanceof AmbiguousDecisionError && error.quoteId === 'quote-1' && error.idempotencyKey === 'interrupted-purchase-001');
   assert.equal(calls, 1);
+});
+
+const registration: RegisterSellerOfferInput = {
+  id: 'routing-agent', name: 'Routing agent', endpoint: 'https://agent.example/decide',
+  model: 'acme/routing-agent:2026-09', apiKey: 'endpoint-credential', priceNanos: '123456789012345678901',
+};
+const ownedOffer = { id: registration.id, name: registration.name, endpoint: registration.endpoint, model: registration.model, priceNanos: registration.priceNanos, payoutAccountId: 'seller-account-id', enabled: false, paused: false, commissionBps: 725 };
+
+test('seller offer registration uses agent credentials and preserves its exact custom model and price', async () => {
+  const calls: Array<{ method: string | undefined; url: string; auth: string | null; body: unknown }> = [];
+  const fetcher: typeof fetch = async (url, init) => {
+    calls.push({ url: String(url), method: init?.method, auth: new Headers(init?.headers).get('Authorization'), body: JSON.parse(String(init?.body)) });
+    return reply(ownedOffer, 201);
+  };
+  const client = new ZokoClient({ baseUrl: 'https://zoko.example', apiKey: 'seller-agent-key', fetch: fetcher });
+  const offer = await client.registerOffer(registration);
+  assert.deepEqual(calls, [{ url: 'https://zoko.example/v1/seller/offers', method: 'POST', auth: 'Bearer seller-agent-key', body: registration }]);
+  assert.equal(offer.model, 'acme/routing-agent:2026-09');
+  assert.equal(offer.priceNanos, '123456789012345678901');
+  assert.equal(offer.enabled, false);
+  assert.equal('apiKey' in offer, false);
+});
+
+test('seller listing pagination is explicit, bounded and does not fetch another page automatically', async () => {
+  const urls: string[] = [];
+  const fetcher: typeof fetch = async (url) => { urls.push(String(url)); return reply({ offers: [ownedOffer], nextCursor: 'routing-agent' }); };
+  const client = new ZokoClient({ baseUrl: 'https://zoko.example', apiKey: 'seller-agent-key', fetch: fetcher });
+  const page = await client.listOffers({ limit: 20, after: 'prior-agent' });
+  assert.equal(page.nextCursor, 'routing-agent');
+  assert.deepEqual(urls, ['https://zoko.example/v1/seller/offers?limit=20&after=prior-agent']);
+  for (const limit of [0, 101, 1.5]) assert.throws(() => client.listOffers({ limit }));
+  assert.throws(() => client.listOffers({ after: '../other-owner' }));
+  assert.equal(urls.length, 1);
+});
+
+test('seller controls cannot submit ownership, approval or endpoint identity changes', () => {
+  let calls = 0;
+  const fetcher: typeof fetch = async () => { calls++; return reply(ownedOffer); };
+  const client = new ZokoClient({ baseUrl: 'https://zoko.example', apiKey: 'seller-agent-key', fetch: fetcher });
+  for (const forbidden of [{ enabled: true }, { payoutAccountId: 'other-account' }, { ownerAccountId: 'other-account' }]) assert.throws(() => client.registerOffer({ ...registration, ...forbidden } as RegisterSellerOfferInput));
+  for (const forbidden of [{ enabled: true }, { payoutAccountId: 'other-account' }, { endpoint: 'https://different.example' }, { model: 'different-model' }]) assert.throws(() => client.updateOffer(registration.id, forbidden as UpdateSellerOfferInput));
+  assert.throws(() => client.updateOffer(registration.id, {}));
+  assert.throws(() => client.updateOffer(registration.id, { priceNanos: '0' }));
+  assert.throws(() => client.updateOffer(registration.id, { priceNanos: '1.5' }));
+  assert.equal(calls, 0);
+});
+
+test('seller updates explicitly set price, credential and paused state without automatically retrying an uncertain mutation', async () => {
+  const bodies: unknown[] = [];
+  const fetcher: typeof fetch = async (url, init) => {
+    assert.equal(String(url), 'https://zoko.example/v1/seller/offers/routing-agent');
+    assert.equal(init?.method, 'PATCH');
+    bodies.push(JSON.parse(String(init?.body)));
+    if (bodies.length === 1) return reply({ ...ownedOffer, priceNanos: '123', paused: true });
+    throw new TypeError('Reply lost after update');
+  };
+  const client = new ZokoClient({ baseUrl: 'https://zoko.example', apiKey: 'seller-agent-key', fetch: fetcher });
+  const offer = await client.updateOffer('routing-agent', { priceNanos: '123', paused: true, apiKey: 'rotated-credential' });
+  assert.equal(offer.paused, true);
+  assert.deepEqual(bodies[0], { priceNanos: '123', paused: true, apiKey: 'rotated-credential' });
+  await assert.rejects(client.updateOffer('routing-agent', { paused: false }), /Reply lost/);
+  assert.equal(bodies.length, 2);
 });

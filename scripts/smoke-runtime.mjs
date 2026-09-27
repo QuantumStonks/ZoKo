@@ -47,7 +47,12 @@ try {
   assert.equal(cashtab.status, 200, 'The built image must include its locally bundled Cashtab integration.');
   assert.match(cashtab.headers.get('content-type') ?? '', /javascript/);
   assert.ok((await cashtab.text()).length > 1000, 'The Cashtab bundle must contain the compiled integration.');
-  assert.equal((await request('/health/ready')).status, 503, 'Missing sellers must keep readiness false.');
+  const readiness = await request('/health/ready');
+  assert.equal(readiness.status, 200, 'A fresh marketplace must become infrastructure-ready before sellers are onboarded.');
+  const ready = await readiness.json();
+  assert.equal(ready.ok, true);
+  assert.equal(ready.tradingReady, false, 'An empty marketplace must not claim trading readiness.');
+  assert.equal(ready.enabledSellers, 0, 'The runtime must not seed a platform-owned service.');
   assert.equal((await request('/v1/me')).status, 401, 'Buyer data requires authentication.');
   const created = await request('/v1/admin/accounts', {
     method: 'POST', headers: { authorization: `Bearer ${admin}`, 'content-type': 'application/json' },
@@ -61,13 +66,16 @@ try {
   const balance = await me.json();
   assert.equal(balance.balanceNanos, '0');
   assert.equal(balance.reservedNanos, '0');
+  const offers = await request('/v1/seller/offers', { headers: { authorization: `Bearer ${account.apiKey}` } });
+  assert.equal(offers.status, 200, 'An agent account must also have seller access.');
+  assert.deepEqual(await offers.json(), { offers: [], nextCursor: null });
   const deposits = await request('/v1/deposits', { headers: { authorization: `Bearer ${account.apiKey}` } });
   assert.equal(deposits.status, 200);
   assert.deepEqual((await deposits.json()).deposits, []);
   const audit = await request('/v1/admin/audit', { headers: { authorization: `Bearer ${admin}` } });
   assert.equal(audit.status, 200);
   assert.equal((await audit.json()).ok, true, 'The new account must preserve the journal invariant.');
-  console.log('Runtime smoke passed: unprivileged read-only image, PostgreSQL startup, console and Cashtab bundle, fail-closed readiness, authentication, account creation, deposit history and ledger audit. No provider call or payment occurred.');
+  console.log('Runtime smoke passed: unprivileged read-only image, PostgreSQL startup, console and Cashtab bundle, separate infrastructure and trading readiness, authentication, dual-role agent account, empty seller inventory, deposit history and ledger audit. No provider call or payment occurred.');
 } catch (error) {
   await docker(['logs', '--tail', '80', container], { log: true }).catch(() => {});
   throw error;

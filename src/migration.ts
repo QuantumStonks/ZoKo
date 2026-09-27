@@ -1,7 +1,7 @@
 import type { Db } from './db.js';
 import { paymentsMigration, paymentsUpgradeMigration } from './payments/migration.js';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const schema = `
 CREATE TABLE IF NOT EXISTS zoko_migrations(version integer PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now());
@@ -27,7 +27,9 @@ CREATE TABLE sellers(
  id text PRIMARY KEY, name text NOT NULL, endpoint text NOT NULL, api_key_encrypted text NOT NULL,
  model text NOT NULL, price_nanos numeric(40,0) NOT NULL CHECK(price_nanos>0),
  payout_account_id uuid REFERENCES accounts(id), enabled boolean NOT NULL DEFAULT true,
- failures integer NOT NULL DEFAULT 0, circuit_until timestamptz, created_at timestamptz NOT NULL DEFAULT now()
+ paused boolean NOT NULL DEFAULT false,
+ failures integer NOT NULL DEFAULT 0, circuit_until timestamptz, created_at timestamptz NOT NULL DEFAULT now(),
+ CONSTRAINT sellers_enabled_requires_owner CHECK(NOT enabled OR payout_account_id IS NOT NULL)
 );
 CREATE TABLE quotes(
  id uuid PRIMARY KEY, account_id uuid NOT NULL REFERENCES accounts(id), seller_id text NOT NULL REFERENCES sellers(id),
@@ -58,6 +60,15 @@ CREATE TABLE audit_events(id bigserial PRIMARY KEY, actor text NOT NULL, action 
 CREATE TRIGGER audit_immutable BEFORE UPDATE OR DELETE ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_journal_mutation();
 `;
 
+const marketplaceUpgradeMigration = `
+ALTER TABLE sellers ADD COLUMN paused boolean NOT NULL DEFAULT false;
+-- Keep legacy offers, frozen quotes, receipts and financial evidence. An offer
+-- without an agent settlement account cannot accept new marketplace work.
+UPDATE sellers SET enabled=false WHERE payout_account_id IS NULL;
+ALTER TABLE sellers ADD CONSTRAINT sellers_enabled_requires_owner
+ CHECK(NOT enabled OR payout_account_id IS NOT NULL);
+`;
+
 export async function migrate(db: Db): Promise<void> {
   const client = await db.connect();
   try {
@@ -68,12 +79,22 @@ export async function migrate(db: Db): Promise<void> {
     if (!existing.rowCount) {
       await client.query(schema); await client.query(paymentsMigration);
       await client.query('INSERT INTO zoko_migrations(version) VALUES($1)',[SCHEMA_VERSION]);
-    } else if (existing.rows[0].version === 1) {
-      // Add durable HD-wallet state without replacing legacy identities or payment evidence.
-      // The payment preflight separately rejects any unsafe wallet reinterpretation.
-      await client.query(paymentsUpgradeMigration);
-      await client.query('INSERT INTO zoko_migrations(version) VALUES($1)',[SCHEMA_VERSION]);
-    } else if (existing.rows[0].version !== SCHEMA_VERSION) throw new Error('Unsupported database schema version');
+    } else {
+      let version = existing.rows[0].version;
+      if (version === 1) {
+        // Add durable HD-wallet state without replacing legacy identities or payment evidence.
+        // The payment preflight separately rejects any unsafe wallet reinterpretation.
+        await client.query(paymentsUpgradeMigration);
+        await client.query('INSERT INTO zoko_migrations(version) VALUES(2)');
+        version = 2;
+      }
+      if (version === 2) {
+        await client.query(marketplaceUpgradeMigration);
+        await client.query('INSERT INTO zoko_migrations(version) VALUES(3)');
+        version = 3;
+      }
+      if (version !== SCHEMA_VERSION) throw new Error('Unsupported database schema version');
+    }
     await client.query('COMMIT');
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }

@@ -36,6 +36,10 @@ test('setup generates an independent service wallet secret without exposing it a
     assert.notEqual(seed, setting(content, 'POSTGRES_PASSWORD'));
     assert.notEqual(seed, Buffer.from(setting(content, 'ZOKO_ENCRYPTION_KEY'), 'base64').toString('hex'));
     assert.ok(!content.includes('GENERATE_'));
+    assert.equal(setting(content, 'ZOKO_PROVIDER_HOSTS'), '');
+    assert.equal(setting(content, 'ZOKO_PLATFORM_FEE_BPS'), '1000');
+    assert.doesNotMatch(content, /^(?:TYPESAFE_|ZOKO_JEV_)/m);
+    assert.match(result.stdout, /No platform inference credentials or default offers are required/);
     assert.ok(!result.stdout.includes(seed) && !result.stderr.includes(seed));
     if (process.platform !== 'win32') assert.equal((await stat(join(directory, '.env'))).mode & 0o777, 0o600);
     assert.equal(invoke(directory).status, 1);
@@ -46,7 +50,7 @@ test('setup generates an independent service wallet secret without exposing it a
 
 test('adding a missing service seed preserves all existing secrets and tightens file permissions', async () => {
   await withSetup(async directory => {
-    const original = 'ZOKO_ADMIN_TOKEN=existing-admin-value\nZOKO_ENCRYPTION_KEY=existing-key\nPOSTGRES_PASSWORD=existing-password\nTYPESAFE_API_KEY=existing-provider-key\n';
+    const original = 'ZOKO_ADMIN_TOKEN=existing-admin-value\nZOKO_ENCRYPTION_KEY=existing-key\nPOSTGRES_PASSWORD=existing-password\nZOKO_PROVIDER_HOSTS=agent.example.com\nZOKO_PLATFORM_FEE_BPS=500\n';
     await writeFile(join(directory, '.env'), original, { mode: 0o644 });
     await chmod(join(directory, '.env'), 0o644);
     const result = invoke(directory, '--add-wallet');
