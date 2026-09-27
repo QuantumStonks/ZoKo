@@ -643,6 +643,8 @@ describe('Programmatic payments: genuine signed bytes and real PostgreSQL persis
     const legacy = { network: 'mainnet', walletName: 'zoko', identityAddress: recipient, genesis: MAINNET_GENESIS };
     await db.query("INSERT INTO payments_state(key,value) VALUES('wallet-identity',$1)", [JSON.stringify(legacy)]);
     await db.query('DROP TABLE payments_address_scans'); await db.query('DROP TABLE payments_addresses');
+    await db.query('ALTER TABLE sellers DROP CONSTRAINT sellers_enabled_requires_owner');
+    await db.query('ALTER TABLE sellers DROP COLUMN paused');
     await db.query('DELETE FROM zoko_migrations'); await db.query('INSERT INTO zoko_migrations(version) VALUES(1)');
     await migrate(db);
     const h = harness(db); await assert.rejects(h.payments.preflight(), isPaymentError('node_wallet_migration_required'));

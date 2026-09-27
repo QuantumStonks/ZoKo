@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Db, Tx } from './db.js';
 import { transaction, transfer, lockWallets } from './db.js';
 import { MoneySchema, type Config } from './config.js';
-import { AppError, decrypt, digest, encrypt, validateEndpoint } from './security.js';
+import { AppError, decrypt, digest, validateEndpoint } from './security.js';
 import { DecisionInputSchema, type DecisionInput } from './protocol.js';
 import { evaluateProvider, resultConfidence } from './provider.js';
 import { evaluateRestrictedProvider } from './provider-network.js';
@@ -21,39 +21,46 @@ type Row = Record<string, any>; // PostgreSQL rows, narrowed at trust boundaries
 export class Market {
   constructor(private db: Db, private config: Config, private provider: Provider = evaluateRestrictedProvider) {}
 
-  async seed(): Promise<void> {
-    if (!this.config.jevApiKey) return;
-    const encrypted = encrypt(this.config.jevApiKey, this.config.encryptionKey);
-    // Operator edits survive restarts; env only provisions the initial offer.
-    await this.db.query(`INSERT INTO sellers(id,name,endpoint,api_key_encrypted,model,price_nanos)
-      VALUES('jev','Jev · TypeSafe','https://api.typesafe.ai/v1/systemone',$1,$2,$3) ON CONFLICT(id) DO NOTHING`, [encrypted,this.config.jevModel,this.config.jevPriceNanos]);
-  }
-
   async catalog(): Promise<unknown[]> {
     const sellers = await this.db.query(`SELECT s.id,s.name,s.model,s.price_nanos,s.enabled,s.circuit_until,
       (SELECT count(*)::integer FROM decisions d WHERE d.seller_id=s.id AND d.status='succeeded') AS completed,
       (SELECT percentile_cont(0.95) WITHIN GROUP(ORDER BY latency_ms) FROM decisions d WHERE d.seller_id=s.id AND d.status='succeeded' AND d.created_at>now()-interval '24 hours') AS p95_ms
-      FROM sellers s WHERE s.enabled ORDER BY s.price_nanos,s.id`);
+      FROM sellers s JOIN accounts owner ON owner.id=s.payout_account_id
+      WHERE s.enabled AND NOT s.paused AND NOT owner.disabled ORDER BY s.price_nanos,s.id`);
     return sellers.rows.map(s => ({id:s.id,name:s.name,model:s.model,priceNanos:s.price_nanos,questionTypes:['choice','score','noul'],available:!s.circuit_until || new Date(s.circuit_until).getTime()<=Date.now(),completed:s.completed,p95LatencyMs:s.p95_ms===null?null:Math.round(s.p95_ms),confidenceProvenance:'provider_reported',protocol:'typesafe-systemone-v1'}));
   }
 
   async quote(accountId: string, raw: DecisionInput, rawPolicy: Policy = {}): Promise<Row> {
     const input = DecisionInputSchema.parse(raw), policy = PolicySchema.parse(rawPolicy);
-    const account = await this.account(this.db, accountId);
-    let price = BigInt(account.max_price_nanos);
-    if (policy.maxPriceNanos !== undefined && BigInt(policy.maxPriceNanos)<price) price = BigInt(policy.maxPriceNanos);
-    const selected = await this.db.query(`SELECT * FROM sellers WHERE enabled AND price_nanos<=$1
-      AND (circuit_until IS NULL OR circuit_until<=now())
-      AND ($2::text[] IS NULL OR id=ANY($2)) AND ($3::text[] IS NULL OR id=ANY($3))
-      ORDER BY price_nanos,id LIMIT 1`, [price.toString(), account.allowed_sellers, policy.allowedSellers ?? null]);
-    if (!selected.rowCount) throw new AppError(503,'no_seller','No enabled seller meets the account and request policy');
-    const s = selected.rows[0], id = randomUUID(), requestHash = digest(input), schemaHash = digest(input.questions);
-    validateEndpoint(s.endpoint, this.config.providerHosts);
-    const timeoutMs = Math.min(policy.maxLatencyMs ?? this.config.providerMaxTimeoutMs, this.config.providerMaxTimeoutMs);
-    const row = await this.db.query(`INSERT INTO quotes(id,account_id,seller_id,request_hash,schema_hash,price_nanos,endpoint,api_key_encrypted,model,payout_account_id,fee_bps,timeout_ms,min_confidence,expires_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,now()+$14*interval '1 second') RETURNING expires_at`,
-    [id,accountId,s.id,requestHash,schemaHash,s.price_nanos,s.endpoint,s.api_key_encrypted,s.model,s.payout_account_id,this.config.platformFeeBps,timeoutMs,policy.minConfidence ?? 0,this.config.quoteTtlSeconds]);
-    return {id,sellerId:s.id,model:s.model,priceNanos:s.price_nanos,schemaHash,requestHash,expiresAt:row.rows[0].expires_at.toISOString(),timeoutMs,minConfidence:policy.minConfidence ?? 0,chargePolicy:'schema_valid_response_including_low_confidence',currency:'nanoXEC'};
+    return transaction(this.db,async tx => {
+      const initialAccount = await this.account(tx, accountId);
+      const maximumPrice = (account:Row) => policy.maxPriceNanos !== undefined && BigInt(policy.maxPriceNanos)<BigInt(account.max_price_nanos)
+        ? BigInt(policy.maxPriceNanos) : BigInt(account.max_price_nanos);
+      const selected = await tx.query(`SELECT s.id,s.payout_account_id FROM sellers s JOIN accounts owner ON owner.id=s.payout_account_id
+        WHERE s.enabled AND NOT s.paused AND NOT owner.disabled AND s.price_nanos<=$1
+        AND (s.circuit_until IS NULL OR s.circuit_until<=clock_timestamp())
+        AND ($2::text[] IS NULL OR s.id=ANY($2)) AND ($3::text[] IS NULL OR s.id=ANY($3))
+        ORDER BY s.price_nanos,s.id LIMIT 1`, [maximumPrice(initialAccount).toString(), initialAccount.allowed_sellers, policy.allowedSellers ?? null]);
+      if (!selected.rowCount) throw new AppError(503,'no_seller','No active seller offer meets the account and request policy');
+      // Agents may be buyers and sellers simultaneously. Acquire every involved
+      // account in UUID order before locking the offer or any financial rows.
+      const accounts = await this.lockAccounts(tx,[accountId,selected.rows[0].payout_account_id]);
+      const account = this.activeBuyer(accounts,accountId);
+      const current = await tx.query(`SELECT *,circuit_until IS NULL OR circuit_until<=clock_timestamp() AS accepting
+        FROM sellers WHERE id=$1 FOR SHARE`,[selected.rows[0].id]);
+      const s=current.rows[0];
+      if (!this.availableSeller(s,accounts) || BigInt(s.price_nanos)>maximumPrice(account)
+        || (account.allowed_sellers && !account.allowed_sellers.includes(s.id))) {
+        throw new AppError(503,'no_seller','No active seller offer meets the account and request policy');
+      }
+      const id = randomUUID(), requestHash = digest(input), schemaHash = digest(input.questions);
+      validateEndpoint(s.endpoint, this.config.providerHosts);
+      const timeoutMs = Math.min(policy.maxLatencyMs ?? this.config.providerMaxTimeoutMs, this.config.providerMaxTimeoutMs);
+      const row = await tx.query(`INSERT INTO quotes(id,account_id,seller_id,request_hash,schema_hash,price_nanos,endpoint,api_key_encrypted,model,payout_account_id,fee_bps,timeout_ms,min_confidence,expires_at)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,clock_timestamp()+$14*interval '1 second') RETURNING expires_at`,
+      [id,accountId,s.id,requestHash,schemaHash,s.price_nanos,s.endpoint,s.api_key_encrypted,s.model,s.payout_account_id,this.config.platformFeeBps,timeoutMs,policy.minConfidence ?? 0,this.config.quoteTtlSeconds]);
+      return {id,sellerId:s.id,model:s.model,priceNanos:s.price_nanos,schemaHash,requestHash,expiresAt:row.rows[0].expires_at.toISOString(),timeoutMs,minConfidence:policy.minConfidence ?? 0,chargePolicy:'schema_valid_response_including_low_confidence',currency:'nanoXEC'};
+    });
   }
 
   async decide(accountId: string, idempotencyKey: string, body: {quoteId:string} & DecisionInput): Promise<Row> {
@@ -62,12 +69,17 @@ export class Market {
     const input = DecisionInputSchema.parse({state:body.state,questions:body.questions});
     const fingerprint = digest({quoteId:body.quoteId,...input});
     const admitted = await transaction(this.db, async tx => {
-      const account = await this.account(tx, accountId, true);
+      const routing = (await tx.query(`SELECT q.seller_id,q.payout_account_id AS quoted_owner_id,s.payout_account_id AS current_owner_id
+        FROM quotes q JOIN sellers s ON s.id=q.seller_id WHERE q.id=$1 AND q.account_id=$2`,[body.quoteId,accountId])).rows[0];
+      const accounts = await this.lockAccounts(tx,[accountId,routing?.quoted_owner_id,routing?.current_owner_id]);
+      const account = this.activeBuyer(accounts,accountId);
       const previous = await tx.query('SELECT * FROM decisions WHERE account_id=$1 AND idempotency_key=$2', [accountId,idempotencyKey]);
       if (previous.rowCount) {
         if (previous.rows[0].request_hash !== fingerprint) throw new AppError(409,'idempotency_conflict','This idempotency key was used with a different request');
         return {previous:previous.rows[0]};
       }
+      const sellers = routing ? await tx.query(`SELECT *,circuit_until IS NULL OR circuit_until<=clock_timestamp() AS accepting
+        FROM sellers WHERE id=$1 FOR SHARE`,[routing.seller_id]) : undefined;
       const quotes = await tx.query('SELECT *,expires_at>clock_timestamp() AS valid FROM quotes WHERE id=$1 AND account_id=$2 FOR UPDATE', [body.quoteId,accountId]);
       if (!quotes.rowCount) throw new AppError(404,'quote_not_found','Quote not found');
       const q = quotes.rows[0];
@@ -75,8 +87,11 @@ export class Market {
       if (q.request_hash !== digest(input) || q.schema_hash !== digest(input.questions)) throw new AppError(409,'quote_input_mismatch','Input or questions do not match the quote');
       const used = await tx.query('SELECT id FROM decisions WHERE quote_id=$1', [q.id]);
       if (used.rowCount) throw new AppError(409,'quote_consumed','Quote already used; replay the original idempotency key');
-      const seller = await tx.query('SELECT enabled,circuit_until FROM sellers WHERE id=$1', [q.seller_id]);
-      if (!seller.rows[0]?.enabled || (seller.rows[0].circuit_until && new Date(seller.rows[0].circuit_until).getTime()>Date.now())) throw new AppError(503,'seller_unavailable','Quoted seller is currently unavailable');
+      const owner = q.payout_account_id ? accounts.get(q.payout_account_id) : undefined;
+      if (!this.availableSeller(sellers?.rows[0],accounts) || !owner || owner.disabled
+        || q.seller_id!==routing?.seller_id || q.payout_account_id!==routing?.quoted_owner_id) {
+        throw new AppError(503,'seller_unavailable','Quoted seller or its settlement account is unavailable');
+      }
       if (BigInt(q.price_nanos)>BigInt(account.max_price_nanos) || (account.allowed_sellers && !account.allowed_sellers.includes(q.seller_id))) throw new AppError(403,'spending_policy','The quote no longer meets the account policy');
       validateEndpoint(q.endpoint,this.config.providerHosts);
       const day = (await tx.query("SELECT (clock_timestamp() AT TIME ZONE 'UTC')::date::text AS day")).rows[0].day;
@@ -107,15 +122,27 @@ export class Market {
     }
     const latencyMs = Math.round(performance.now()-started);
     return transaction(this.db, async tx => {
-      await tx.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE',[accountId]);
+      await this.lockAccounts(tx,[accountId,q.payout_account_id]);
+      await tx.query('SELECT id FROM sellers WHERE id=$1 FOR UPDATE',[q.seller_id]);
+      const frozenQuote = (await tx.query('SELECT payout_account_id FROM quotes WHERE id=$1 FOR SHARE',[q.id])).rows[0];
       const current = (await tx.query('SELECT *,expires_at>clock_timestamp() AS live FROM decisions WHERE id=$1 FOR UPDATE',[d.id])).rows[0];
       if (current.status !== 'running') return this.receipt(current);
+      if (!q.payout_account_id || !frozenQuote?.payout_account_id) {
+        await this.refund(tx,current,'indeterminate','seller_owner_missing');
+        return {id:d.id,status:'indeterminate',error:{code:'seller_owner_missing',message:'Legacy quote has no seller settlement account; funds released'}};
+      }
+      if (frozenQuote.payout_account_id!==q.payout_account_id) {
+        await this.refund(tx,current,'indeterminate','quote_recipient_changed');
+        return {id:d.id,status:'indeterminate',error:{code:'quote_recipient_changed',message:'Quote settlement account changed; funds released'}};
+      }
       if (!current.live) {
         await this.refund(tx,current,'indeterminate','execution_expired');
         // Return a terminal object so the refund transaction commits.
         return {id:d.id,status:'indeterminate',error:{code:'execution_expired',message:'Execution deadline expired; funds released'}};
       }
-      const amount = BigInt(q.price_nanos), fee = q.payout_account_id ? amount*BigInt(q.fee_bps)/10000n : amount;
+      // Pausing an offer or disabling either agent stops new work. Already
+      // admitted work retains its frozen recipient and contractual commission.
+      const amount = BigInt(q.price_nanos), fee = amount*BigInt(q.fee_bps)/10000n;
       await lockWallets(tx,[`reserved:${accountId}`,...(fee>0n?['platform']:[]),...(amount-fee>0n?[`available:${q.payout_account_id}`]:[])]);
       if (fee>0n) await transfer(tx,`decision:${d.id}:fee`,`reserved:${accountId}`,'platform',fee,{decisionId:d.id});
       if (amount-fee>0n) await transfer(tx,`decision:${d.id}:seller`,`reserved:${accountId}`,`available:${q.payout_account_id}`,amount-fee,{decisionId:d.id,sellerId:q.seller_id});
@@ -126,6 +153,24 @@ export class Market {
       await tx.query('UPDATE sellers SET failures=0,circuit_until=NULL WHERE id=$1',[q.seller_id]);
       return response;
     });
+  }
+
+  private async lockAccounts(tx:Tx,ids:Array<string|null|undefined>):Promise<Map<string,Row>> {
+    const accountIds=[...new Set(ids.filter((id):id is string=>typeof id==='string'))].sort();
+    const result=await tx.query('SELECT * FROM accounts WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE',[accountIds]);
+    return new Map(result.rows.map(row=>[row.id,row]));
+  }
+
+  private activeBuyer(accounts:Map<string,Row>,id:string):Row {
+    const account=accounts.get(id);
+    if(!account || account.disabled) throw new AppError(403,'account_disabled','Account is unavailable');
+    return account;
+  }
+
+  private availableSeller(seller:Row|undefined,accounts:Map<string,Row>):boolean {
+    if(!seller?.enabled || seller.paused || !seller.accepting || !seller.payout_account_id) return false;
+    const owner=accounts.get(seller.payout_account_id);
+    return Boolean(owner && !owner.disabled);
   }
 
   private async account(db: Pick<Db,'query'> | Tx,id:string, lock=false): Promise<Row> {
@@ -151,19 +196,23 @@ export class Market {
       await tx.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE',[accountId]);
       const d = (await tx.query('SELECT * FROM decisions WHERE id=$1 FOR UPDATE',[id])).rows[0];
       if (d.status!=='running') return;
+      await tx.query('SELECT id FROM sellers WHERE id=$1 FOR UPDATE',[d.seller_id]);
       await this.refund(tx,d,'failed',code);
       await tx.query("UPDATE sellers SET failures=failures+1,circuit_until=CASE WHEN failures+1>=3 THEN now()+interval '60 seconds' ELSE circuit_until END WHERE id=$1",[d.seller_id]);
     });
   }
 
   async recoverStale():Promise<number> {
-    const stale = await this.db.query("SELECT id,account_id FROM decisions WHERE status='running' AND expires_at<clock_timestamp() ORDER BY expires_at LIMIT 100");
+    const stale = await this.db.query(`SELECT d.id,d.account_id FROM decisions d JOIN quotes q ON q.id=d.quote_id
+      WHERE d.status='running' AND (d.expires_at<clock_timestamp() OR q.payout_account_id IS NULL)
+      ORDER BY d.expires_at LIMIT 100`);
     let recovered=0;
     for (const row of stale.rows) await transaction(this.db,async tx => {
       await tx.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE',[row.account_id]);
-      const current = await tx.query("SELECT * FROM decisions WHERE id=$1 AND status='running' AND expires_at<clock_timestamp() FOR UPDATE",[row.id]);
+      const current = await tx.query(`SELECT d.*,q.payout_account_id FROM decisions d JOIN quotes q ON q.id=d.quote_id
+        WHERE d.id=$1 AND d.status='running' AND (d.expires_at<clock_timestamp() OR q.payout_account_id IS NULL) FOR UPDATE OF d`,[row.id]);
       if (!current.rowCount) return;
-      await this.refund(tx,current.rows[0],'indeterminate','execution_expired'); recovered++;
+      await this.refund(tx,current.rows[0],'indeterminate',current.rows[0].payout_account_id?'execution_expired':'seller_owner_missing'); recovered++;
     });
     return recovered;
   }

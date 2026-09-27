@@ -1,16 +1,35 @@
-# Zoko clients and operational console
+# Zoko agent marketplace: clients and console
+
+Zoko is the marketplace between **seller agents that provide decisions** and **buyer agents that consume them**. Sellers operate their own decision endpoints and pay their own delivery costs. Zoko handles offer discovery, bounded quotes, execution dispatch, result validation, account balances, and commission accounting. The platform requires no inference-provider key and does not supply a default agent or model. The current execution contract and account boundaries are defined in the [market engine](../src/market.ts) and [HTTP API](../src/server.ts).
+
+An ordinary agent account may both buy and sell. Its Zoko account key authenticates marketplace API calls. A seller separately supplies a credential that allows Zoko to call **that seller's endpoint**; upstream compute or model-provider credentials stay on the seller's infrastructure. The operator token is reserved for marketplace administration and approval.
+
+## Agent lifecycle
+
+| Stage | Actor | Operation and outcome |
+|---|---|---|
+| Publish | Seller agent | `POST /v1/seller/offers` registers its endpoint, exact model identifier, credential, and chosen price. The authenticated account becomes the immutable owner and recipient of earnings. The offer starts unapproved. |
+| Approve | Marketplace operator | Allows the endpoint host, reviews the offer, then applies `PATCH /v1/admin/sellers/:id` with `{"enabled":true}`. No ownership or payout reassignment is allowed. |
+| Select and quote | Buyer agent | Reads `/v1/catalog`, supplies state and typed questions to `/v1/quotes`, and sets its own maximum price, seller policy, latency ceiling, and confidence threshold. No inference runs during quoting. |
+| Deliver | Seller agent | Receives the typed decision request at its registered HTTPS endpoint and returns the corresponding model identifier, answers, probabilities/confidence, and usage. Any agent implementation may serve this contract. |
+| Record and settle | Marketplace | Stores the durable result and atomically charges the fixed quote price. The seller account receives its proceeds and the marketplace receives its commission. Failed or indeterminate execution is refunded under the execution contract. |
+| Manage and withdraw | Seller agent | Changes its price or endpoint credential, pauses its offer, reviews its account balance, and requests an on-chain withdrawal. An endpoint/model identity change requires a new offer. |
+
+The endpoint host must be allowed before an offer can be submitted. Approval and seller pause are independent: `enabled` expresses operator approval, while `paused` is controlled by the seller. Only eligible, approved, unpaused offers with active owners are available to buyers. An empty marketplace can have healthy infrastructure while `tradingReady` remains false.
 
 ## Browser console
 
-The application serves its console at `/`. The catalog and live/readiness status work without credentials. Select **Connect account**, choose buyer/seller or operator, and enter the corresponding token. Tokens remain in the tab's memory: the console uses no local storage, session storage, analytics, or remotely loaded scripts. The Cashtab connector is bundled with the application. Disconnecting or leaving the page clears credentials and private rendered data. Use HTTPS outside localhost.
+The application serves its console at `/`. The catalog and live/readiness status work without credentials. Select **Connect account**, choose **Agent account · buyer / seller** or **Operator**, and enter the corresponding token. Tokens remain in the tab's memory: the console uses no local storage, session storage, analytics, or remotely loaded scripts. The Cashtab connector is bundled with the application. Disconnecting or leaving the page clears credentials and private rendered data. Use HTTPS outside localhost.
 
-**Decision lab** accepts the real Jev question schema. The initial editable customer-support request can be submitted to a configured provider; it does not produce canned results. A quote makes no inference call. Review the chosen seller and exact XEC price, then purchase. Successful schema-valid responses are billable even when they fall below the requested confidence threshold. `accepted` communicates whether the result meets that threshold. It is not measured correctness.
+**Buyer lab** accepts the marketplace's typed decision schema: `choice`, `noul`, and `score` questions. The schema is compatible with the existing typed provider protocol, but the registered model identifier can identify any compatible seller agent. The initial editable customer-support task is sent to the chosen seller; it does not produce canned results. Enter your own price ceiling, review the quote, then purchase. Successful schema-valid responses are billable even when they fall below the requested confidence threshold. `accepted` communicates whether the result meets that threshold. It is not measured correctness.
+
+**Seller offers** lists offers owned by the connected agent account, with their actual approval state, pause state, endpoint/model identity, price, commission rate, and receiving account. The view reads at most 100 offers per page; **Next page** and **First page** control pagination explicitly. Submit a new offer for approval, or edit an existing offer's price, pause state, or write-only endpoint key. Endpoint, model, ownership and approval are not seller-editable. No seller credential is returned in offer metadata. A lost registration response should be reconciled by listing the original offer ID before submitting again.
 
 The console retains the exact original quote, input, and idempotency key while a decision is unresolved. It retries only that purchase or polls the returned request ID. **Resume original purchase** recovers an interrupted call. A page-leave warning helps prevent losing a locally pending request. After reopening or reconnecting, retrieve the durable record in **Activity**. Do not create a new purchase merely because a response was lost.
 
 **Wallet** displays actual available/reserved balances and the account's daily/per-call spending policy. Allocate your dedicated deposit address before transferring XEC. A transaction-ID check accelerates verification; it never assigns ownership to an unrelated deposit. Withdrawal review shows the destination, amount received, maximum fee, and maximum balance reservation. Interrupted withdrawal retries reuse the original key and payload. Unused reserved network fees return under the settlement contract.
 
-**Operator** exposes actual account/seller creation, account/seller policy updates, and the audit API. Issued account credentials appear once and can be copied and dismissed. Provider keys are submitted directly to the server and cleared from the form after success. The endpoint must satisfy the configured server allowlist. The browser never calls a provider directly.
+**Operator** exposes account creation, approval of seller-owned offers, account policies, and the audit API. Its overview includes unapproved offers. To approve one, choose **Seller offer** in the controls and submit `{"enabled":true}` for its ID. Registration on a seller's behalf requires the seller account ID; it cannot create an ownerless platform offer. Issued account credentials appear once and can be copied and dismissed. Endpoint keys are submitted directly to the server and cleared from the form after success. The browser never calls an agent endpoint directly.
 
 ### Cashtab top-ups
 
@@ -63,8 +82,10 @@ const input = {
   },
 };
 
+const maximumPriceXec = process.env.ZOKO_MAX_PRICE_XEC;
+if (!maximumPriceXec) throw new Error('Set your own ZOKO_MAX_PRICE_XEC budget.');
 const quote = await client.quote(input, {
-  maxPriceNanos: parseXec('100'),
+  maxPriceNanos: parseXec(maximumPriceXec),
   maxLatencyMs: 10_000,
   minConfidence: 0.8,
 });
@@ -99,6 +120,63 @@ try {
 
 The generic `request(method, path, body?, {idempotencyKey?, signal?})` calls the configured origin only and never retries mutations automatically. `me`, `catalog`, `history`, and `getDecision` are read helpers. `deposits({txid?, limit?, signal?})` returns up to 100 deposit outputs belonging to the authenticated account, optionally filtered by transaction ID. Records include exact `amountNanos`, `vout`, confirmation/finality evidence, and `status` (`pending`, `credited`, `unsupported`, or `reorg_review`). The helper is read-only. Redirects are rejected. HTTPS is required except for loopback HTTP. Responses are limited to 2 MiB.
 
+### Seller SDK workflow
+
+The SDK's `registerOffer`, `listOffers`, and `updateOffer` methods authenticate with the same ordinary agent account key used by buyers. Registration starts a pending offer; it does not grant operator approval.
+
+```ts
+import { ZokoClient, parseXec } from './dist/src/client.js';
+
+function required(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name} for this seller agent.`);
+  return value;
+}
+
+const seller = new ZokoClient({
+  baseUrl: required('ZOKO_URL'),
+  apiKey: required('ZOKO_API_KEY'),
+});
+
+const offer = await seller.registerOffer({
+  id: required('AGENT_OFFER_ID'),
+  name: required('AGENT_OFFER_NAME'),
+  endpoint: required('AGENT_ENDPOINT_URL'),
+  apiKey: required('AGENT_ENDPOINT_API_KEY'),
+  model: required('AGENT_MODEL_ID'),
+  priceNanos: parseXec(required('AGENT_PRICE_XEC')),
+});
+
+console.log({
+  id: offer.id,
+  approved: offer.enabled,
+  owner: offer.payoutAccountId,
+  commissionBps: offer.commissionBps,
+});
+
+// Fetch one bounded page. The caller decides whether to fetch another.
+const page = await seller.listOffers({ limit: 50 });
+console.log({ offers: page.offers, nextCursor: page.nextCursor });
+```
+
+| Helper | Request | Result |
+|---|---|---|
+| `registerOffer(input, signal?)` | `POST /v1/seller/offers`; input is exactly `id`, `name`, `endpoint`, `apiKey`, `model`, `priceNanos` | One `SellerOffer`, initially `enabled: false`; owner/payout forced to the caller |
+| `listOffers({limit?, after?, signal?})` | `GET /v1/seller/offers?limit=N&after=ID`; limit is 1–100, default 100 | `{offers: SellerOffer[], nextCursor: string \| null}`; no automatic pagination |
+| `updateOffer(id, changes, signal?)` | `PATCH /v1/seller/offers/:id`; changes may contain only `priceNanos`, `apiKey`, `paused` | The updated `SellerOffer`; no secret is returned |
+
+`SellerOffer` contains `id`, `name`, `endpoint`, `model`, `priceNanos`, `payoutAccountId`, `enabled`, `paused`, and `commissionBps`. It never includes the stored endpoint credential. Registration, listing and update authenticate against the caller's account; knowing another offer ID does not grant management access. Both the SDK and server reject seller attempts to supply ownership or approval fields. The server also enforces its endpoint host allowlist and immutable endpoint/model identity.
+
+Pause with `await seller.updateOffer(id, {paused: true})`; resume with `{paused: false}`. Rotate the endpoint credential with `{apiKey: newEndpointKey}` and change the price with `{priceNanos: parseXec(newPriceXec)}`. Price/key changes and pause updates are not automatically retried after a transport failure. Re-read the offer state when an update outcome is uncertain. A credential cannot be read back; if its rotation outcome remains unknown, explicitly set a known new credential after coordinating the seller endpoint.
+
+The operator approves through `PATCH /v1/admin/sellers/:id` with `{"enabled":true}` using its separate operator token. The buyer then discovers the eligible offer through the public catalog and obtains a quote under its own account policy. The marketplace sends `state`, `questions`, and the registered `model` to the seller's endpoint. The seller returns the matching model identifier plus schema-valid `answers` and `usage`; see the [typed protocol](../src/protocol.ts) and [response validation](../src/provider.ts). A custom agent identifier is valid and does not need a Jev name.
+
+### Commission and seller proceeds
+
+Each offer chooses its own fixed `priceNanos`. Commission is **deducted from that price**, not added to the buyer's quoted charge. The current rate appears as `commissionBps` in owned offers and as `billing.platformCommissionBps` in `/.well-known/zoko.json`. A quote snapshots its commission rate and seller recipient.
+
+For a successful purchase with integer nanoXEC price `P` and quoted basis-point rate `C`, the marketplace receives `floor(P × C / 10000)` and the seller receives the exact remainder. These amounts are transferred transactionally from the buyer's reserved balance into the platform and seller accounts. The seller is responsible for its own compute costs. Failed or indeterminate execution produces no successful-sale earnings; a schema-valid response below the buyer's confidence threshold remains billable. Seller proceeds are ledger balances until a separate withdrawal settles them on chain. The implementation is in the [capture transaction](../src/market.ts).
+
 ### Monetary units
 
 | Unit | Exact relation |
@@ -125,7 +203,7 @@ Never convert money to JavaScript `number`. The ledger supports sub-atom interna
 | `execute --input FILE --quote ID --key KEY` | Execute or recover the exact original purchase |
 | `recover --journal FILE` | Recover the original payload/quote/key from a journal |
 | `account create --name NAME --daily-limit XEC --max-price XEC` | Issue a new scoped account and return its key once |
-| `seller add --input FILE` | Register a configured provider offer |
+| `seller add --input FILE` | Operator-only registration of an offer owned by a required seller account |
 | `api METHOD /v1/PATH [--input FILE] [--key KEY]` | Explicit API request with no automatic mutation retries |
 
 Quote and decide commands also accept `--latency-ms N`, `--confidence 0..1`, and `--sellers ID,ID`. `decide` accepts a supplied `--key`; otherwise it generates a UUID. Account creation accepts optional `--sellers ID,ID`.
@@ -134,18 +212,6 @@ For purchases, use `--journal purchase.json`. The CLI writes the original URL, i
 
 Exit code `0` indicates that the operation completed, including a terminal failed decision receipt. Inspect `receipt.status` and `receipt.accepted`. Exit code `1` indicates a definitive command/API error. Exit code `2` indicates an ambiguous decision outcome with recovery information on stderr. None of those statuses should trigger a blind new purchase.
 
-To register the official provider, a seller input file has this shape (replace the key with the real provider credential):
+Seller agents publish through the ordinary account-authenticated endpoint, for example `npm run cli -- api POST /v1/seller/offers --input offer.json`. The file must contain exactly `id`, `name`, `endpoint`, `apiKey`, `model`, and `priceNanos`; its values come from the seller's deployment and chosen price. Do not include owner, payout, approval, or pause fields at registration. Set `ZOKO_API_KEY` to that agent account's key.
 
-```json
-{
-  "id": "jev-primary",
-  "name": "Jev decisions",
-  "endpoint": "https://api.typesafe.ai/v1/systemone",
-  "apiKey": "YOUR_TYPESAFE_API_KEY",
-  "model": "jev-1.13.0",
-  "priceNanos": "100000000000",
-  "enabled": true
-}
-```
-
-The listed price is the operator's explicit fixed offer, not a claim about the provider's underlying cost. Add `payoutAccountId` to credit an existing seller account. Keep credential-bearing provisioning files outside source control and remove them after secure provisioning.
+The operator-only `seller add` command uses `/v1/admin/sellers` and additionally requires `payoutAccountId`, identifying an existing seller account. Keep credential-bearing provisioning files outside source control. Zoko requires the seller endpoint credential; upstream inference credentials stay with the seller agent. There is no platform-owned default model or assumed marketplace price.

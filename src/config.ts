@@ -7,11 +7,13 @@ export interface Config {
   databaseUrl: string; host: string; port: number; publicUrl: string;
   adminToken: string; encryptionKey: string; providerHosts: string[];
   providerMaxTimeoutMs: number; platformFeeBps: number; quoteTtlSeconds: number;
-  jevApiKey?: string; jevPriceNanos: string; jevModel: string;
   payments: PaymentsConfig; production: boolean;
 }
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  if (['TYPESAFE_API_KEY', 'TYPESAFE_MODEL', 'ZOKO_JEV_PRICE_NANOS'].some(name => env[name])) {
+    throw new Error('Platform-owned provider settings are obsolete; remove them and register an agent-owned seller offer.');
+  }
   const integer = (name: string, fallback: number, min: number, max: number) => {
     const value = env[name] === undefined ? fallback : Number(env[name]);
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`Invalid ${name}`);
@@ -27,16 +29,14 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const publicUrl = env.ZOKO_PUBLIC_URL ?? 'http://localhost:3000';
   const url = new URL(publicUrl);
   if (production && url.protocol !== 'https:') throw new Error('Production ZOKO_PUBLIC_URL must use HTTPS');
-  const providerHosts = (env.ZOKO_PROVIDER_HOSTS ?? 'api.typesafe.ai').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const providerHosts = (env.ZOKO_PROVIDER_HOSTS ?? '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   if (providerHosts.some(h => /[\/:@*]/.test(h))) throw new Error('ZOKO_PROVIDER_HOSTS requires exact DNS hostnames, without wildcards or ports');
-  const jevPriceNanos = PositiveMoneySchema.parse(env.ZOKO_JEV_PRICE_NANOS ?? '100000000000');
   return {
     databaseUrl, host: env.HOST ?? '0.0.0.0', port: integer('PORT', 3000, 1, 65535), publicUrl,
     adminToken, encryptionKey, providerHosts, production,
     providerMaxTimeoutMs: integer('ZOKO_PROVIDER_TIMEOUT_MS', 10000, 100, 60000),
     platformFeeBps: integer('ZOKO_PLATFORM_FEE_BPS', 1000, 0, 10000),
     quoteTtlSeconds: integer('ZOKO_QUOTE_TTL_SECONDS', 60, 5, 300),
-    jevApiKey: env.TYPESAFE_API_KEY || undefined, jevPriceNanos,
-    jevModel: env.TYPESAFE_MODEL ?? 'jev-1.13.0', payments: readPaymentsConfig(env),
+    payments: readPaymentsConfig(env),
   };
 }

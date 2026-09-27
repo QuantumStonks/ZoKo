@@ -80,7 +80,7 @@ For the Compose deployment, run:
 docker compose exec -T api node dist/src/doctor.js
 ```
 
-For a native Node deployment with its own reachable PostgreSQL URL, run `npm run doctor`. Preflight validates the service-seed format and wallet identity, the expected network/chain anchors, the selected hosted Chronik endpoint, token-index capability and database compatibility. The broader doctor also reconciles ledger reservations and reads authenticated Typesafe model metadata.
+For a native Node deployment with its own reachable PostgreSQL URL, run `npm run doctor`. Preflight validates the service-seed format and wallet identity, the expected network/chain anchors, the selected hosted Chronik endpoint, token-index capability and database compatibility. The broader doctor also reconciles ledger reservations and verifies agent accounts, approved seller ownership, stored endpoint credentials and the host allowlist. It makes no seller endpoint requests; an empty marketplace produces an onboarding warning.
 
 Doctor does not assign deposit/change addresses, mutate the wallet identity, run history catch-up, reconcile queued payments, sign transactions, broadcast, create deposits, move funds or buy inference. Passing its checks is evidence that configured prerequisites respond correctly; it does not certify an empty processing backlog. Actual signing/broadcast, finality and paid inference are verified by the bounded acceptance cycle described below.
 
@@ -137,6 +137,8 @@ Withdrawals are processed individually in bounded worker cycles. One withdrawal 
 ## Legacy node-wallet deployments
 
 Schema 2 introduces HD derivation and hosted-history state. A schema migration is not a fund migration. If an earlier deployment contains a node-wallet identity, assigned addresses or payment evidence, the new backend returns `node_wallet_migration_required`. Obsolete `ABC_*` configuration is rejected. A newly generated service seed does not control the earlier wallet's addresses and cannot safely reconcile its signed withdrawals.
+
+Schema 3 subsequently adds agent-owned offer controls and disables legacy ownerless offers while preserving historical financial records. It does not change the HD wallet architecture. Stop all older API processes and workers before this upgrade and follow the [deployment upgrade procedure](deployment.md#upgrade); retain the original service seed, database and encryption key.
 
 For a previous installation that never assigned addresses or created payment state, preserve the existing database and configuration, remove the obsolete node-wallet environment settings, add the new dedicated seed with `npm run init -- --add-wallet`, and let the supported structural migration run. Preflight still determines whether the database is eligible; do not remove identity or evidence rows to force it through.
 

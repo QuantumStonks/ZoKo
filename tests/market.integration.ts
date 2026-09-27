@@ -127,6 +127,7 @@ describe('Market invariants with real PostgreSQL', {
 
   async function fixture(options: {
     balance?: bigint; dailyLimit?: bigint; maxPrice?: bigint; provider?: ProviderFunction;
+    feeBps?: number; selfSeller?: boolean;
   } = {}) {
     const sellerId = `seller-${randomUUID()}`;
     const buyer = await createAccount(db, {
@@ -135,7 +136,7 @@ describe('Market invariants with real PostgreSQL', {
       maxPriceNanos: (options.maxPrice ?? 10_000n).toString(),
       allowedSellers: [sellerId],
     });
-    const seller = await createAccount(db, { name: 'Integration seller', dailyLimitNanos: '0', maxPriceNanos: '0' });
+    const seller = options.selfSeller ? buyer : await createAccount(db, { name: 'Integration seller', dailyLimitNanos: '0', maxPriceNanos: '0' });
     const providerApiKey = randomBytes(24).toString('hex');
     await db.query(`
       INSERT INTO sellers(id,name,endpoint,api_key_encrypted,model,price_nanos,payout_account_id)
@@ -148,9 +149,13 @@ describe('Market invariants with real PostgreSQL', {
     }
     let calls = 0;
     const invoked = options.provider ?? (async () => { calls++; return structuredClone(successfulResult); });
-    const market = new Market(db, config, invoked);
+    const market = new Market(db, { ...config, platformFeeBps: options.feeBps ?? config.platformFeeBps }, invoked);
     const quote = await market.quote(buyer.id, decisionInput);
     return { buyer, seller, sellerId, market, quote, balance, providerApiKey, get calls() { return calls; } };
+  }
+
+  async function platformBalance():Promise<bigint> {
+    return BigInt((await db.query("SELECT balance::text FROM wallets WHERE id='platform'")).rows[0].balance);
   }
 
   test('migrations are repeatable and journal references cannot duplicate or change a transfer', async () => {
@@ -293,7 +298,7 @@ describe('Market invariants with real PostgreSQL', {
       do {
         const active = await db.query(`SELECT EXISTS(
           SELECT 1 FROM pg_stat_activity WHERE application_name=$1 AND wait_event_type='Lock'
-          AND query='SELECT * FROM accounts WHERE id=$1 FOR UPDATE'
+          AND query LIKE 'SELECT * FROM accounts WHERE id=ANY%'
         ) AS waiting`, [schema]);
         waiting = active.rows[0].waiting;
         if (!waiting) await new Promise(resolve => setTimeout(resolve, 10));
@@ -322,12 +327,66 @@ describe('Market invariants with real PostgreSQL', {
     assert.deepEqual(await walletBalances(context.buyer.id), { available: context.balance, reserved: 0n });
   });
 
-  test('a seller disabled after quoting cannot receive new purchases', async () => {
+  test('legacy ownerless offers cannot be routed and ownerless quotes cannot reserve or capture funds', async () => {
     const context = await fixture();
-    await db.query('UPDATE sellers SET enabled=false WHERE id=$1', [context.sellerId]);
-    await assert.rejects(context.market.decide(context.buyer.id, randomUUID(), { quoteId: context.quote.id, ...decisionInput }), statusIs(409, 503));
+    const platformBefore=await platformBalance();
+    // A legacy quote can be ownerless even if its current offer has an owner.
+    await db.query('UPDATE quotes SET payout_account_id=NULL WHERE id=$1', [context.quote.id]);
+    await assert.rejects(context.market.decide(context.buyer.id, randomUUID(), { quoteId: context.quote.id, ...decisionInput }),
+      (error:unknown)=>error instanceof AppError&&error.statusCode===503&&error.code==='seller_unavailable');
+    await db.query('UPDATE sellers SET enabled=false,payout_account_id=NULL WHERE id=$1', [context.sellerId]);
+    await assert.rejects(context.market.quote(context.buyer.id, decisionInput),
+      (error:unknown)=>error instanceof AppError&&error.statusCode===503&&error.code==='no_seller');
+    assert.equal((await context.market.catalog() as {id:string}[]).some(offer=>offer.id===context.sellerId),false);
     assert.equal(context.calls, 0);
     assert.deepEqual(await walletBalances(context.buyer.id), { available: context.balance, reserved: 0n });
+    assert.equal(await platformBalance(),platformBefore);
+    assert.equal((await db.query('SELECT id FROM decisions WHERE account_id=$1',[context.buyer.id])).rowCount,0);
+  });
+
+  test('disabled or paused offers and disabled owners stop new quotes and unstarted purchases', async () => {
+    for (const unavailable of ['offer_disabled','offer_paused','owner_disabled']) {
+      const context = await fixture();
+      if (unavailable==='owner_disabled') await db.query('UPDATE accounts SET disabled=true WHERE id=$1',[context.seller.id]);
+      else if (unavailable==='offer_paused') await db.query('UPDATE sellers SET paused=true WHERE id=$1',[context.sellerId]);
+      else await db.query('UPDATE sellers SET enabled=false WHERE id=$1',[context.sellerId]);
+      await assert.rejects(context.market.quote(context.buyer.id, decisionInput),
+        (error:unknown)=>error instanceof AppError&&error.statusCode===503&&error.code==='no_seller',unavailable);
+      await assert.rejects(context.market.decide(context.buyer.id, randomUUID(), { quoteId: context.quote.id, ...decisionInput }),
+        (error:unknown)=>error instanceof AppError&&error.statusCode===503&&error.code==='seller_unavailable',unavailable);
+      assert.equal((await context.market.catalog() as {id:string}[]).some(offer=>offer.id===context.sellerId),false,unavailable);
+      assert.equal(context.calls,0);
+      assert.deepEqual(await walletBalances(context.buyer.id),{available:context.balance,reserved:0n});
+    }
+  });
+
+  test('a frozen settlement owner must still be active at admission after a direct database reassignment', async () => {
+    const context=await fixture();
+    const replacement=await createAccount(db,{name:'Active replacement agent',dailyLimitNanos:'0',maxPriceNanos:'0'});
+    await db.query('UPDATE sellers SET payout_account_id=$2 WHERE id=$1',[context.sellerId,replacement.id]);
+    await db.query('UPDATE accounts SET disabled=true WHERE id=$1',[context.seller.id]);
+    assert.ok((await context.market.quote(context.buyer.id,decisionInput)).id);
+    await assert.rejects(context.market.decide(context.buyer.id,randomUUID(),{quoteId:context.quote.id,...decisionInput}),
+      (error:unknown)=>error instanceof AppError&&error.statusCode===503&&error.code==='seller_unavailable');
+    assert.equal(context.calls,0);
+    assert.deepEqual(await walletBalances(context.buyer.id),{available:context.balance,reserved:0n});
+  });
+
+  test('admitted work pays its original agent after the offer is paused and both agents are disabled', async () => {
+    const provider=heldProvider();
+    const context=await fixture({provider:provider.invoke});
+    const platformBefore=await platformBalance();
+    const purchase=context.market.decide(context.buyer.id,randomUUID(),{quoteId:context.quote.id,...decisionInput});
+    void purchase.catch(()=>undefined);
+    try {
+      await provider.entered;
+      await db.query('UPDATE sellers SET enabled=false,paused=true WHERE id=$1',[context.sellerId]);
+      await db.query('UPDATE accounts SET disabled=true WHERE id=ANY($1::uuid[])',[[context.buyer.id,context.seller.id]]);
+    } finally { provider.response.resolve(structuredClone(successfulResult)); }
+    assert.equal((await purchase).status,'succeeded');
+    assert.deepEqual(await walletBalances(context.buyer.id),{available:context.balance-price,reserved:0n});
+    assert.deepEqual(await walletBalances(context.seller.id),{available:225n,reserved:0n});
+    assert.equal(await platformBalance()-platformBefore,25n);
   });
 
   test('current principal seller policy is enforced when an old quote is purchased', async () => {
@@ -367,15 +426,57 @@ describe('Market invariants with real PostgreSQL', {
     assert.deepEqual(await walletBalances(replacementSeller.id), { available: 0n, reserved: 0n });
   });
 
-  test('decision settlement and revenue transfers share a global wallet lock order', async () => {
-    const context = await fixture();
+  test('commission settlement conserves the price with both zero and ordinary marketplace fees', async () => {
+    for (const feeBps of [0,1000]) {
+      const context=await fixture({feeBps});
+      const platformBefore=await platformBalance();
+      const receipt=await context.market.decide(context.buyer.id,randomUUID(),{quoteId:context.quote.id,...decisionInput});
+      const fee=price*BigInt(feeBps)/10000n;
+      assert.equal(receipt.status,'succeeded');
+      assert.deepEqual(await walletBalances(context.buyer.id),{available:context.balance-price,reserved:0n});
+      assert.deepEqual(await walletBalances(context.seller.id),{available:price-fee,reserved:0n});
+      assert.equal(await platformBalance()-platformBefore,fee);
+      const captures=await db.query('SELECT to_wallet,amount::text FROM transfers WHERE reference=ANY($1::text[]) ORDER BY to_wallet',
+        [[`decision:${receipt.id}:fee`,`decision:${receipt.id}:seller`]]);
+      assert.equal(captures.rows.reduce((sum,row)=>sum+BigInt(row.amount),0n),price);
+      assert.equal(captures.rows.filter(row=>row.to_wallet==='platform').length,fee>0n?1:0);
+    }
+  });
+
+  test('agents can buy from themselves and each other concurrently using the same settlement accounts', async () => {
+    const agents=await Promise.all([fixture({selfSeller:true}),fixture({selfSeller:true})]);
+    const sellerIds=agents.map(agent=>agent.sellerId);
+    await db.query('UPDATE accounts SET allowed_sellers=$1 WHERE id=ANY($2::uuid[])',[sellerIds,agents.map(agent=>agent.buyer.id)]);
+    const platformBefore=await platformBalance();
+    const purchases=await Promise.all(Array.from({length:16},async(_,index)=>{
+      const buyer=agents[index%2],seller=agents[Math.floor(index/2)%2];
+      const quote=await buyer.market.quote(buyer.buyer.id,decisionInput,{allowedSellers:[seller.sellerId]});
+      return {buyer,quote};
+    }));
+    const receipts=await Promise.all(purchases.map(({buyer,quote})=>buyer.market.decide(buyer.buyer.id,randomUUID(),{quoteId:quote.id,...decisionInput})));
+    assert.equal(receipts.filter(receipt=>receipt.status==='succeeded').length,16);
+    assert.equal(agents.reduce((sum,agent)=>sum+agent.calls,0),16);
+    for (const agent of agents) {
+      // Eight gross purchases and eight sales per agent; the daily spending
+      // limit still accounts for every purchase even when proceeds return here.
+      assert.deepEqual(await walletBalances(agent.buyer.id),{available:agent.balance-200n,reserved:0n});
+      assert.deepEqual((await db.query('SELECT spent::text,reserved::text FROM budgets WHERE account_id=$1',[agent.buyer.id])).rows,[{spent:'2000',reserved:'0'}]);
+    }
+    assert.equal(await platformBalance()-platformBefore,400n);
+  });
+
+  test('decision settlement and revenue transfers serialize account and wallet locks without a cycle', async () => {
+    const provider=heldProvider();
+    const context = await fixture({provider:provider.invoke});
     await transaction(db, tx => transfer(tx, `platform-funding:${randomUUID()}`, 'external', 'platform', 100n));
+    const purchase = context.market.decide(context.buyer.id, randomUUID(), { quoteId: context.quote.id, ...decisionInput })
+      .then(value => ({ ok: true as const, value }), error => ({ ok: false as const, error }));
+    await provider.entered;
     const revenueTransaction = await db.connect();
     await revenueTransaction.query('BEGIN');
     await revenueTransaction.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE', [context.seller.id]);
     await revenueTransaction.query('SELECT id FROM wallets WHERE id=$1 FOR UPDATE', [`available:${context.seller.id}`]);
-    const purchase = context.market.decide(context.buyer.id, randomUUID(), { quoteId: context.quote.id, ...decisionInput })
-      .then(value => ({ ok: true as const, value }), error => ({ ok: false as const, error }));
+    provider.response.resolve(structuredClone(successfulResult));
     let revenueError: unknown;
     try {
       const deadline = Date.now() + 3000;
@@ -383,14 +484,14 @@ describe('Market invariants with real PostgreSQL', {
       do {
         const active = await db.query(`SELECT EXISTS(
           SELECT 1 FROM pg_stat_activity WHERE application_name=$1 AND wait_event_type='Lock'
-          AND query LIKE '%FROM wallets%'
+          AND query LIKE 'SELECT * FROM accounts WHERE id=ANY%'
         ) AS waiting`, [schema]);
         waiting = active.rows[0].waiting;
         if (!waiting) await new Promise(resolve => setTimeout(resolve, 10));
       } while (!waiting && Date.now() < deadline);
-      assert.equal(waiting, true, 'Settlement must be waiting on the seller wallet');
-      // This models /v1/admin/revenue-transfer. If capture has already locked
-      // platform before requesting the seller wallet, this forms a real deadlock.
+      assert.equal(waiting, true, 'Settlement must wait for the seller account before taking financial locks');
+      // Model /v1/admin/revenue-transfer, which locks the recipient account
+      // before its wallet. Capture must not already hold the platform wallet.
       await transfer(revenueTransaction, `revenue-concurrency:${randomUUID()}`, 'platform', `available:${context.seller.id}`, 1n);
       await revenueTransaction.query('COMMIT');
     } catch (error) {
@@ -405,6 +506,40 @@ describe('Market invariants with real PostgreSQL', {
     if (outcome.ok) assert.equal(outcome.value.status, 'succeeded');
     assert.deepEqual(await walletBalances(context.seller.id), { available: 226n, reserved: 0n });
     assert.deepEqual(await walletBalances(context.buyer.id), { available: context.balance - price, reserved: 0n });
+  });
+
+  test('legacy ownerless in-flight work refunds immediately on completion or recovery without platform capture', async () => {
+    for (const mode of ['completion','recovery']) {
+      const provider=heldProvider();
+      const context=await fixture({provider:provider.invoke});
+      const platformBefore=await platformBalance();
+      const key=randomUUID(),body={quoteId:context.quote.id,...decisionInput};
+      const purchase=context.market.decide(context.buyer.id,key,body);
+      void purchase.catch(()=>undefined);
+      try {
+        await provider.entered;
+        // Reconstruct a running quote from before ownership became mandatory.
+        // Its deadline is deliberately far ahead: recovery must not wait for it.
+        await db.query('UPDATE quotes SET payout_account_id=NULL WHERE id=$1',[context.quote.id]);
+        await db.query("UPDATE decisions SET expires_at=clock_timestamp()+interval '1 day' WHERE quote_id=$1",[context.quote.id]);
+        if (mode==='recovery') {
+          const otherProcess=new Market(db,config,provider.invoke);
+          const recovered=await Promise.all([context.market.recoverStale(),otherProcess.recoverStale()]);
+          assert.equal(recovered.reduce((sum,count)=>sum+count,0),1);
+          assert.equal(await otherProcess.recoverStale(),0);
+        }
+      } finally { provider.response.resolve(structuredClone(successfulResult)); }
+      const receipt=await purchase;
+      assert.equal(receipt.status,'indeterminate',mode);
+      assert.equal(receipt.error.code,'seller_owner_missing',mode);
+      assert.equal((await context.market.decide(context.buyer.id,key,body)).error.code,'seller_owner_missing');
+      assert.deepEqual(await walletBalances(context.buyer.id),{available:context.balance,reserved:0n});
+      assert.deepEqual(await walletBalances(context.seller.id),{available:0n,reserved:0n});
+      assert.equal(await platformBalance(),platformBefore);
+      assert.equal(provider.calls,1);
+      assert.deepEqual((await db.query('SELECT spent::text,reserved::text FROM budgets WHERE account_id=$1',[context.buyer.id])).rows,[{spent:'0',reserved:'0'}]);
+      assert.equal((await db.query('SELECT id FROM transfers WHERE reference=ANY($1::text[])',[[`decision:${receipt.id}:fee`,`decision:${receipt.id}:seller`]])).rowCount,0);
+    }
   });
 
   test('provider failures refund the reservation and remain terminal on identical retries', async () => {
