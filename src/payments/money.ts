@@ -29,50 +29,27 @@ export function requireAtoms(nanos: bigint): bigint {
   return nanos / NANOS_PER_ATOM;
 }
 
-/** RPC Amount arguments accept decimal strings. Never convert money through Number. */
+/** Exact XEC decimal representation; never convert money through Number. */
 export function nanosToXec(nanos: bigint): string {
   requireAtoms(nanos);
   return `${nanos / NANOS_PER_XEC}.${((nanos % NANOS_PER_XEC) / NANOS_PER_ATOM).toString().padStart(2, '0')}`;
 }
 
-/** Parse an exact RPC lexical decimal (including its optional sign). */
+/** Parse an exact XEC decimal, including its optional sign. */
 export function xecToNanos(value: unknown): bigint {
   if (typeof value !== 'string' || !/^-?(0|[1-9][0-9]{0,13})(\.[0-9]{1,2})?$/.test(value)) {
-    throw new PaymentError('invalid_rpc_amount', 'Bitcoin ABC returned an invalid or inexact XEC amount');
+    throw new PaymentError('invalid_amount', 'Expected an exact XEC amount with at most two decimal places');
   }
   const negative = value.startsWith('-');
   const [whole, fraction = ''] = (negative ? value.slice(1) : value).split('.');
   const amount = BigInt(whole!) * NANOS_PER_XEC + BigInt(fraction.padEnd(2, '0')) * NANOS_PER_ATOM;
-  if (amount > MAX_MONEY_NANOS) throw new PaymentError('invalid_rpc_amount', 'Bitcoin ABC amount exceeds the XEC monetary range');
+  if (amount > MAX_MONEY_NANOS) throw new PaymentError('invalid_amount', 'Amount exceeds the XEC monetary range');
   return negative ? -amount : amount;
-}
-
-export function safeInteger(value: unknown, field: string): number {
-  if (typeof value !== 'string' || !/^-?[0-9]+$/.test(value)) {
-    throw new PaymentError('invalid_rpc_response', `Bitcoin ABC returned an invalid ${field}`);
-  }
-  const result = Number(value);
-  if (!Number.isSafeInteger(result)) throw new PaymentError('invalid_rpc_response', `Bitcoin ABC ${field} is outside the safe integer range`);
-  return result;
-}
-
-export function record(value: unknown, field: string): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new PaymentError('invalid_rpc_response', `Invalid ${field} response`);
-  }
-  return value as Record<string, unknown>;
 }
 
 export function txid(value: unknown): string {
   if (typeof value !== 'string' || !/^[0-9a-f]{64}$/.test(value)) {
     throw new PaymentError('invalid_txid', 'Transaction ID must be 64 lowercase hexadecimal characters', 400);
-  }
-  return value;
-}
-
-export function rawHex(value: unknown): string {
-  if (typeof value !== 'string' || value.length < 20 || value.length > 200_000 || !/^(?:[0-9a-f]{2})+$/.test(value)) {
-    throw new PaymentError('invalid_transaction', 'Bitcoin ABC returned invalid transaction bytes');
   }
   return value;
 }

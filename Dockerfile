@@ -9,6 +9,8 @@ FROM dependencies AS build
 COPY tsconfig.json ./
 COPY src ./src
 COPY tests ./tests
+COPY scripts/build-browser.mjs ./scripts/build-browser.mjs
+COPY public ./public
 RUN npm run build && npm prune --omit=dev --ignore-scripts
 
 FROM ${NODE_IMAGE} AS runtime
@@ -17,7 +19,7 @@ WORKDIR /app
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist/src ./dist/src
 COPY --chown=node:node package.json package-lock.json ./
-COPY --chown=node:node public ./public
+COPY --from=build --chown=node:node /app/public ./public
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=45s --retries=3 \

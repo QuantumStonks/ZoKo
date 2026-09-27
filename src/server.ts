@@ -11,6 +11,7 @@ import { AppError, encrypt, issueKey, keyHash, safeEqual, validateEndpoint } fro
 import { Payments } from './payments/index.js';
 import { PaymentError } from './payments/money.js';
 import { DecisionInputSchema } from './protocol.js';
+import { SCHEMA_VERSION } from './migration.js';
 
 const Uuid = z.uuid();
 const SellerId = z.string().regex(/^[a-z0-9][a-z0-9_-]{0,63}$/);
@@ -22,7 +23,7 @@ const SellerSchema = z.object({id:SellerId,name:Names,endpoint:z.string().url().
 export async function buildServer(config:Config,db:Db,payments:Payments,provider?:Provider) {
   const app = Fastify({
     bodyLimit:65536,requestTimeout:70000,connectionTimeout:10000,trustProxy:false,
-    logger:{level:process.env.LOG_LEVEL ?? 'info',redact:['req.headers.authorization','req.headers.cookie','res.headers["set-cookie"]','apiKey','api_key_encrypted','password','rpcPassword','state','questions']},
+    logger:{level:process.env.LOG_LEVEL ?? 'info',redact:['req.headers.authorization','req.headers.cookie','res.headers["set-cookie"]','apiKey','api_key_encrypted','password','walletSeedHex','XEC_WALLET_SEED_HEX','state','questions']},
   });
   const market = new Market(db,config,provider);
   app.decorate('market',market);
@@ -41,7 +42,7 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     if (error instanceof PaymentError) return reply.code(error.statusCode).send({error:{code:error.code,message:error.message},requestId:request.id});
     const code = (error as {statusCode?:number}).statusCode;
     if (code && code>=400 && code<500) return reply.code(code).send({error:{code:'request_rejected',message:code===429?'Rate limit exceeded':'Request rejected'},requestId:request.id});
-    // Do not serialize database errors, RPC payloads, secrets, or untrusted provider bodies.
+    // Do not serialize database errors, wallet secrets, or untrusted upstream bodies.
     request.log.error({requestId:request.id,errorType:error instanceof Error?error.name:'UnknownError'},'Request failed');
     return reply.code(500).send({error:{code:'internal_error',message:'Request could not be completed; retry with the same idempotency key'},requestId:request.id});
   });
@@ -70,10 +71,11 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     return result;
   };
 
-  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.0.0'}));
+  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.1.0'}));
   app.get('/health/ready',async(_req,reply)=>{
     try {
-      await db.query('SELECT version FROM zoko_migrations WHERE version=1');
+      const migration=await db.query('SELECT max(version)::integer AS version FROM zoko_migrations');
+      if(migration.rows[0]?.version!==SCHEMA_VERSION)throw new Error('Unsupported schema');
       const count = await db.query('SELECT count(*)::integer AS n FROM sellers WHERE enabled');
       const paymentStatus = payments.status() as {ready?:boolean;enabled?:boolean};
       const ready=count.rows[0].n>0 && (!config.payments.enabled || paymentStatus.ready===true);
@@ -83,10 +85,10 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
   });
   app.get('/v1/catalog',async()=>({sellers:await market.catalog()}));
   app.get('/.well-known/zoko.json',async()=>({
-    name:'Zoko',version:'1.0.0',protocol:'typesafe-systemone-v1',
+    name:'Zoko',version:'1.1.0',protocol:'typesafe-systemone-v1',
     catalog:'/v1/catalog',quote:'/v1/quotes',execute:'/v1/decisions',
     authentication:{scheme:'Bearer',provisioning:'operator_issued_scoped_account_key'},
-    payment:{currency:'XEC',ledgerUnit:'nanoXEC',unitsPerXec:'1000000000',unitsPerOnChainAtom:'10000000',method:'custodial_prepaid_balance',network:config.payments.network},
+    payment:{currency:'XEC',ledgerUnit:'nanoXEC',unitsPerXec:'1000000000',unitsPerOnChainAtom:'10000000',method:'custodial_prepaid_balance',network:config.payments.network,verification:'hosted_chronik',fundingWallet:'cashtab',depositHistory:'/v1/deposits'},
     billing:{quoteTtlSeconds:config.quoteTtlSeconds,idempotencyHeader:'Idempotency-Key',successfulResponseIsBillable:true,lowConfidenceResponseIsBillable:true,failedExecutionIsRefunded:true},
     limits:{inputBytes:32768,questions:20,maximumProviderTimeoutMs:config.providerMaxTimeoutMs},
     documentation:'https://github.com/QuantumStonks/ZoKo',
@@ -102,6 +104,14 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
   app.post('/v1/deposits/claim',async req=>{
     const id=await buyer(req.headers),body=z.object({txid:z.string().regex(/^[0-9a-fA-F]{64}$/)}).strict().parse(req.body);
     return payments.claimDeposit(id,body.txid.toLowerCase());
+  });
+  app.get('/v1/deposits',async req=>{
+    const id=await buyer(req.headers);
+    const query=z.object({txid:z.string().regex(/^[0-9a-fA-F]{64}$/).transform(v=>v.toLowerCase()).optional(),limit:z.coerce.number().int().min(1).max(100).default(100)}).strict().parse(req.query);
+    const rows=await db.query(`SELECT txid,vout,amount_nanos::text,status,confirmations,avalanche_finalized,credited_at,created_at
+      FROM payments_deposits WHERE account_id=$1 AND network=$2 AND ($3::text IS NULL OR txid=$3)
+      ORDER BY created_at DESC,txid,vout LIMIT $4`,[id,config.payments.network,query.txid??null,query.limit]);
+    return {deposits:rows.rows.map(d=>({txid:d.txid,vout:d.vout,amountNanos:d.amount_nanos,status:d.status,confirmations:d.confirmations,avalancheFinalized:d.avalanche_finalized,creditedAt:d.credited_at,createdAt:d.created_at}))};
   });
   app.post('/v1/withdrawals',async req=>{
     const id=await buyer(req.headers),body=z.object({address:z.string().min(10).max(200),amountNanos:PositiveMoneySchema}).strict().parse(req.body);

@@ -231,6 +231,35 @@ describe('Fastify API boundaries with real PostgreSQL', {
     assert.equal(me.json().reservedNanos, '0');
   });
 
+  test('deposit history attributes outputs to the authenticated buyer without minting credit', async () => {
+    const first=await account('Funding history buyer');
+    const second=await account('Unrelated funding buyer');
+    const ownTx=randomBytes(32).toString('hex'),otherTx=randomBytes(32).toString('hex');
+    for(const [owner,txid] of [[first.id,ownTx],[second.id,otherTx]]) {
+      await db.query(`INSERT INTO payments_deposits(network,txid,vout,account_id,amount_nanos,address,status)
+        VALUES('mainnet',$1,0,$2,'100000000000','ecash:pending-test-fixture','pending')`,[txid,owner]);
+    }
+    assert.equal((await request('GET','/v1/deposits')).statusCode,401);
+    const history=await request('GET','/v1/deposits',undefined,first.apiKey);
+    assert.equal(history.statusCode,200,history.body);
+    const deposits=history.json().deposits;
+    assert.equal(deposits.length,1);
+    assert.equal(deposits[0].txid,ownTx);
+    assert.equal(deposits[0].amountNanos,'100000000000');
+    assert.equal(deposits[0].status,'pending');
+    assert.equal(deposits[0].creditedAt,null);
+    assert.equal(deposits[0].avalancheFinalized,false);
+    const filtered=await request('GET',`/v1/deposits?txid=${ownTx.toUpperCase()}&limit=1`,undefined,first.apiKey);
+    assert.deepEqual(filtered.json().deposits,deposits);
+    const foreign=await request('GET',`/v1/deposits?txid=${otherTx}`,undefined,first.apiKey);
+    assert.deepEqual(foreign.json().deposits,[]);
+    for(const query of ['limit=101','limit=1.5','txid=not-a-transaction','accountId='+second.id]) {
+      assert.equal((await request('GET','/v1/deposits?'+query,undefined,first.apiKey)).statusCode,400);
+    }
+    const me=await request('GET','/v1/me',undefined,first.apiKey);
+    assert.equal(me.json().balanceNanos,'0');
+  });
+
   test('pending HTTP purchases expose 202 and Retry-After, then replay the same committed receipt', async () => {
     const context = await fixture();
     const offer = await quote(context.buyer.apiKey);

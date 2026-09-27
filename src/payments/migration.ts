@@ -1,3 +1,32 @@
+export const paymentsUpgradeMigration = `
+CREATE TABLE IF NOT EXISTS payments_addresses (
+  network text NOT NULL,
+  address text NOT NULL,
+  account_id uuid REFERENCES accounts(id),
+  branch smallint NOT NULL CHECK (branch IN (0,1)),
+  derivation_index integer NOT NULL CHECK (derivation_index>=0),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(network,address),
+  UNIQUE(network,branch,derivation_index),
+  UNIQUE(account_id),
+  CHECK (branch=0 OR account_id IS NULL)
+);
+CREATE TABLE IF NOT EXISTS payments_address_scans (
+  network text NOT NULL,
+  address text NOT NULL,
+  confirmed_offset bigint NOT NULL DEFAULT 0 CHECK(confirmed_offset>=0),
+  anchor_height integer,
+  anchor_hash text,
+  next_scan_at timestamptz NOT NULL DEFAULT now(),
+  last_scanned_at timestamptz,
+  last_error text,
+  PRIMARY KEY(network,address),
+  FOREIGN KEY(network,address) REFERENCES payments_addresses(network,address)
+);
+CREATE INDEX IF NOT EXISTS payments_address_scans_due ON payments_address_scans(next_scan_at,last_scanned_at);
+ALTER TABLE payments_deposits ADD COLUMN IF NOT EXISTS block_height integer;
+`;
+
 export const paymentsMigration = `
 CREATE TABLE IF NOT EXISTS payments_state (
   key text PRIMARY KEY,
@@ -58,4 +87,5 @@ CREATE TABLE IF NOT EXISTS payments_withdrawals (
 );
 CREATE INDEX IF NOT EXISTS payments_withdrawals_queue ON payments_withdrawals(created_at) WHERE status IN ('requested','preparing','signed','broadcast');
 CREATE INDEX IF NOT EXISTS payments_withdrawals_account ON payments_withdrawals(account_id,created_at DESC);
+${paymentsUpgradeMigration}
 `;

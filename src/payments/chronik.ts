@@ -1,5 +1,5 @@
 import { ChronikClient, type Tx } from 'chronik-client';
-import { boundedBody } from './rpc.js';
+import { boundedBody } from './transport.js';
 import { PaymentError } from './money.js';
 
 export class ChronikHttpError extends PaymentError {
@@ -11,7 +11,8 @@ export class ChronikHttpError extends PaymentError {
 /**
  * The upstream client handles protobuf. Its public transport interface is replaced
  * with bounded, abortable fetch because its default Axios transport has no timeout.
- * Endpoint selection happens only after independent node/chain validation.
+ * Endpoint selection requires a pinned network checkpoint and token-index canary.
+ * The selected service remains trusted for chain inclusion and finality.
  */
 export class ChronikGateway {
   readonly client: ChronikClient;

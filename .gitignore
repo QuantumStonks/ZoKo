@@ -10,3 +10,4 @@ test-results/
 *.pem
 *.key
 backups/
+public/cashtab.js
