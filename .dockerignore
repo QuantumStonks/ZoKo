@@ -13,7 +13,9 @@ test-results
 *.key
 CONTRACT.md
 docs
-scripts
+scripts/*
+!scripts/build-browser.mjs
+public/cashtab.js
 README.md
 compose*.yaml
 Caddyfile

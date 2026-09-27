@@ -13,7 +13,7 @@ try {
   const market=new Market(db,config),payments=new Payments(db,config.payments);
   await market.seed();
   const app=await buildServer(config,db,payments);
-  // A node outage keeps readiness false; the control plane remains available for diagnosis.
+  // An upstream outage keeps readiness false; the control plane remains available for diagnosis.
   try { await payments.preflight(); } catch { app.log.error('eCash preflight failed; paid operations remain unavailable'); }
   await market.recoverStale();
   const tick=async()=>{

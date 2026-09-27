@@ -3,6 +3,7 @@ import { createDb, auditLedger } from './db.js';
 import { decrypt, validateEndpoint } from './security.js';
 import { Payments } from './payments/index.js';
 import { restrictedProviderFetch, closeProviderConnections } from './provider-network.js';
+import { SCHEMA_VERSION } from './migration.js';
 
 interface Check { name: string; status: 'pass' | 'fail' | 'warning'; message: string }
 
@@ -44,7 +45,7 @@ async function checkTypesafe(apiKey: string): Promise<string[]> {
 
 async function main(): Promise<void> {
   if (process.argv.includes('--help')) {
-    console.log('Usage: npm run doctor\nRead-only configuration, PostgreSQL schema/ledger, wallet preflight, and provider metadata checks. No migrations, inference, deposits or payouts are created.');
+    console.log('Usage: npm run doctor\nRead-only configuration, PostgreSQL schema/ledger, dedicated service wallet identity, hosted Chronik and provider metadata checks. No migrations, address assignments, signatures, inference or broadcasts are created.');
     return;
   }
   if (process.argv.length > 2) throw new Error('Unsupported doctor arguments; use --help.');
@@ -54,8 +55,11 @@ async function main(): Promise<void> {
   try {
     config = readConfig();
     add('configuration', 'pass', 'Required configuration and secret formats are valid.');
-  } catch {
-    add('configuration', 'fail', 'Invalid or missing configuration. Compare .env with .env.example; secrets were not printed.');
+  } catch (error) {
+    const legacy = error && typeof error === 'object' && 'code' in error && error.code === 'obsolete_node_configuration';
+    add('configuration', 'fail', legacy
+      ? 'Obsolete ABC_* configuration is present. Follow the legacy-wallet migration procedure in docs/ecash.md; preserve existing funded payment state and its original wallet.'
+      : 'Invalid or missing configuration. Compare .env with .env.example; secrets were not printed.');
     console.log(JSON.stringify({ ok: false, checks }, null, 2));
     process.exitCode = 1;
     return;
@@ -69,9 +73,9 @@ async function main(): Promise<void> {
     const version = await db.query('SHOW server_version_num');
     if (Number(version.rows[0].server_version_num) < 160000) throw new Error('Unsupported PostgreSQL version');
     const migration = await db.query('SELECT max(version) AS version FROM zoko_migrations');
-    if (migration.rows[0].version !== 1) throw new Error('Unsupported schema version');
+    if (migration.rows[0].version !== SCHEMA_VERSION) throw new Error('Unsupported schema version');
     databaseReady = true;
-    add('database', 'pass', 'PostgreSQL 16+ is reachable and schema version 1 is installed.');
+    add('database', 'pass', `PostgreSQL 16+ is reachable and schema version ${SCHEMA_VERSION} is installed.`);
     const ledger = await auditLedger(db) as { ok: boolean };
     add('ledger', ledger.ok ? 'pass' : 'fail', ledger.ok
       ? 'Wallet journal, decision budgets, and all decision/withdrawal reservations reconcile.'
@@ -96,10 +100,13 @@ async function main(): Promise<void> {
       const payments = new Payments(db, config.payments);
       await payments.preflight();
       if (!config.payments.enabled) add('payments', 'fail', 'Payments are disabled. This is not a funded marketplace deployment.');
-      else add('payments', 'pass', 'Dedicated wallet and chain preflight passed. No payment was created.');
+      else add('payments', 'pass', 'Dedicated service wallet identity, chain anchors, hosted tip freshness and token-index preflight passed. No address was assigned and no transaction was signed or broadcast.');
     }
-  } catch {
-    add('payments', 'fail', 'Wallet or chain preflight failed. Verify Bitcoin ABC credentials, dedicated wallet, Chronik, network and finality settings.');
+  } catch (error) {
+    const code = error && typeof error === 'object' && 'code' in error && typeof error.code === 'string' && /^[a-z_]{1,80}$/.test(error.code) ? error.code : 'payment_preflight_failed';
+    add('payments', 'fail', code === 'node_wallet_migration_required'
+      ? 'This database contains legacy node-wallet payment state. Preserve the original deployment and reconcile it using docs/ecash.md; a new service seed cannot convert its funds or pending payments.'
+      : `Service wallet or hosted Chronik verification failed (${code}). Verify the original service seed, network, hosted endpoint and finality settings.`);
   }
   if (typesafeCredential) {
     try {

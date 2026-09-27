@@ -57,8 +57,6 @@ services:
     mem_limit: 768m
     cpus: 2
     stop_grace_period: 75s
-    extra_hosts:
-      - host.docker.internal:host-gateway
     logging: *logging
 
   caddy:

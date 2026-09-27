@@ -1,5 +1,7 @@
 import type { Db } from './db.js';
-import { paymentsMigration } from './payments/index.js';
+import { paymentsMigration, paymentsUpgradeMigration } from './payments/migration.js';
+
+export const SCHEMA_VERSION = 2;
 
 const schema = `
 CREATE TABLE IF NOT EXISTS zoko_migrations(version integer PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now());
@@ -65,8 +67,13 @@ export async function migrate(db: Db): Promise<void> {
     const existing = await client.query('SELECT version FROM zoko_migrations ORDER BY version DESC LIMIT 1');
     if (!existing.rowCount) {
       await client.query(schema); await client.query(paymentsMigration);
-      await client.query('INSERT INTO zoko_migrations(version) VALUES(1)');
-    } else if (existing.rows[0].version !== 1) throw new Error('Unsupported database schema version');
+      await client.query('INSERT INTO zoko_migrations(version) VALUES($1)',[SCHEMA_VERSION]);
+    } else if (existing.rows[0].version === 1) {
+      // Add durable HD-wallet state without replacing legacy identities or payment evidence.
+      // The payment preflight separately rejects any unsafe wallet reinterpretation.
+      await client.query(paymentsUpgradeMigration);
+      await client.query('INSERT INTO zoko_migrations(version) VALUES($1)',[SCHEMA_VERSION]);
+    } else if (existing.rows[0].version !== SCHEMA_VERSION) throw new Error('Unsupported database schema version');
     await client.query('COMMIT');
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }

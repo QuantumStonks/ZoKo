@@ -1,5 +1,7 @@
+import { cashtabFunding, createFundingRequest, parseFundingAmount, depositKey, observeDeposits, pollFunding } from '/cashtab.js';
+
 const $ = (selector) => document.querySelector(selector);
-const state = { token: null, role: null, me: null, sellers: [], quote: null, purchase: null, withdrawal: null, epoch: 0, running: false };
+const state = { token: null, role: null, me: null, sellers: [], quote: null, purchase: null, withdrawal: null, funding: null, epoch: 0, running: false };
 const titles = { overview: 'Overview', playground: 'Decision lab', wallet: 'Wallet', activity: 'Activity', operator: 'Operator' };
 const terminal = (status) => !['pending', 'queued', 'calling', 'running', 'reserved'].includes(status);
 const node = (tag, text, className) => { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; };
@@ -21,10 +23,10 @@ const parseMoney = (value) => {
 const short = (value) => typeof value === 'string' && value.length > 17 ? `${value.slice(0, 8)}…${value.slice(-5)}` : String(value ?? '—');
 const when = (value) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); };
 class ApiError extends Error { constructor(status, data) { super(data?.error?.message ?? data?.message ?? (typeof data?.error === 'string' ? data.error : `Request failed (HTTP ${status}).`)); this.status = status; this.data = data; } }
-async function api(path, { method = 'GET', body, key, token = state.token, timeout = 30000 } = {}) {
+async function api(path, { method = 'GET', body, key, token = state.token, timeout = 30000, signal } = {}) {
   const epoch = state.epoch;
   const boundSession = token !== null && token === state.token;
-  const response = await fetch(path, { method, headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(key ? { 'Idempotency-Key': key } : {}) }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(timeout), cache: 'no-store', redirect: 'error' });
+  const response = await fetch(path, { method, headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(key ? { 'Idempotency-Key': key } : {}) }, body: body === undefined ? undefined : JSON.stringify(body), signal: signal ? AbortSignal.any([AbortSignal.timeout(timeout), signal]) : AbortSignal.timeout(timeout), cache: 'no-store', redirect: 'error' });
   const text = await response.text();
   if (text.length > 2097152) throw new Error('The server response exceeded the console limit.');
   let data;
@@ -115,6 +117,116 @@ function renderAddress(address) {
   $('#wallet-link').href = address;
   $('#deposit-address-result').hidden = false;
 }
+async function deposits() {
+  requireBuyer(); const epoch = state.epoch; const { data } = await api('/v1/deposits?limit=100'); if (epoch !== state.epoch) return;
+  observeDeposits(data.deposits);
+  if (!data.deposits.length) { empty($('#deposit-history'), 'No deposits recorded yet.', 'Incoming payments appear here while Zoko verifies the network.', '▱'); return; }
+  $('#deposit-history').replaceChildren(table(['Transaction', 'Output', 'Status', 'Amount', 'Confirmations', 'Credited'], data.deposits.map((record) => {
+    const id = node('span', short(record.txid), 'table-id'); id.title = record.txid;
+    return [id, record.vout, statusTag(record.status), `${money(record.amountNanos)} XEC`, record.confirmations ?? '—', record.creditedAt ? when(record.creditedAt) : '—'];
+  })));
+}
+function resetFunding() {
+  state.funding?.controller?.abort(); state.funding = null;
+  $('#funding-preview').hidden = true; $('#funding-review').replaceChildren(); $('#funding-pay-link').removeAttribute('href'); $('#funding-pay-link').removeAttribute('aria-disabled');
+  $('#funding-amount').disabled = false; $('#prepare-funding').disabled = false; $('#funding-cashtab').disabled = false; $('#funding-cashtab').hidden = true; $('#check-funding').hidden = true; $('#reset-funding').hidden = true;
+  message('#funding-status', '');
+}
+function fundingControls(funding) {
+  if (state.funding !== funding) return;
+  $('#funding-amount').disabled = funding.submitted || funding.walletPending;
+  $('#prepare-funding').disabled = funding.submitted || funding.walletPending;
+  $('#funding-cashtab').hidden = !funding.extension;
+  $('#funding-cashtab').disabled = funding.submitted || funding.walletPending;
+  $('#funding-pay-link').className = funding.extension ? 'text-button funding-alternative' : 'button primary full';
+  $('#funding-pay-link').textContent = funding.extension ? 'Open the mobile / web payment link ↗' : 'Pay with Cashtab ↗';
+  $('#funding-pay-link').setAttribute('aria-disabled', String(funding.submitted || funding.walletPending));
+  $('#cashtab-method').textContent = funding.extension ? 'EXTENSION READY' : 'MOBILE / WEB';
+  $('#funding-wallet-note').textContent = funding.extension ? 'Cashtab will ask you to review and approve this exact destination and amount.' : 'The official pay.e.cash link opens Cashtab or its wallet payment page. Approve the payment there, then return to check funding.';
+  $('#check-funding').hidden = !funding.submitted;
+  $('#check-funding').disabled = funding.watching || funding.walletPending;
+  $('#reset-funding').hidden = !funding.submitted;
+  $('#reset-funding').disabled = funding.walletPending;
+}
+function renderFundingObservation(funding, observation) {
+  if (state.funding !== funding) return;
+  funding.observation = observation;
+  const transaction = funding.txid ? ` Transaction ${funding.txid}.` : '';
+  const tail = observation.timedOut ? ' Automatic checks have paused. Use “Check funding” later; do not pay again just because confirmation is pending.' : '';
+  if (observation.status === 'credited') message('#funding-status', `Zoko has verified and credited ${money(observation.creditedNanos)} XEC to this account.${transaction}`);
+  else if (observation.status === 'review') message('#funding-status', `A recorded deposit requires review. Inspect its status in deposit history or contact the operator.${transaction}`, true);
+  else if (observation.status === 'pending') message('#funding-status', `${money(observation.observedNanos)} XEC is recorded on this account. ${money(observation.creditedNanos)} XEC is credited; the remaining deposit is awaiting network verification.${transaction}${tail}`);
+  else message('#funding-status', `No matching deposit has been recorded yet. The wallet may still be awaiting approval or the network may still be indexing the payment.${transaction}${tail}`);
+}
+async function beginFundingWatch(funding) {
+  if (state.funding !== funding || funding.watching || funding.epoch !== state.epoch) return;
+  requireBuyer(); funding.controller?.abort(); funding.controller = new AbortController(); funding.watching = true; fundingControls(funding);
+  try {
+    const observation = await pollFunding({
+      signal: funding.controller.signal, txid: funding.txid, baseline: funding.baseline,
+      readDeposits: async (signal) => { const { data } = await api(`/v1/deposits?limit=100${funding.txid ? `&txid=${encodeURIComponent(funding.txid)}` : ''}`, { signal, timeout: 10000 }); return data.deposits; },
+      onUpdate: (value) => { if (funding.epoch !== state.epoch) return; renderFundingObservation(funding, value); void loadMe().catch(() => {}); },
+    });
+    renderFundingObservation(funding, observation);
+  } catch (error) {
+    if (!funding.controller.signal.aborted && state.funding === funding) message('#funding-status', `Deposit verification could not be completed: ${errorText(error)} Check funding again before sending another payment.`, true);
+  } finally {
+    funding.watching = false;
+    if (state.funding === funding && funding.epoch === state.epoch) { fundingControls(funding); void Promise.allSettled([loadMe(), deposits()]); }
+  }
+}
+$('#funding-form').addEventListener('submit', (event) => {
+  event.preventDefault(); void busy($('#prepare-funding'), async () => {
+    requireBuyer(); if (state.funding?.walletPending || state.funding?.submitted) throw new Error('Check the existing top-up before preparing another payment.');
+    const amount = parseFundingAmount($('#funding-amount').value);
+    await loadMe(); if (state.me?.payments?.depositsEnabled !== true) throw new Error('Deposits are not currently ready. Ask the operator to check payment status.');
+    const epoch = state.epoch;
+    const [addressResult, historyResult, extension] = await Promise.all([api('/v1/deposit-address', { method: 'POST', body: {} }), api('/v1/deposits?limit=100'), cashtabFunding.available()]);
+    if (epoch !== state.epoch) return;
+    const request = createFundingRequest(addressResult.data.address ?? addressResult.data.depositAddress, amount.amountXec);
+    observeDeposits(historyResult.data.deposits);
+    resetFunding();
+    const funding = { request, epoch, extension, baseline: new Set(historyResult.data.deposits.map(depositKey)), submitted: false, walletPending: false, watching: false, txid: undefined, controller: null };
+    state.funding = funding; renderAddress(request.address);
+    $('#funding-review').replaceChildren(details([['Amount to credit', `${money(request.amountNanos)} XEC`], ['Receiving account', state.me.account.name], ['Network', 'eCash mainnet'], ['Destination', request.address]]));
+    $('#funding-pay-link').href = request.payUrl; $('#funding-preview').hidden = false; fundingControls(funding);
+    message('#funding-status', 'Payment prepared. Review the destination and amount, then approve it in your wallet.');
+  }, '#funding-status');
+});
+$('#funding-amount').addEventListener('input', () => { if (state.funding && !state.funding.submitted && !state.funding.walletPending) resetFunding(); });
+$('#funding-cashtab').addEventListener('click', () => {
+  const funding = state.funding;
+  if (!funding || funding.submitted || funding.walletPending || funding.epoch !== state.epoch) return;
+  funding.walletPending = true; fundingControls(funding); message('#funding-status', 'Review the top-up in Cashtab. This page is waiting for your wallet response.');
+  void (async () => {
+    requireBuyer(); const outcome = await cashtabFunding.send(funding.request);
+    if (state.funding !== funding || funding.epoch !== state.epoch) return;
+    funding.walletPending = false;
+    if (outcome.kind === 'unavailable') { funding.extension = false; message('#funding-status', 'The Cashtab extension is unavailable. Use the official payment link below to review this top-up.'); }
+    else if (outcome.kind === 'declined') message('#funding-status', `Cashtab declined the request: ${outcome.reason}`);
+    else if (outcome.kind === 'busy') message('#funding-status', 'Another Cashtab approval is already in progress. Finish it before opening another payment.');
+    else {
+      funding.submitted = true;
+      if (outcome.kind === 'submitted') {
+        funding.txid = outcome.txid; $('#deposit-txid').value = outcome.txid;
+        message('#funding-status', `Cashtab returned transaction ${outcome.txid}. Zoko is checking it on chain before crediting your account.`);
+        try { await api('/v1/deposits/claim', { method: 'POST', body: { txid: outcome.txid } }); } catch { /* A callback is only a hint; indexed deposit history remains authoritative. */ }
+      } else message('#funding-status', outcome.reason, true);
+      if (state.funding === funding && funding.epoch === state.epoch) void beginFundingWatch(funding).catch((error) => message('#funding-status', errorText(error), true));
+    }
+    fundingControls(funding);
+  })().catch((error) => { if (state.funding === funding) { funding.walletPending = false; fundingControls(funding); message('#funding-status', errorText(error), true); } });
+});
+$('#funding-pay-link').addEventListener('click', (event) => {
+  const funding = state.funding;
+  if (!funding || funding.submitted || funding.walletPending || funding.epoch !== state.epoch || state.role !== 'buyer') { event.preventDefault(); return; }
+  funding.submitted = true; fundingControls(funding);
+  // The ordinary, validated anchor performs the only wallet navigation. Never
+  // open a second popup, parse URL success claims, or infer credit from return.
+  void beginFundingWatch(funding).catch((error) => message('#funding-status', errorText(error), true));
+});
+$('#check-funding').addEventListener('click', () => { if (state.funding) void beginFundingWatch(state.funding).catch((error) => message('#funding-status', errorText(error), true)); });
+$('#reset-funding').addEventListener('click', () => { if (state.funding?.walletPending) return; const wasPending = state.funding?.observation?.status !== 'credited'; resetFunding(); if (wasPending) message('#funding-status', 'The earlier payment may still arrive. Check deposit history before approving a separate top-up.'); $('#funding-amount').focus(); });
 async function loadMe() { requireBuyer(); const epoch = state.epoch; const { data } = await api('/v1/me'); if (epoch !== state.epoch) return; state.me = data; renderAccount(); }
 async function history() {
   requireBuyer(); const epoch = state.epoch; const { data } = await api('/v1/decisions?limit=50'); if (epoch !== state.epoch) return;
@@ -132,11 +244,12 @@ async function withdrawals() {
 }
 async function inspectReceipt(id) { const { data } = await api(`/v1/decisions/${encodeURIComponent(id)}`); $('#receipt-json').textContent = json(data); $('#receipt-dialog').showModal(); }
 async function overview() { requireAdmin(); const epoch = state.epoch; const { data } = await api('/v1/admin/overview'); if (epoch === state.epoch) $('#operator-overview').textContent = json(data); }
-async function refreshBuyer() { const results = await Promise.allSettled([loadMe(), history(), withdrawals()]); results.forEach((result) => { if (result.status === 'rejected') toast(errorText(result.reason)); }); }
+async function refreshBuyer() { const results = await Promise.allSettled([loadMe(), history(), withdrawals(), deposits()]); results.forEach((result) => { if (result.status === 'rejected') toast(errorText(result.reason)); }); }
 function clearSession() {
+  resetFunding();
   state.token = null; state.role = null; state.me = null; state.quote = null; state.purchase = null; state.withdrawal = null; state.epoch++; state.running = false;
   $('#receipt-dialog').close(); $('#withdrawal-dialog').close(); $('#withdrawal-button').textContent = 'Review withdrawal →'; $('#connection-token').value = ''; $('#seller-api-key').value = ''; $('#new-account-secret').textContent = ''; $('#new-account-result').hidden = true; $('#operator-overview').textContent = ''; $('#audit-log').textContent = 'Select “Load audit log” to retrieve recent entries.'; $('#receipt-json').textContent = ''; $('#connect-button').textContent = 'Connect account ↗'; $('#operator-content').hidden = true; $('#operator-gate').hidden = false; $('#purchase-button').hidden = true; $('#resume-button').hidden = true; $('#quote-button').disabled = false;
-  empty($('#decision-history'), 'Your request history lives here.', 'Connect an account to retrieve its decisions.', '≋'); empty($('#withdrawal-history'), 'No account connected.', 'Connect to retrieve your withdrawal history.', '▱'); empty($('#quote-result'), 'Know the cost before the call.', 'Your eligible seller, exact price and expiry will appear here.', '⌁'); empty($('#decision-result'), 'Ready when you are.', 'Validated answers and the server receipt appear after execution.', '⌘');
+  empty($('#deposit-history'), 'No account connected.', 'Connect to retrieve verified and pending deposits.', '▱'); empty($('#decision-history'), 'Your request history lives here.', 'Connect an account to retrieve its decisions.', '≋'); empty($('#withdrawal-history'), 'No account connected.', 'Connect to retrieve your withdrawal history.', '▱'); empty($('#quote-result'), 'Know the cost before the call.', 'Your eligible seller, exact price and expiry will appear here.', '⌁'); empty($('#decision-result'), 'Ready when you are.', 'Validated answers and the server receipt appear after execution.', '⌘');
   for (const id of ['#decision-message', '#deposit-message', '#withdrawal-message', '#account-message', '#seller-message', '#admin-update-message']) message(id, '');
   renderAccount();
 }
@@ -239,7 +352,7 @@ $('#resume-button').addEventListener('click', () => void executePurchase().catch
 
 $('#deposit-address-button').addEventListener('click', () => void busy($('#deposit-address-button'), async () => { requireBuyer(); const { data } = await api('/v1/deposit-address', { method: 'POST', body: {} }); renderAddress(data.address ?? data.depositAddress); await loadMe(); }, '#deposit-message'));
 $('#copy-address').addEventListener('click', () => void navigator.clipboard.writeText($('#deposit-address').value).then(() => toast('Address copied.')).catch(() => toast('Copy unavailable. Select and copy the address manually.')));
-$('#deposit-claim-form').addEventListener('submit', (event) => { event.preventDefault(); void busy($('#deposit-claim-form button'), async () => { requireBuyer(); const { data } = await api('/v1/deposits/claim', { method: 'POST', body: { txid: $('#deposit-txid').value.trim() } }); message('#deposit-message', json(data)); await loadMe(); }, '#deposit-message'); });
+$('#deposit-claim-form').addEventListener('submit', (event) => { event.preventDefault(); void busy($('#deposit-claim-form button'), async () => { requireBuyer(); const txid = $('#deposit-txid').value.trim().toLowerCase(); const { data } = await api('/v1/deposits/claim', { method: 'POST', body: { txid } }); observeDeposits(data.deposits, { txid }); message('#deposit-message', json(data)); await Promise.all([loadMe(), deposits()]); if (state.funding?.submitted && !state.funding.watching) { state.funding.txid = txid; void beginFundingWatch(state.funding).catch((error) => message('#funding-status', errorText(error), true)); } }, '#deposit-message'); });
 $('#withdrawal-form').addEventListener('input', () => { if (state.withdrawal?.submitted) return; state.withdrawal = null; });
 $('#withdrawal-form').addEventListener('submit', (event) => {
   event.preventDefault(); void busy($('#withdrawal-button'), async () => {
@@ -282,7 +395,7 @@ $('#refresh-history').addEventListener('click', () => void busy($('#refresh-hist
 $('#refresh-wallet').addEventListener('click', () => void busy($('#refresh-wallet'), async () => { requireBuyer(); await refreshBuyer(); }));
 $('#refresh-catalog').addEventListener('click', () => void busy($('#refresh-catalog'), catalog));
 addEventListener('pagehide', () => { clearSession(); });
-addEventListener('beforeunload', (event) => { if ((state.purchase && !terminal(state.purchase.status)) || state.withdrawal?.submitted) { event.preventDefault(); event.returnValue = ''; } });
+addEventListener('beforeunload', (event) => { if ((state.purchase && !terminal(state.purchase.status)) || state.withdrawal?.submitted || state.funding?.walletPending || state.funding?.watching) { event.preventDefault(); event.returnValue = ''; } });
 navigate();
 void health();
 void catalog().catch((error) => empty($('#catalog'), 'The catalog is unavailable.', errorText(error)));

@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Typed AI decisions with an auditable eCash-funded marketplace ledger",
   "type": "module",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx --watch src/main.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && npm run build:browser",
     "start": "node dist/src/main.js",
     "check": "tsc --noEmit",
     "test": "node --import tsx --test --test-concurrency=1 tests/*.test.ts",
@@ -18,12 +18,16 @@
     "cli": "node --env-file-if-exists=.env --import tsx src/cli.ts",
     "init": "node scripts/init-env.mjs",
     "backup": "node scripts/backup.mjs",
-    "restore": "node scripts/restore.mjs"
+    "restore": "node scripts/restore.mjs",
+    "build:browser": "node scripts/build-browser.mjs",
+    "predev": "npm run build:browser"
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",
     "@fastify/static": "10.1.5",
+    "cashtab-connect": "1.2.1",
     "chronik-client": "4.3.1",
+    "ecash-lib": "4.14.1",
     "ecashaddrjs": "2.0.1",
     "fastify": "5.12.5",
     "pg": "8.23.0",
@@ -33,6 +37,7 @@
   "devDependencies": {
     "@types/node": "24.19.0",
     "@types/pg": "8.23.1",
+    "esbuild": "0.28.2",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
   }

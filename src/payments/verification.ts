@@ -1,13 +1,16 @@
-import { createHash } from 'node:crypto';
 import { decodeCashAddress, encodeCashAddress, getOutputScriptFromAddress, getTypeAndHashFromOutputScript } from 'ecashaddrjs';
 import type { Tx as ChronikTx } from 'chronik-client';
 import { networkPrefix, type PaymentsConfig } from './config.js';
-import { DUST_ATOMS, NANOS_PER_ATOM, PaymentError, rawHex, record, requireAtoms, safeInteger, txid, xecToNanos } from './money.js';
+import { DUST_ATOMS, NANOS_PER_ATOM, PaymentError, requireAtoms } from './money.js';
+import { decodeTransaction } from './wallet.js';
 
 export interface InputOutpoint { txid: string; vout: number }
 export interface DecodedTransaction {
   txid: string;
   coinbase: boolean;
+  size: number;
+  version: number;
+  lockTime: number;
   inputs: InputOutpoint[];
   outputs: { vout: number; script: string; nanos: bigint }[];
 }
@@ -33,37 +36,17 @@ export function scriptAddress(script: string, network: PaymentsConfig['network']
 }
 
 export function transactionId(hex: string): string {
-  const bytes = Buffer.from(rawHex(hex), 'hex');
-  return createHash('sha256').update(createHash('sha256').update(bytes).digest()).digest().reverse().toString('hex');
+  return decodeTransaction(hex).txid;
 }
 
-export function decodeRpcTransaction(value: unknown): DecodedTransaction {
-  const data = record(value, 'decoded transaction');
-  if (!Array.isArray(data.vin) || !Array.isArray(data.vout) || data.vin.length === 0 || data.vout.length === 0) {
-    throw new PaymentError('invalid_transaction', 'Decoded transaction must contain inputs and outputs');
-  }
-  const coinbase = data.vin.length === 1 && typeof record(data.vin[0], 'transaction input').coinbase === 'string';
-  const inputs = coinbase ? [] : data.vin.map(value => {
-    const input = record(value, 'transaction input');
-    const vout = safeInteger(input.vout, 'input index');
-    if (vout < 0 || vout > 0xffff_ffff) throw new PaymentError('invalid_transaction', 'Invalid input index');
-    return { txid: txid(input.txid), vout };
-  });
-  if (new Set(inputs.map(input => `${input.txid}:${input.vout}`)).size !== inputs.length) {
-    throw new PaymentError('invalid_transaction', 'Transaction contains duplicate inputs');
-  }
-  const outputs = data.vout.map((value, index) => {
-    const output = record(value, 'transaction output');
-    const script = record(output.scriptPubKey, 'output script').hex;
-    const vout = safeInteger(output.n, 'output index');
-    if (typeof script !== 'string' || !/^(?:[0-9a-f]{2})*$/.test(script) || vout !== index) {
-      throw new PaymentError('invalid_transaction', 'Invalid output script or index');
-    }
-    const nanos = xecToNanos(output.value);
-    if (nanos < 0n) throw new PaymentError('invalid_transaction', 'Negative transaction output');
-    return { vout, script, nanos };
-  });
-  return { txid: txid(data.txid), coinbase, inputs, outputs };
+export function decodeRawTransaction(hex: string): DecodedTransaction {
+  const data = decodeTransaction(hex);
+  const coinbase = data.inputs.length === 1 && data.inputs[0]!.txid === '0'.repeat(64) && data.inputs[0]!.vout === 0xffffffff;
+  return {
+    txid: data.txid, coinbase, inputs: data.inputs,
+    size: data.size, version: data.version, lockTime: data.lockTime,
+    outputs: data.outputs.map((output, vout) => ({ vout, script: output.outputScript, nanos: output.sats * NANOS_PER_ATOM })),
+  };
 }
 
 export function verifyWithdrawalOutputs(
@@ -94,19 +77,20 @@ export function verifyInputsUnchanged(actual: InputOutpoint[], expected: InputOu
 
 export function verifyChronikTransaction(decoded: DecodedTransaction, indexed: ChronikTx): void {
   if (decoded.txid !== indexed.txid || decoded.coinbase !== indexed.isCoinbase ||
-      (!decoded.coinbase && (decoded.inputs.length !== indexed.inputs.length || decoded.inputs.some((input, i) =>
-        input.txid !== indexed.inputs[i]!.prevOut.txid || input.vout !== indexed.inputs[i]!.prevOut.outIdx))) ||
+      decoded.size !== indexed.size || decoded.version !== indexed.version || decoded.lockTime !== indexed.lockTime ||
+      decoded.inputs.length !== indexed.inputs.length || decoded.inputs.some((input, i) =>
+        input.txid !== indexed.inputs[i]!.prevOut.txid || input.vout !== indexed.inputs[i]!.prevOut.outIdx) ||
       decoded.outputs.length !== indexed.outputs.length ||
       decoded.outputs.some((output, i) => output.script !== indexed.outputs[i]!.outputScript ||
-        output.nanos !== indexed.outputs[i]!.sats * NANOS_PER_ATOM)) {
-    throw new PaymentError('payment_source_mismatch', 'Wallet and Chronik disagree on transaction outputs');
+        typeof indexed.outputs[i]!.sats !== 'bigint' || output.nanos !== indexed.outputs[i]!.sats * NANOS_PER_ATOM)) {
+    throw new PaymentError('payment_source_mismatch', 'Chronik transaction metadata does not match its locally decoded raw bytes');
   }
 }
 
 export function verifyFee(inputTotal: bigint, outputTotal: bigint, reportedFee: bigint, budget: bigint, maxRate: bigint, sizeBytes: number): void {
   const fee = inputTotal - outputTotal;
   if (fee <= 0n || fee !== reportedFee || fee > budget || !Number.isSafeInteger(sizeBytes) || sizeBytes <= 0 ||
-      fee * 1000n > maxRate * BigInt(sizeBytes)) {
+      fee > ((maxRate / NANOS_PER_ATOM * BigInt(sizeBytes) + 999n) / 1000n) * NANOS_PER_ATOM) {
     throw new PaymentError('payout_fee_limit', 'Withdrawal fee is invalid or exceeds the reserved fee budget/rate');
   }
 }

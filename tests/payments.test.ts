@@ -3,24 +3,26 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
 import test from 'node:test';
+import { createHash } from 'node:crypto';
+import * as proto from 'chronik-client/dist/proto/chronik.js';
 import type { Token, Tx } from 'chronik-client';
 import { encodeCashAddress } from 'ecashaddrjs';
 import {
   MAX_MONEY_NANOS, NANOS_PER_ATOM, PaymentError, nanosToXec, parseNanos,
-  rawHex, record, requireAtoms, safeInteger, txid, xecToNanos,
+  requireAtoms, txid, xecToNanos,
 } from '../src/payments/money.js';
 import { readPaymentsConfig, trustedUrl } from '../src/payments/config.js';
-import { AbcRpc, RpcError, boundedBody, parseExactJson } from '../src/payments/rpc.js';
+import { boundedBody } from '../src/payments/transport.js';
 import { ChronikGateway, ChronikHttpError, assertPlainXec } from '../src/payments/chronik.js';
 import {
-  addressScript, canonicalAddress, decodeRpcTransaction, scriptAddress, transactionId,
+  addressScript, canonicalAddress, scriptAddress, transactionId,
   verifyChronikTransaction, verifyFee, verifyInputsUnchanged, verifyWithdrawalOutputs,
   type DecodedTransaction,
 } from '../src/payments/verification.js';
 
 type Handler = (req: IncomingMessage, res: ServerResponse) => void | Promise<void>;
 
-/** Real loopback sockets exercise fetch, redirects, aborts, and wire-level numeric tokens. */
+/** Real loopback sockets exercise fetch, redirects, aborts, and protobuf integers. */
 async function serve<T>(handler: Handler, run: (url: string) => Promise<T>): Promise<T> {
   const server = createServer((req, res) => {
     Promise.resolve(handler(req, res)).catch(error => {
@@ -36,19 +38,6 @@ async function serve<T>(handler: Handler, run: (url: string) => Promise<T>): Pro
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
-}
-
-async function rpcRequest(req: IncomingMessage): Promise<{ id: string; method: string; params: unknown[] }> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(Buffer.from(chunk));
-  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as { id: string; method: string; params: unknown[] };
-}
-
-function rpc(url: string, timeoutMs = 1000): AbcRpc {
-  return new AbcRpc({
-    ...readPaymentsConfig({ ABC_RPC_URL: url, ABC_RPC_USERNAME: 'rpc-user', ABC_RPC_PASSWORD: 'rpc-secret' }),
-    rpcTimeoutMs: timeoutMs,
-  });
 }
 
 function paymentCode(code: string): (error: unknown) => boolean {
@@ -74,136 +63,38 @@ test('monetary boundaries reject precision loss, subatomic withdrawals, and malf
   assert.throws(() => parseNanos('0'), paymentCode('invalid_amount'));
   assert.equal(parseNanos('0', 'balance', true), 0n);
   for (const value of [1, 0.01, '1e2', '0.001', '-0.001', '01.00', '21000000000000.01', 'Infinity', '1.']) {
-    assert.throws(() => xecToNanos(value), paymentCode('invalid_rpc_amount'), String(value));
+    assert.throws(() => xecToNanos(value), paymentCode('invalid_amount'), String(value));
   }
   for (const value of [-NANOS_PER_ATOM, 1n, NANOS_PER_ATOM + 1n]) {
     assert.throws(() => nanosToXec(value), paymentCode('subatomic_withdrawal'));
   }
 });
 
-test('exact JSON preserves numeric lexemes including decimals above JavaScript precision', () => {
-  const parsed = parseExactJson('{"amount":20999999999999.99,"atoms":2099999999999999,"negative":-0.01,"exponent":1e20,"ok":true,"empty":null,"text":"123"}');
-  assert.deepEqual(parsed, {
-    amount: '20999999999999.99', atoms: '2099999999999999', negative: '-0.01', exponent: '1e20', ok: true, empty: null, text: '123',
-  });
-  assert.equal(xecToNanos(record(parsed, 'test').amount), 20_999_999_999_999_990_000_000n);
-  assert.throws(() => xecToNanos(record(parsed, 'test').exponent), paymentCode('invalid_rpc_amount'));
-  assert.throws(() => parseExactJson('{"amount":NaN}'), SyntaxError);
-});
-
-test('identifier and RPC structure guards reject ambiguous or unsafe values', () => {
-  assert.equal(safeInteger('9007199254740991', 'height'), Number.MAX_SAFE_INTEGER);
-  for (const value of ['9007199254740992', '1.0', '1e3', 1, null]) {
-    assert.throws(() => safeInteger(value, 'height'), paymentCode('invalid_rpc_response'));
-  }
-  for (const value of [null, [], 'object', 3]) assert.throws(() => record(value, 'RPC'), paymentCode('invalid_rpc_response'));
+test('transaction identifiers reject ambiguous or malformed values', () => {
   assert.equal(txid('ab'.repeat(32)), 'ab'.repeat(32));
   for (const value of ['AB'.repeat(32), 'ab'.repeat(31), 'ag'.repeat(32)]) assert.throws(() => txid(value), paymentCode('invalid_txid'));
-  assert.equal(rawHex('00'.repeat(10)), '00'.repeat(10));
-  for (const value of ['ab'.repeat(9), 'f'.repeat(21), 'AA'.repeat(10), '00'.repeat(100_001)]) {
-    assert.throws(() => rawHex(value), paymentCode('invalid_transaction'));
-  }
 });
 
-test('payment configuration rejects wrong networks, embedded credentials, and inexact fee ceilings', () => {
-  const config = readPaymentsConfig({});
+test('programmatic payment configuration rejects wrong seeds, networks, endpoints, and inexact fee ceilings', () => {
+  const seed = createHash('sha256').update('Zoko public unit test seed; never fund').digest('hex');
+  const config = readPaymentsConfig({ XEC_WALLET_SEED_HEX: seed });
+  assert.equal(config.walletSeedHex, seed);
   assert.equal(config.network, 'mainnet');
   assert.equal(config.requireFinalized, true);
   assert.equal(config.feeRateXecPerKb, '10.00');
   for (const env of [
-    { XEC_NETWORK: 'bitcoin' }, { XEC_CONFIRMATIONS: '0' }, { XEC_CONFIRMATIONS: '1.5' },
+    { XEC_NETWORK: 'bitcoin' }, { XEC_CONFIRMATIONS: '-1' }, { XEC_CONFIRMATIONS: '1.5' },
     { XEC_REQUIRE_FINALIZED: 'yes' }, { ZOKO_PAYMENTS_ENABLED: '1' },
-    { ABC_RPC_WALLET: '../treasury' }, { ABC_RPC_URL: 'http://user:secret@localhost:8332' },
+    { XEC_WALLET_SEED_HEX: '00' }, { XEC_WALLET_SEED_HEX: seed.toUpperCase() },
+    { ABC_RPC_PASSWORD: 'obsolete-test-configuration' },
+    { CHRONIK_URLS: 'https://user:secret@chronik.e.cash' },
     { CHRONIK_URLS: 'https://chronik.e.cash?key=secret' }, { CHRONIK_URLS: 'https://chronik.e.cash,' },
     { XEC_FEE_RATE: '0.00' }, { XEC_FEE_RATE: '10.001' },
     { XEC_FEE_RATE: '10.00', XEC_MAX_FEE_RATE: '9.99' }, { XEC_MAX_FEE_NANOS: '10000001' },
-  ]) assert.throws(() => readPaymentsConfig(env), PaymentError, JSON.stringify(env));
-  assert.equal(trustedUrl('http://127.0.0.1:8332/', 'RPC'), 'http://127.0.0.1:8332');
+  ]) assert.throws(() => readPaymentsConfig({ XEC_WALLET_SEED_HEX: seed, ...env }), PaymentError, JSON.stringify(env));
+  assert.equal(trustedUrl('http://127.0.0.1:8332/', 'Chronik'), 'http://127.0.0.1:8332');
   for (const url of ['file:///etc/passwd', 'ftp://localhost', 'http://localhost/#secret', '/relative']) {
-    assert.throws(() => trustedUrl(url, 'RPC'), paymentCode('configuration'));
-  }
-});
-
-test('RPC uses dedicated wallet path and exact decimal string parameters over real HTTP', async () => {
-  let called = 0;
-  await serve(async (req, res) => {
-    called++;
-    assert.equal(req.method, 'POST');
-    assert.equal(req.url, '/wallet/zoko');
-    assert.equal(req.headers.authorization, `Basic ${Buffer.from('rpc-user:rpc-secret').toString('base64')}`);
-    const request = await rpcRequest(req);
-    assert.equal(request.method, 'fundrawtransaction');
-    assert.deepEqual(request.params, ['00'.repeat(10), { feeRate: '10.00' }]);
-    res.setHeader('content-type', 'application/json');
-    res.end(`{"id":${JSON.stringify(request.id)},"error":null,"result":{"amount":20999999999999.99,"fee":-5.46,"confirmations":6}}`);
-  }, async url => {
-    assert.deepEqual(await rpc(url).call('fundrawtransaction', ['00'.repeat(10), { feeRate: '10.00' }]), {
-      amount: '20999999999999.99', fee: '-5.46', confirmations: '6',
-    });
-  });
-  assert.equal(called, 1);
-});
-
-test('RPC rejects an unrelated response ID', async () => {
-  await serve((_req, res) => { res.end('{"id":"another-request","error":null,"result":true}'); }, async url => {
-    await assert.rejects(rpc(url).call('getcurrencyinfo'), paymentCode('rpc_id_mismatch'));
-  });
-});
-
-test('RPC error responses retain numeric code and never expose remote diagnostics', async () => {
-  await serve(async (req, res) => {
-    const request = await rpcRequest(req);
-    res.statusCode = 500;
-    res.end(JSON.stringify({ id: request.id, result: null, error: { code: -4, message: 'wallet private rpc-secret detail' } }));
-  }, async url => {
-    await assert.rejects(rpc(url).call('fundrawtransaction'), error => {
-      assert.ok(error instanceof RpcError);
-      assert.equal(error.rpcCode, -4);
-      assert.doesNotMatch(error.message, /rpc-secret|private|detail/);
-      return true;
-    });
-  });
-});
-
-test('RPC refuses redirects without forwarding wallet credentials or making a second request', async () => {
-  let destinationRequests = 0;
-  await serve((_req, res) => { destinationRequests++; res.end('unexpected'); }, async destination => {
-    await serve((_req, res) => { res.writeHead(307, { location: destination }); res.end(); }, async url => {
-      await assert.rejects(rpc(url).call('sendrawtransaction'), paymentCode('wallet_rpc_unavailable'));
-    });
-  });
-  assert.equal(destinationRequests, 0);
-});
-
-test('RPC timeouts are bounded before headers and during response streaming', async () => {
-  for (const streaming of [false, true]) {
-    await serve((_req, res) => {
-      if (streaming) { res.writeHead(200, { 'content-type': 'application/json' }); res.write('{"result":'); }
-    }, async url => {
-      const start = performance.now();
-      await assert.rejects(rpc(url, 80).call('gettransaction'), paymentCode('wallet_rpc_unavailable'));
-      assert.ok(performance.now() - start < 2000);
-    });
-  }
-});
-
-test('RPC malformed JSON, invalid UTF-8, missing result, and oversized response fail closed', async () => {
-  for (const mode of ['malformed', 'utf8', 'missing', 'large']) {
-    await serve(async (req, res) => {
-      const request = await rpcRequest(req);
-      if (mode === 'malformed') res.end('private rpc-secret: not JSON');
-      if (mode === 'utf8') res.end(Buffer.from([0xff, 0xfe]));
-      if (mode === 'missing') res.end(JSON.stringify({ id: request.id, error: null }));
-      if (mode === 'large') { res.setHeader('content-length', 16 * 1024 * 1024 + 1); res.flushHeaders(); }
-    }, async url => {
-      const expected = mode === 'large' ? 'upstream_response_limit' : mode === 'missing' ? 'wallet_rpc_http' : 'invalid_rpc_response';
-      await assert.rejects(rpc(url).call('gettransaction'), error => {
-        assert.ok(error instanceof PaymentError);
-        assert.equal(error.code, expected);
-        assert.doesNotMatch(error.message, /rpc-secret|private/);
-        return true;
-      });
-    });
+    assert.throws(() => trustedUrl(url, 'Chronik'), paymentCode('configuration'));
   }
 });
 
@@ -312,31 +203,13 @@ test('transaction ID hashing matches the upstream published historical transacti
   assert.equal(transactionId(raw), 'f4184fc596403b9d638783cf57adfe4c75c605f6356fbc91338530e9831e9e16');
 });
 
-function rpcDecoded(): Record<string, unknown> {
-  return {
-    txid: '12'.repeat(32),
-    vin: [{ txid: '34'.repeat(32), vout: '0' }],
-    vout: [{ n: '0', value: '5.46', scriptPubKey: { hex: '51' } }],
-  };
+function decodedTransaction(): DecodedTransaction {
+  return { txid: '12'.repeat(32), coinbase: false, size: 192, version: 2, lockTime: 0, inputs: [{ txid: '34'.repeat(32), vout: 0 }],
+    outputs: [{ vout: 0, script: '51', nanos: 5_460_000_000n }] };
 }
 
-test('decoded transaction checks forbid duplicate inputs, malformed vouts, and rounded amounts', () => {
-  const valid = decodeRpcTransaction(rpcDecoded());
-  assert.equal(valid.outputs[0]!.nanos, 5_460_000_000n);
-  const firstInput = { txid: '34'.repeat(32), vout: '0' };
-  for (const patch of [
-    { vin: [] }, { vout: [] }, { vin: [firstInput, firstInput] },
-    { vin: [{ ...firstInput, vout: '-1' }] }, { vin: [{ ...firstInput, vout: '4294967296' }] },
-    { vout: [{ n: '1', value: '5.46', scriptPubKey: { hex: '51' } }] },
-    { vout: [{ n: '0', value: '-5.46', scriptPubKey: { hex: '51' } }] },
-    { vout: [{ n: '0', value: 5.46, scriptPubKey: { hex: '51' } }] },
-    { vout: [{ n: '0', value: '5.461', scriptPubKey: { hex: '51' } }] },
-    { vout: [{ n: '0', value: '5.46', scriptPubKey: { hex: '5g' } }] },
-  ]) assert.throws(() => decodeRpcTransaction({ ...rpcDecoded(), ...patch }), PaymentError);
-});
-
 test('withdrawal verification enforces exact recipients, change, dust, and no third output', () => {
-  const base = decodeRpcTransaction(rpcDecoded());
+  const base = decodedTransaction();
   assert.doesNotThrow(() => verifyWithdrawalOutputs(base, '51', 5_460_000_000n, '52'));
   const change = { vout: 1, script: '52', nanos: 10_000_000_000n };
   assert.doesNotThrow(() => verifyWithdrawalOutputs({ ...base, outputs: [...base.outputs, change] }, '51', 5_460_000_000n, '52'));
@@ -361,10 +234,11 @@ test('reserved-input comparison is order-independent and rejects changes or dupl
 });
 
 test('Chronik and wallet must agree on the complete recipient value and script', () => {
-  const decoded: DecodedTransaction = decodeRpcTransaction(rpcDecoded());
+  const decoded: DecodedTransaction = decodedTransaction();
   assert.doesNotThrow(() => verifyChronikTransaction(decoded, plainTransaction()));
   for (const patch of [
     { txid: '56'.repeat(32) }, { outputs: [] },
+    { version: 1 }, { size: 193 }, { lockTime: 1 },
     { outputs: [{ sats: 547n, outputScript: '51' }] },
     { outputs: [{ sats: 546n, outputScript: '52' }] },
     { inputs: [{ ...plainTransaction().inputs[0]!, prevOut: { txid: '78'.repeat(32), outIdx: 0 } }] },
@@ -383,4 +257,59 @@ test('fee verifier uses exact totals and enforces both absolute budget and rate 
     [1000n * atom, 800n * atom, 200n * atom, 200n * atom, 1000n * atom, 0],
   ];
   for (const args of invalidCases) assert.throws(() => verifyFee(...args), paymentCode('payout_fee_limit'));
+});
+
+
+test('Chronik protobuf preserves exact native atoms and raw transaction bytes', async () => {
+  const id = '12'.repeat(32), sats = 2_099_999_999_999_999n;
+  const raw = Buffer.from('02000000000000000000', 'hex');
+  await serve((req, res) => {
+    assert.equal(req.headers['content-type'], 'application/x-protobuf');
+    assert.equal(req.headers.authorization, undefined);
+    if (req.url === `/raw-tx/${id}`) res.end(proto.RawTx.encode(proto.RawTx.fromPartial({ rawTx: raw })).finish());
+    else if (req.url === `/tx/${id}`) res.end(proto.Tx.encode(proto.Tx.fromPartial({
+      txid: Buffer.from(id, 'hex').reverse(), version: 2, isFinal: true,
+      outputs: [{ sats, outputScript: Buffer.from('51', 'hex') }], tokenStatus: proto.TokenStatus.TOKEN_STATUS_NON_TOKEN,
+    })).finish());
+    else { res.statusCode = 404; res.end(); }
+  }, async url => {
+    const gateway = new ChronikGateway(url, 1000), tx = await gateway.tx(id);
+    assert.equal(tx.txid, id); assert.equal(tx.outputs[0]!.sats, sats);
+    assert.equal(tx.outputs[0]!.sats * NANOS_PER_ATOM, 20_999_999_999_999_990_000_000n);
+    assert.deepEqual(await gateway.client.rawTx(id), { rawTx: raw.toString('hex') });
+  });
+});
+
+test('Chronik broadcast sends exact bytes with token checks enabled and never retries an HTTP failure', async () => {
+  const raw = Buffer.from('02000000000000000000', 'hex');
+  let attempts = 0;
+  await serve(async (req, res) => {
+    attempts++;
+    assert.equal(req.method, 'POST'); assert.equal(req.url, '/broadcast-tx');
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) chunks.push(Buffer.from(chunk));
+    const request = proto.BroadcastTxRequest.decode(Buffer.concat(chunks));
+    assert.deepEqual(Buffer.from(request.rawTx), raw); assert.equal(request.skipTokenChecks, false);
+    res.statusCode = 503; res.end('private server diagnostic');
+  }, async url => {
+    await assert.rejects(new ChronikGateway(url, 1000).client.broadcastTx(raw), error => {
+      assert.ok(error instanceof ChronikHttpError); assert.equal(error.httpStatus, 503);
+      assert.doesNotMatch(error.message, /private|diagnostic/); return true;
+    });
+  });
+  assert.equal(attempts, 1);
+});
+
+test('Chronik aborts a stalled response before its headers arrive', async () => {
+  await serve(() => undefined, async url => {
+    const start = performance.now();
+    await assert.rejects(new ChronikGateway(url, 80).request('/tx/id', 'GET'), paymentCode('chronik_unavailable'));
+    assert.ok(performance.now() - start < 2000);
+  });
+});
+
+test('Chronik bounds a declared oversized response before reading its body', async () => {
+  await serve((_req, res) => { res.setHeader('content-length', 8 * 1024 * 1024 + 1); res.flushHeaders(); }, async url => {
+    await assert.rejects(new ChronikGateway(url, 1000).request('/tx/id', 'GET'), paymentCode('upstream_response_limit'));
+  });
 });

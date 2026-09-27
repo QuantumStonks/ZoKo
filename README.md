@@ -2,7 +2,7 @@
 
 **Typed AI decisions, paid in eCash, with explicit spending limits and an auditable ledger.**
 
-Zoko is a deployable marketplace service for machine-to-machine semantic decisions. Buyers submit context and typed questions, obtain an exact price, and purchase a schema-validated result. The service includes a real Typesafe/Jev adapter, an operator and buyer console, a TypeScript client, a recovery-aware CLI, PostgreSQL accounting, and Bitcoin ABC/Chronik deposit and withdrawal processing.
+Zoko is a deployable marketplace service for machine-to-machine semantic decisions. Buyers submit context and typed questions, obtain an exact price, and purchase a schema-validated result. The service includes a real Typesafe/Jev adapter, an operator and buyer console, a TypeScript client, a recovery-aware CLI, PostgreSQL accounting, a dedicated service wallet and hosted Chronik deposit and withdrawal processing. Buyers can fund their accounts from Cashtab. The API signs withdrawals programmatically with the service wallet.
 
 Every balance, price, fee and limit is an integer string in **nanoXEC**. One XEC is 1,000,000,000 nanoXEC; one spendable on-chain atom is 10,000,000 nanoXEC (0.01 XEC). Small AI purchases settle in the application ledger. On-chain deposits and withdrawals fund and redeem that balance, so each inference does not require a dust-sized blockchain transaction.
 
@@ -15,15 +15,15 @@ Every balance, price, fee and limit is an integer string in **nanoXEC**. One XEC
 | Spending controls | Per-purchase ceilings, UTC daily budgets, seller allowlists and disabled-account checks apply before money is reserved. |
 | Retry safety | A durable idempotency key binds a purchase. Concurrent retries reuse the same decision; external inference is never automatically repeated after an ambiguous failure. |
 | Accounting | PostgreSQL transactions reserve, capture or refund funds. The append-only transfer journal reconciles wallet balances. Process memory is not the financial authority. |
-| Funding | Each account receives its own Bitcoin ABC wallet address. Chronik and RPC verification attribute deposits to actual outputs, verify network and finality, and reject token-bearing outputs. |
-| Withdrawals | Amounts and maximum fees are reserved, inputs are locked, signed bytes and the transaction ID are persisted before broadcast, and recovery rebroadcasts those exact bytes. |
+| Funding | Each account receives its own service-wallet deposit address. Cashtab payment links and the optional extension support customer-authorized funding; hosted Chronik verifies actual outputs, chain anchors and reported finality. Token-bearing outputs are rejected. |
+| Withdrawals | A dedicated HD wallet signs locally using the eCash library. Amounts, maximum fees and inputs are reserved, signed bytes and the transaction ID are persisted before hosted broadcast, and recovery rebroadcasts those exact bytes. |
 | Operations | Persistent PostgreSQL, a non-root container, readiness checks, a read-only doctor, backups with checksums, optional Caddy HTTPS, CI and a functional console. |
 
-This release is an **operator-curated, custodial marketplace**. The operator creates buyer accounts and approves sellers; the server holds the dedicated eCash wallet. Seller availability and price are real configured offers. Task quality and commercial margin must be measured for the actual buyer workload.
+This release is an **operator-curated, custodial marketplace**. The operator creates buyer accounts and approves sellers; the API holds its dedicated eCash service-wallet seed. Cashtab remains the customer's wallet. Hosted Chronik supplies the trusted chain view; Zoko validates transaction structure and configured chain anchors but does not independently run consensus validation. Seller availability and price are real configured offers. Task quality and commercial margin must be measured for the actual buyer workload.
 
 ## Deploy
 
-Prerequisites are Docker with Compose, a public domain for HTTPS, a funded Typesafe API account, and a synchronized Bitcoin ABC eCash node with a **dedicated, backed-up signing wallet** plus a verified Chronik endpoint. The wallet cannot be shared with another sender. See [eCash operation](docs/ecash.md) for node flags, token-index checks, finality and wallet requirements.
+Prerequisites are **Node 24**, Docker with Compose, a public domain for HTTPS and a funded Typesafe API account. The default hosted Chronik endpoints supply blockchain access with ordered failover. `npm run init` generates the dedicated service-wallet secret locally. See [eCash operation](docs/ecash.md) for wallet custody, hosted endpoint trust, finality and recovery.
 
 ```bash
 git clone https://github.com/QuantumStonks/ZoKo.git
@@ -32,24 +32,26 @@ npm ci
 npm run init
 ```
 
-Node 24 is required for the setup command and native tools. `npm run init` creates `.env` with random administrator, encryption and PostgreSQL secrets and refuses to overwrite an existing file. Set these values in `.env`:
+`npm run init` creates `.env` with independent random administrator, encryption, PostgreSQL and service-wallet secrets and refuses to overwrite an existing file. **Back up this file securely before funding the service. Never supply your personal Cashtab recovery phrase.** Set these values in `.env`:
 
 - `ZOKO_PUBLIC_URL`, `ZOKO_DOMAIN`, and `ACME_EMAIL` for your domain.
 - `TYPESAFE_API_KEY` for real inference, with `TYPESAFE_MODEL` pinned to the desired model.
-- `ABC_RPC_URL`, `ABC_RPC_USERNAME`, `ABC_RPC_PASSWORD`, and `ABC_RPC_WALLET` for your dedicated eCash wallet.
-- `CHRONIK_URLS` for the configured network. The mainnet default is an external Chronik endpoint; operating your own endpoint gives you control of availability.
+- Retain the generated `XEC_WALLET_SEED_HEX`. This is the dedicated service secret, distinct from the encryption key and personal wallets.
+- Retain the hosted mainnet defaults in `CHRONIK_URLS`, or supply your chosen trusted endpoints. Setup includes `https://chronik.e.cash` followed by `https://chronik-native2.fabien.cash` for availability failover.
 - `ZOKO_JEV_PRICE_NANOS` and `ZOKO_PLATFORM_FEE_BPS` for your actual business economics.
 
 Then start the service:
 
 ```bash
-docker compose --profile https up -d --build
+docker compose --profile https up -d --build --wait --wait-timeout 180
 docker compose exec -T api node dist/src/doctor.js
 ```
 
 Point DNS to the host and permit inbound TCP 80/443 (and optionally UDP 443 for HTTP/3). Open `ZOKO_PUBLIC_URL`. Connect using `ZOKO_ADMIN_TOKEN`, create a buyer account with a bounded budget, and save its API key when it is issued. Buyer keys are returned once; the database stores their hashes.
 
-The doctor performs authenticated metadata and infrastructure reads. It **does not spend provider credit or transfer eCash**. Complete the small real deposit → decision → withdrawal acceptance sequence in [deployment and recovery](docs/deployment.md) before inviting customers. Real external acceptance depends on your credentials, node, domain and funded wallet.
+The doctor performs authenticated metadata, wallet-identity and infrastructure reads. It **does not assign addresses, sign transactions, spend provider credit or transfer eCash**. As a buyer, use the console's funding form to prepare a payment and approve it in Cashtab, or send to the displayed address from another eCash wallet. Credit appears only after server-side verification meets the configured confirmations and finality. Complete the small real deposit → decision → withdrawal acceptance sequence in [deployment and recovery](docs/deployment.md) before inviting customers. Real external acceptance depends on your credentials, domain, hosted service availability and actual network settlement.
+
+For an existing empty installation missing the service seed, `npm run init -- --add-wallet` securely adds only that missing value. Existing funded databases from the earlier node-wallet backend require the explicit [legacy migration procedure](docs/ecash.md#legacy-node-wallet-deployments); changing a seed cannot migrate their funds or pending payments.
 
 For an existing reverse proxy, omit `--profile https`. The application binds to `127.0.0.1:3000` on the host. Keep production `ZOKO_PUBLIC_URL` set to the public HTTPS URL.
 

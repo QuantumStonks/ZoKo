@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 if (args.length !== 2 || args[1] !== '--confirm-restore') {
-  console.error('Usage: npm run restore -- /absolute/backup.dump --confirm-restore\nStops the API and replaces the PostgreSQL database from a verified backup. Restore the matching Bitcoin ABC wallet and run doctor before restarting the API.');
+  console.error('Usage: npm run restore -- /absolute/backup.dump --confirm-restore\nStops the API and replaces the PostgreSQL database from a verified backup. Restore the original service wallet seed and encryption key and run doctor before restarting the API.');
   process.exit(1);
 }
 const source = resolve(args[0]);
@@ -28,4 +28,4 @@ const input = await open(source, 'r');
 try {
   await run(['compose', 'exec', '-T', 'database', 'sh', '-c', 'PGPASSWORD="$POSTGRES_PASSWORD" pg_restore --username=zoko --dbname=zoko --clean --if-exists --no-owner --no-privileges --single-transaction --exit-on-error'], input.fd);
 } finally { await input.close(); }
-console.log('Database restored. API remains stopped. Restore the matching dedicated wallet, run doctor, reconcile withdrawals, then explicitly start the API.');
+console.log('Database restored. API remains stopped. Restore the original service wallet seed and encryption key, run doctor, reconcile withdrawals, then explicitly start the API.');

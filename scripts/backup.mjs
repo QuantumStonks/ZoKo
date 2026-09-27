@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 if (process.argv.length > 3 || process.argv.includes('--help')) {
-  console.log('Usage: npm run backup -- [destination.dump]\nWrites a consistent PostgreSQL custom-format backup and SHA-256 checksum. Bitcoin ABC wallet backup is separate; see docs/deployment.md.');
+  console.log('Usage: npm run backup -- [destination.dump]\nWrites a consistent PostgreSQL custom-format backup and SHA-256 checksum. Retain an encrypted backup of the original service wallet seed and encryption key separately; see docs/deployment.md.');
   process.exit(process.argv.includes('--help') ? 0 : 1);
 }
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -32,6 +32,7 @@ try {
   await rm(temporary);
   await writeFile(`${destination}.sha256`, `${checksum.digest('hex')}  ${destination.split(/[\\/]/).at(-1)}\n`, { flag: 'wx', mode: 0o600 });
   console.log(`Saved ${destination} and SHA-256 checksum. Copy both to encrypted off-host storage.`);
+  console.log('This database backup does not contain the service wallet seed or provider encryption key. Retain their original values in the matching encrypted configuration backup.');
 } catch (error) {
   await file.close().catch(() => {});
   await rm(temporary, { force: true });

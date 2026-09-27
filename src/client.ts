@@ -4,6 +4,16 @@ import type { ProviderResult } from './provider.js';
 
 /** Integer nanoXEC at every wire boundary. One XEC is 1,000,000,000 nanoXEC. */
 export type NanoXec = string;
+export interface DepositRecord {
+  txid: string;
+  vout: number;
+  amountNanos: NanoXec;
+  status: 'pending' | 'credited' | 'unsupported' | 'reorg_review';
+  confirmations: number;
+  avalancheFinalized: boolean;
+  creditedAt: string | null;
+  createdAt: string;
+}
 export interface PurchasePolicy {
   maxPriceNanos: NanoXec;
   maxLatencyMs?: number;
@@ -186,6 +196,17 @@ export class ZokoClient {
 
   me<T = unknown>(signal?: AbortSignal): Promise<T> { return this.request<T>('GET', '/v1/me', undefined, { signal }); }
   catalog<T = unknown>(signal?: AbortSignal): Promise<T> { return this.request<T>('GET', '/v1/catalog', undefined, { signal }); }
+  /** Payment evidence from Zoko's verifier, scoped to this API key's account. */
+  deposits(options: { txid?: string; limit?: number; signal?: AbortSignal } = {}): Promise<{ deposits: DepositRecord[] }> {
+    const limit=options.limit??100;
+    if(!Number.isInteger(limit)||limit<1||limit>100)throw new RangeError('Deposit limit must be between 1 and 100.');
+    const query=new URLSearchParams({limit:String(limit)});
+    if(options.txid!==undefined){
+      if(!/^[0-9a-fA-F]{64}$/.test(options.txid))throw new TypeError('Transaction ID must contain 64 hexadecimal characters.');
+      query.set('txid',options.txid.toLowerCase());
+    }
+    return this.request('GET',`/v1/deposits?${query}`,undefined,{signal:options.signal});
+  }
   history<T = unknown>(limit = 50, signal?: AbortSignal): Promise<T> {
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new RangeError('History limit must be between 1 and 100.');
     return this.request<T>('GET', `/v1/decisions?limit=${limit}`, undefined, { signal });

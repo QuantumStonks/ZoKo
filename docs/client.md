@@ -2,7 +2,7 @@
 
 ## Browser console
 
-The application serves its console at `/`. The catalog and live/readiness status work without credentials. Select **Connect account**, choose buyer/seller or operator, and enter the corresponding token. Tokens remain in the tab's memory: the console uses no local storage, session storage, analytics, or third-party script. Disconnecting or leaving the page clears credentials and private rendered data. Use HTTPS outside localhost.
+The application serves its console at `/`. The catalog and live/readiness status work without credentials. Select **Connect account**, choose buyer/seller or operator, and enter the corresponding token. Tokens remain in the tab's memory: the console uses no local storage, session storage, analytics, or remotely loaded scripts. The Cashtab connector is bundled with the application. Disconnecting or leaving the page clears credentials and private rendered data. Use HTTPS outside localhost.
 
 **Decision lab** accepts the real Jev question schema. The initial editable customer-support request can be submitted to a configured provider; it does not produce canned results. A quote makes no inference call. Review the chosen seller and exact XEC price, then purchase. Successful schema-valid responses are billable even when they fall below the requested confidence threshold. `accepted` communicates whether the result meets that threshold. It is not measured correctness.
 
@@ -11,6 +11,22 @@ The console retains the exact original quote, input, and idempotency key while a
 **Wallet** displays actual available/reserved balances and the account's daily/per-call spending policy. Allocate your dedicated deposit address before transferring XEC. A transaction-ID check accelerates verification; it never assigns ownership to an unrelated deposit. Withdrawal review shows the destination, amount received, maximum fee, and maximum balance reservation. Interrupted withdrawal retries reuse the original key and payload. Unused reserved network fees return under the settlement contract.
 
 **Operator** exposes actual account/seller creation, account/seller policy updates, and the audit API. Issued account credentials appear once and can be copied and dismissed. Provider keys are submitted directly to the server and cleared from the form after success. The endpoint must satisfy the configured server allowlist. The browser never calls a provider directly.
+
+### Cashtab top-ups
+
+In **Wallet**, enter the XEC amount and choose **Prepare top-up**. Amounts allow up to two decimal places and must be at least 5.46 XEC. The console allocates or retrieves the connected account's dedicated receiving address, checks its eCash checksum and mainnet prefix, and shows the exact amount, account, network, and destination before any wallet action. All amount calculations use integer atoms and nanoXEC strings. Your wallet's network fee is additional to the amount sent.
+
+When the official extension is available, **Pay with Cashtab** invokes `cashtab-connect` 1.2.1's `sendXec(address, amount)` with the exact amount as a string. The extension presents the transaction for the user's approval. The console holds one SDK instance and permits only one active wallet request. It never requests the customer's wallet balance, seed, or private key. The SDK is bundled into a self-hosted browser asset by `npm run build:browser`, which is included in the normal build and development startup.
+
+The mobile/web alternative is an ordinary link to `https://pay.e.cash/?bip21=<encoded-payment>&b=1`, containing only the validated address and exact amount. The official wallet link opens Cashtab or the payment landing page for review and approval. It does not automatically sign a payment. The console does not open a second popup, follow untrusted return URLs, or interpret a URL fragment as proof of payment. See the [official payment-link documentation](https://docs.e.cash/pay/).
+
+A wallet response is **only a transaction hint**. A returned transaction ID is passed to `POST /v1/deposits/claim`, and the console reads the authenticated `GET /v1/deposits` endpoint to verify recorded outpoints. It displays credited funding only when the server reports `status: "credited"` with a credit timestamp. A changed account balance or a successful wallet callback alone cannot satisfy that condition. For mobile/web links without a transaction callback, the console watches outpoints newly recorded for the account relative to the pre-payment history. The displayed amount is the actual amount recorded by the server. A manual transaction-ID check is also available. See [payment operation](ecash.md) for the hosted Chronik trust boundary and server recovery rules.
+
+Wallet timeouts, missing or malformed receipts, and generic `success: false` responses leave the outcome **unknown** and do not automatically enable another send. The SDK's `CashtabTransactionDeniedError` is not by itself sufficient evidence of cancellation: Zoko recognizes only the exact reason `User rejected the transaction` as an explicit refusal. The current official Cashtab [Reject-button implementation](https://github.com/Bitcoin-ABC/bitcoin-abc/blob/b53096bc43db49bc90a4c6c39a7c0106d4be2d78/cashtab/src/components/Send/SendXec.tsx) emits that reason, and the button is disabled while sending. Other post-dispatch errors lead to deposit reconciliation. No error path automatically sends again.
+
+Automatic reconciliation runs for at most two minutes and 25 reads, with a maximum of three consecutive read failures. Network confirmation may take longer; the payment worker continues independently. **Check funding** starts another bounded read-only check. **Prepare another top-up** explicitly begins a separate payment and warns that the previous one may still arrive. It does not cancel an existing on-chain payment. Inspect your wallet and deposit history before approving another transfer after an unknown outcome. A page-leave warning applies while a wallet approval or local polling session is active; it does not keep the page blocked throughout a longer confirmation wait.
+
+Cashtab payment links are enabled for mainnet `ecash:` addresses. The manual address flow remains available for another configured network with a wallet that supports it. Customer wallet funding is separate from the operator's dedicated service-wallet seed and payout signing.
 
 ## TypeScript SDK
 
@@ -81,7 +97,7 @@ try {
 
 `ZokoApiError` exposes `status` and the structured server error `body`. A definitive request rejection, such as a `409` idempotency conflict, is never retried. Terminal failed/refunded receipts are returned for the caller to inspect. Neither a successful HTTP status nor a high confidence score automatically authorizes a downstream real-world action.
 
-The generic `request(method, path, body?, {idempotencyKey?, signal?})` calls the configured origin only and never retries mutations automatically. `me`, `catalog`, `history`, and `getDecision` are read helpers. Redirects are rejected. HTTPS is required except for loopback HTTP. Responses are limited to 2 MiB.
+The generic `request(method, path, body?, {idempotencyKey?, signal?})` calls the configured origin only and never retries mutations automatically. `me`, `catalog`, `history`, and `getDecision` are read helpers. `deposits({txid?, limit?, signal?})` returns up to 100 deposit outputs belonging to the authenticated account, optionally filtered by transaction ID. Records include exact `amountNanos`, `vout`, confirmation/finality evidence, and `status` (`pending`, `credited`, `unsupported`, or `reorg_review`). The helper is read-only. Redirects are rejected. HTTPS is required except for loopback HTTP. Responses are limited to 2 MiB.
 
 ### Monetary units
 
