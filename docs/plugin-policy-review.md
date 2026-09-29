@@ -1,6 +1,6 @@
 # ZoKo public-directory policy clarification
 
-Status: prepared on 2026-09-29; not sent, submitted, or approved. The user designated XECKZ Inc. and authorized public distribution while retaining all rights. Company verification and final legal terms remain incomplete.
+Status: prepared on 2026-09-29; not sent, submitted, or approved. The user explicitly declined sending this inquiry and requested investigation of current plugin discovery. Do not send it or contact support without new explicit authorization. The user designated XECKZ Inc. and authorized public distribution while retaining all rights. Company verification and final legal terms remain incomplete.
 
 ## Evidence and scope
 
@@ -8,7 +8,17 @@ The [current plugin guidelines](https://developers.openai.com/plugins/plugin-gui
 
 ZoKo's requested product charges per typed AI decision. An authorized agent requests a quote and purchases against an existing eCash-funded custodial marketplace balance. The selected seller operates the inference endpoint; its proceeds accrue to the seller's marketplace account after commission. Neither pre-funding nor per-task standing authorization changes the economic nature of these purchases. The plugin supplies no model, public hosted marketplace, default seller, subscription, funds, or claimed production adoption. It bundles local skills and a Node.js CLI/client rather than a hosted MCP app. The package does not perform on-chain withdrawals as a plugin workflow.
 
-This creates a public-listing eligibility conflict requiring authoritative resolution. No provider exception has been granted. Repository publication, private account creation, archive validation, and payment regression tests do not establish directory eligibility.
+This appears to conflict with universal-directory eligibility; it is an interpretation of the published rule, not a provider rejection. No provider exception has been granted. Repository publication, private account creation, archive validation, and payment regression tests do not establish directory eligibility.
+
+## Independent marketplace discovery
+
+The [current packaging documentation](https://developers.openai.com/plugins/build/plugins) separately supports personal, repository, and configured Git/npm marketplaces. These are real distribution mechanisms: Codex can discover entries within the catalogs it considers and install their packages. They do not automatically create a listing in the universal ChatGPT/Codex directory. The directory-specific commerce rule is not evidence that independent Git catalog distribution is unavailable.
+
+The [current developer command reference](https://learn.chatgpt.com/docs/developer-commands#codex-plugin) documents `codex plugin marketplace add`, `codex plugin list --available --json`, and `codex plugin add plugin-name@marketplace-name --json`. Installation and automatic tool selection are distinct: publication of a Git repository alone does not make it discoverable to every agent. Repository catalogs must contain a usable built plugin, rather than point at ZoKo source without its bundled runtime.
+
+On 2026-09-29, the installed local CLI reported `0.130.0-alpha.5` and exposed only `plugin marketplace`, so command availability must be checked on the actual host. The current online documentation describes a newer surface. The official [DevDay event page](https://devday.openai.com/) confirms September 29, 2026; the researched sources did not establish a newly announced unrestricted discovery or automatic installation route. Do not describe that evidence limit as proof that no announcement occurred.
+
+Continue preparing and testing independent catalog distribution. Review universal-directory eligibility separately using current official evidence; do not make sending the declined support inquiry a prerequisite for unrelated packaging, testing, or discoverability work.
 
 ## Draft for an authorized publisher to send
 

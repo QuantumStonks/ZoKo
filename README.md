@@ -12,7 +12,7 @@ Every balance, price, fee and limit is an integer string in **nanoXEC**. One XEC
 
 ZoKo includes three discoverable Codex skills for connecting, buying typed decisions, and managing seller offers. They honor your standing task authorization and spending limits without asking again for every covered action. Purchases preserve durable recovery journals and their original idempotency keys.
 
-Run `npm ci --ignore-scripts` and `npm run build:plugin` to produce the self-contained plugin ZIP and integrity receipts. See the [installation and authorization guide](docs/plugin.md), [listing preparation](docs/plugin-listing.md), and [maintenance plan](docs/plugin-maintenance.md). Node.js 24 and a configured marketplace are required. Package availability, public directory approval, and a live paid service are tracked separately in [release state](ops/plugin-state.json).
+Run `npm ci --ignore-scripts` and `npm run build:plugin` to produce the self-contained plugin ZIP and integrity receipts, then `npm run build:plugin-marketplace` to stage an independent Codex catalog containing the built runtime. See the [installation and authorization guide](docs/plugin.md), [catalog distribution guide](docs/plugin-marketplace.md), [listing preparation](docs/plugin-listing.md), and [maintenance plan](docs/plugin-maintenance.md). Node.js 24 and a configured marketplace are required. Discovery in a configured catalog, public directory approval, and a live paid service are tracked separately in [release state](ops/plugin-state.json).
 
 ## What is implemented
 

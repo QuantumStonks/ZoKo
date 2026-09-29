@@ -5,13 +5,14 @@
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/zoko-plugin",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "implemented_and_locally_validated_including_real_postgresql",
+  "implementation": "validated_locally_and_remote_linux_windows_macos",
   "distribution": {
     "package": "built_and_validated",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
-    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.2.1",
-    "publicDirectory": "not_submitted_commerce_policy_conflict",
-    "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved"
+    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.2.2",
+    "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
+    "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
+    "independentMarketplace": "staged_catalog_discovered_installed_and_skills_loaded_in_isolated_Codex_0.159.0"
   },
   "publisher": {
     "displayName": "ZoKo",
@@ -22,15 +23,15 @@
     "authorization": "standing_task_and_cumulative_limits_no_per_action_reapproval"
   },
   "package": {
-    "version": "1.2.1",
-    "archive": "dist/plugins/zoko-1.2.1.zip",
-    "sha256": "38a26d04d95c705eda97b5a790f317ba046bdfa7605ad69cafa856bd16c763a9",
+    "version": "1.2.2",
+    "archive": "dist/plugins/zoko-1.2.2.zip",
+    "sha256": "6af286c7d32cdf58e7a23f6957192694eb6bc046fb51c10723e92c755431c775",
     "files": 21,
-    "bytes": 1378082
+    "bytes": 1378136
   },
   "accountPlugin": {
     "pluginId": "plugins_6abc19b188e8819185ecd292ad424e42",
-    "releaseId": "pluginrel_6abc1be052e48191b18ec61043cf0016",
+    "releaseId": "pluginrel_6abc1ebf8f6481918ec4b0c07f67b78f",
     "url": "https://chatgpt.com/plugins/plugins_6abc19b188e8819185ecd292ad424e42",
     "scope": "USER",
     "discoverability": "PRIVATE"
@@ -53,14 +54,14 @@
     },
     {
       "check": "npm test",
-      "result": "119 passed, 0 failed, 0 skipped",
-      "receipt": ".local/plugin-package-validation-1.2.1-final.json"
+      "result": "125 passed, 0 failed, 0 skipped",
+      "receipt": ".local/plugin-evidence/marketplace-export-1.2.2.json"
     },
     {
       "check": "npm run test:integration",
       "result": "81 passed, 0 failed, 0 skipped; genuine isolated PostgreSQL 17.11 loopback server, stopped cleanly; no real funds or live marketplace",
-      "receipt": ".local/postgres-portable/run-2026-09-29T20-08-03-219Z/receipt.json",
-      "logSha256": "829ef9641ba9ac01798780ee6aeba2d29f76a65405476fd951e1a9b2316da83a"
+      "receipt": ".local/postgres-portable/run-2026-09-29T20-21-31-754Z/receipt.json",
+      "logSha256": "15fc8e66cec681f6135f7ed19cef9bba9fdeefdce4e29d881f8f4e4dc2d49e0e"
     },
     {
       "check": "npm run build",
@@ -83,45 +84,106 @@
     },
     {
       "check": "private plugin metadata readback",
-      "result": "version 1.2.1, PRIVATE, USER; portable manifest and license exact; compatibility manifest equivalent with provider-normalized ./skills path"
+      "result": "version 1.2.2, PRIVATE, USER; portable manifest, license and integrity exact; compatibility manifest equivalent with provider-normalized ./skills path",
+      "receipt": ".local/plugin-evidence/private-readback-1.2.2.json"
     },
     {
       "check": "website draft",
       "result": "local rendered layout inspected; unpublished, public URLs unverified"
+    },
+    {
+      "check": "actual plugin search",
+      "result": "Available Plugin Management search queried ZoKo and returned no matches; this is a bounded search result, not an exhaustive directory inventory",
+      "observedAt": "2026-09-29",
+      "receipt": ".local/plugin-evidence/plugin-search-20260929.json"
+    },
+    {
+      "check": "isolated current Codex host",
+      "result": "Codex0.159.0 discovered and installed zoko@zoko1.2.2; installed/enabled readback;21files and20integrity entries verified; installedCLI help passed",
+      "receipt": ".local/plugin-evidence/isolated-codex-discovery-1.2.2.json",
+      "sha256": "f747c05931ede1da6d45e40ee66000969a5337cc377c4cd82a2cef0f4db48b22"
+    },
+    {
+      "check": "host skill discovery",
+      "result": "App-server0.159.0 loaded all3enabled ZoKo skills through initialize and skills/list;0loadererrors; no model call/login/auth/funds",
+      "receipt": ".local/plugin-evidence/isolated-codex-skills-1.2.2.json",
+      "sha256": "231a12fd61a4479670a9e8f7b703be347a0f2152e2437c6cbed95136d3492dd6"
+    },
+    {
+      "check": "independent marketplace export",
+      "result": "24 exported files include the exact21-file installable package;6 targeted tests and full125tests passed; independent review found no actionable defects",
+      "receipt": ".local/plugin-evidence/marketplace-export-1.2.2.json",
+      "sha256": "e9e3a864f1dbc5ecaf4bbbb39593a0f153be4e433623c3a4a167363e3822dfe5"
     }
   ],
   "blockers": [
-    "Public-directory policy conflict: current OpenAI plugin guidelines prohibit digital-service commerce; ZoKo sells paid AI decisions. Await authoritative clarification or applicable policy change; do not conceal commerce or silently change the product.",
+    "Universal-directory eligibility appears to conflict with the published digital-service commerce rule. This is an interpretation, not a provider rejection; it does not establish that independent Git marketplace distribution is unavailable.",
     "XECKZ Inc. is user-designated; provider identity verification and legal attestations are incomplete.",
-    "Public website/support/privacy/terms drafts exist but are not hosted or verified; proprietary end-user terms require rights-holder review.",
-    "User has no production hosting account or marketplace URL; real funded buyer/seller acceptance remains unverified.",
-    "Codex personal marketplace source is available; actual host installation and new-chat skill pickup have not been confirmed."
+    "Public website/support/privacy/terms drafts are not hosted or verified; proprietary public end-user terms require rights-holder review.",
+    "No production hosting account, marketplace URL or approved real seller is configured; real paid buyer/seller acceptance remains unverified.",
+    "Isolated currentCLI installation and host skill loading are verified; installation in the active desktop profile and a real agent task remain unverified. The app-bundled CLI0.130.0-alpha.5 lacks current add/list commands."
   ],
   "nextActions": [
-    "Inspect PR #4 remote CI, fix any evidenced failures, and verify installed discovery in a fresh Codex chat.",
-    "Obtain authoritative resolution of public-directory digital-service commerce eligibility using docs/plugin-policy-review.md; inquiry is prepared but unsent.",
-    "Complete company verification and proprietary terms review, then deploy and verify public pages before an eligible submission.",
-    "Provision operator-approved hosting and real seller endpoint; complete authorized live paid acceptance without fabricated balances or inference.",
-    "Verify installed plugin discovery in a new Codex chat and measure successful first use."
+    "Verify remoteCI for catalog export changes, then prepare public catalog promotion with final distribution terms. Existing user authorization to proceed toward public distribution remains valid; directory approval is a separate question.",
+    "Keep the declined support inquiry unsent. Reassess directory eligibility only against authoritative current evidence; advance independent marketplace work separately.",
+    "Complete public end-user terms review, company verification where required, and deploy/verify public policy/support pages before public release.",
+    "Provision authorized hosting and real seller endpoint; complete live acceptance only within existing spending authority and without fabricated balances or inference.",
+    "Install into the intended real host profile, verify an authorized task end to end on a real marketplace, and measure successful first use separately from repository proxies."
   ],
   "policyEvidence": {
     "clarificationDraft": "docs/plugin-policy-review.md",
     "inquirySent": false,
-    "interpretation": "Paid digital AI decision commerce conflicts with current rule; no provider rejection or exception received",
+    "interpretation": "Paid digital AI decision commerce appears incompatible with universal-directory rule; no rejection or exception received. Independent configured marketplaces are a separately documented distribution route.",
     "source": "https://developers.openai.com/plugins/plugin-guidelines",
     "checkedAt": "2026-09-29",
-    "scope": "Universal ChatGPT and Codex directory"
+    "scope": "Universal ChatGPT and Codex directory",
+    "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "d8e6b72c0a0c42299245d97d525ccd5a573bda37",
+  "testedImplementationCommit": "4b9149ff67c2a3de08d170a8119d6d74bbcab115",
   "pullRequest": {
     "state": "OPEN",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
     "draft": true
   },
   "remoteCI": {
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36625277428",
-    "note": "Inspect provider checks for current result; local validation is independent evidence.",
-    "status": "running_at_handoff_record",
-    "implementationCommit": "d8e6b72c0a0c42299245d97d525ccd5a573bda37"
+    "status": "completed_success",
+    "implementationCommit": "4b9149ff67c2a3de08d170a8119d6d74bbcab115",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36626276721",
+    "jobs": [
+      "verify: success",
+      "plugin-portability (macos-latest): success",
+      "plugin-portability (windows-latest): success"
+    ],
+    "receipt": ".local/plugin-evidence/remote-ci-4b9149f.json"
+  },
+  "discoveryEvidence": {
+    "checkedAt": "2026-09-29",
+    "packageSource": "https://developers.openai.com/plugins/build/plugins",
+    "cliSource": "https://learn.chatgpt.com/docs/developer-commands#codex-plugin",
+    "routes": [
+      "universal reviewed directory",
+      "configured personal or Git/npm marketplaces",
+      "workspace publication",
+      "explicit Agents API plugin capabilities"
+    ],
+    "limitation": "Publishing a repository does not automatically add it to every agent catalog or imply global discovery. No dated official evidence of an unrestricted new DevDay discovery route was found.",
+    "installedAppCli": "0.130.0-alpha.5",
+    "registryStableCli": "0.159.0"
+  },
+  "independentMarketplace": {
+    "directory": "dist/plugin-marketplace",
+    "name": "zoko",
+    "pluginId": "zoko@zoko",
+    "source": "./plugins/zoko",
+    "sourceContainsBuiltRuntime": true,
+    "publishedGitRef": null,
+    "catalogSha256": "d54304a64c5860df10c1edb810e20269bf64f921ba56390ff4cebe23f9ff9f64",
+    "hostCliVersion": "0.159.0",
+    "scope": "isolated owner-authorized local install",
+    "activeDesktopProfileInstalled": false,
+    "provenanceSha256": "4af6f714a460c07db690caef3d13044d301beb1b279b93f59906885fdd814a60",
+    "builderSha256": "39a0a4d234fcb0dbc74fe424a36ac535bb08fa4aa2c914749f49cd9f7147b6e9",
+    "testSha256": "f5828e68e04e41c72813a77aa2e55e6ed03af6e01d3ffe6e39eb3c06c1f19408",
+    "sourceCommitAtValidation": "4b9149ff67c2a3de08d170a8119d6d74bbcab115"
   }
 }

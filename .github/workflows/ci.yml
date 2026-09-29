@@ -47,6 +47,7 @@ jobs:
         run: npm run test:integration
       - run: npm run build
       - run: npm run build:plugin
+      - run: npm run build:plugin-marketplace
       - run: npm audit --omit=dev --audit-level=high
       - name: Build hardened runtime image
         run: docker build --pull --target runtime --tag zoko:ci .
@@ -71,5 +72,6 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run check
       - name: Client, recovery, package and host portability
-        run: node --import tsx --test --test-concurrency=1 tests/client.test.ts tests/plugin-runtime.test.ts tests/plugin-package.test.ts tests/setup.test.ts
+        run: node --import tsx --test --test-concurrency=1 tests/client.test.ts tests/plugin-runtime.test.ts tests/plugin-package.test.ts tests/plugin-marketplace.test.ts tests/setup.test.ts
       - run: npm run build:plugin
+      - run: npm run build:plugin-marketplace

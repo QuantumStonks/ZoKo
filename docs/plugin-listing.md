@@ -2,7 +2,7 @@
 
 This is the source-backed listing and review handoff for the skills-only ZoKo package in `plugins/zoko`. The installable artifact is built under `dist/plugins/zoko` with a versioned ZIP. A prepared package, private installation, public submission, and approved public listing are separate states; consult `ops/plugin-state.json` and exact artifact receipts for the latest evidence.
 
-**Current release phase (2026-09-29): public distribution authorized, all rights reserved; directory eligibility blocked.** The owner designated **XECKZ Inc.** for public submission and explicitly authorized proceeding toward public distribution while retaining proprietary rights. This is a supplied publisher name, not evidence of completed provider verification. ZoKo remains the display name. The account plugin remains private; public directory submission, public release assets, and website publication are not yet completed. All-country targeting is prepared. The site and listing are drafts. A public GitHub repository does not grant a redistribution license.
+**Current release phase (2026-09-29): public distribution authorized, all rights reserved; independent marketplace preparation proceeds separately from universal-directory eligibility.** The owner designated **XECKZ Inc.** for public submission and explicitly authorized proceeding toward public distribution while retaining proprietary rights. This is a supplied publisher name, not evidence of completed provider verification. ZoKo remains the display name. The account plugin remains private; public directory submission, public release assets, and website publication are not yet completed. All-country targeting is prepared. The site and listing are drafts. A public GitHub repository does not grant a redistribution license.
 
 ## Public directory eligibility
 
@@ -10,7 +10,7 @@ The [OpenAI plugin guidelines](https://developers.openai.com/plugins/plugin-guid
 
 Keep the paid workflows and declare `extensions.com.openai.review.commerce: true` with an accurate description. Changing the payment rail, hiding the declaration, linking to a transactional site, or describing purchases as discovery does not resolve this conflict. Do not submit a compliance attestation for this offering until authoritative clarification or an applicable policy change resolves it. A discovery-only or existing-entitlement design would change the requested product and requires a separate decision; it must not be silently substituted.
 
-[Policy clarification draft](plugin-policy-review.md) records the precise model and questions for the publisher. No inquiry has been sent. Continue independent package reliability, private installation, documentation, and deployment-readiness work while public eligibility is unresolved.
+[Policy research and unsent clarification draft](plugin-policy-review.md) records the model and the separate distribution routes. The user declined sending the inquiry; do not contact support without new explicit authorization. Current official docs support independent personal, Git/npm, and workspace marketplaces. Continue the [self-contained catalog preparation](plugin-marketplace.md), installation tests, reliability, documentation, and deployment work while universal-directory eligibility is unresolved. A configured catalog is discoverable within that catalog's scope; it is not a universal public listing.
 
 ## Supported proposition
 

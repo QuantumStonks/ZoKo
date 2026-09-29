@@ -8,6 +8,10 @@ Start each maintenance cycle with `ops/plugin-state.json`, the current branch/di
 
 Keep these outcomes separate: package built, package validated, locally installed, private account plugin created, public draft uploaded, submitted for review, approved, and publicly listed. Record the provider ID or readback when available. A local installation does not establish anyone else's installation or public discoverability. A tool success does not establish successful end-user behavior without a readback or exercised workflow.
 
+Independent personal, Git/npm, and workspace catalogs are distinct from the universal ChatGPT/Codex directory. Keep discovery within a configured catalog, installation on a host, skill pickup in a new chat, and global directory recommendations separate. Ship the built runtime in any catalog export; the repository's `plugins/zoko` directory alone is incomplete build input. Check actual host command support before using commands from newer documentation. The app-bundled CLI observed on 2026-09-29 was older than the stable published CLI.
+
+The user declined sending the policy inquiry in `docs/plugin-policy-review.md`. Keep it unsent and do not contact support without new explicit authorization. The apparent universal-directory commerce conflict is not evidence against the separately documented independent Git marketplace route; continue useful work on that route while preserving truthful commerce disclosure and proprietary rights.
+
 ## Repository indicators
 
 The dependency-free collector uses the installed GitHub CLI's existing authentication and sends only GET requests to `github.com`:
