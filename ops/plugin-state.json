@@ -98,7 +98,7 @@
     "Codex personal marketplace source is available; actual host installation and new-chat skill pickup have not been confirmed."
   ],
   "nextActions": [
-    "Publish a reviewable source PR and inspect remote CI independently of local validation.",
+    "Inspect PR #4 remote CI, fix any evidenced failures, and verify installed discovery in a fresh Codex chat.",
     "Obtain authoritative resolution of public-directory digital-service commerce eligibility using docs/plugin-policy-review.md; inquiry is prepared but unsent.",
     "Complete company verification and proprietary terms review, then deploy and verify public pages before an eligible submission.",
     "Provision operator-approved hosting and real seller endpoint; complete authorized live paid acceptance without fabricated balances or inference.",
@@ -111,5 +111,17 @@
     "source": "https://developers.openai.com/plugins/plugin-guidelines",
     "checkedAt": "2026-09-29",
     "scope": "Universal ChatGPT and Codex directory"
+  },
+  "testedImplementationCommit": "d8e6b72c0a0c42299245d97d525ccd5a573bda37",
+  "pullRequest": {
+    "state": "OPEN",
+    "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
+    "draft": true
+  },
+  "remoteCI": {
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36625277428",
+    "note": "Inspect provider checks for current result; local validation is independent evidence.",
+    "status": "running_at_handoff_record",
+    "implementationCommit": "d8e6b72c0a0c42299245d97d525ccd5a573bda37"
   }
 }
