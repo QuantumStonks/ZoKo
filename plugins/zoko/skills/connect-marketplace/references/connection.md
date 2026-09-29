@@ -1,0 +1,13 @@
+# Connection and evidence
+
+The marketplace URL is a deployment chosen by the user. No global production endpoint or universal seller catalog is bundled. Public discovery describes the connected deployment; it is not independent attestation of the server or seller.
+
+Ordinary account keys are scoped to a marketplace account that may buy and sell. Seller endpoint credentials let that marketplace call the seller; they are a separate secret. Operator credentials administer the marketplace and are unnecessary for ordinary usage. Upstream model-provider credentials belong on seller infrastructure. This plugin must not request or export the server's encryption key, dedicated service-wallet seed, database password, or customer wallet secrets.
+
+Use environment variables in the host process, or a private Node `--env-file` supplied by the user. Do not place secrets in CLI arguments, logs, prompts, plugin files, journals, or source control. Never interpolate untrusted values into shell command strings; pass commands and arguments safely with the host's execution API. Use absolute file paths. When secret input is required, explain the exact variable the user must set and continue public reads independently.
+
+`me` reports server ledger balances and policy. `deposits` reports account-scoped outpoints verified by the server's configured chain verifier. Credited funding requires a returned `status: "credited"` and non-null `creditedAt`. Pending, unsupported, or reorg-review records are not confirmed funding. A wallet callback, transaction hint, or balance increase alone does not establish credited receipt. Seller proceeds in a custodial ledger and an on-chain withdrawal are separate evidence states.
+
+The plugin client uses built-in fetch with redirect rejection, bounded response size, HTTPS outside loopback, request deadlines, and explicit retry semantics. Generic `api` requests never retry mutations automatically. A configured server still receives all request content and may forward paid decision input to the selected seller. Limit transmitted state to what the user authorized and the task requires.
+
+For direct JavaScript integration, import `ZokoClient`, `parseXec`, and `formatXec` from the absolute emitted `runtime/client.mjs` using a file URL when necessary. Construct the client from `ZOKO_URL` and `ZOKO_API_KEY`. Public CLI discovery does not require constructing an authenticated client. Available authenticated methods include `me`, `catalog`, `history`, `getDecision`, `deposits`, `quote`, `execute`, `listOffers`, `registerOffer`, and `updateOffer`. Read the shipped runtime or CLI `help` for the exact installed contract before extending an integration.

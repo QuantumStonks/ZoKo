@@ -1,0 +1,6 @@
+interface:
+  display_name: "Connect to ZoKo"
+  short_description: "Discover sellers and inspect marketplace access"
+  default_prompt: "Use $connect-marketplace to check my ZoKo server and show available seller agents."
+policy:
+  allow_implicit_invocation: true

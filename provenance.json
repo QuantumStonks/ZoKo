@@ -1,0 +1,130 @@
+{
+  "format": "zoko-plugin-marketplace/1",
+  "name": "zoko",
+  "version": "1.2.3",
+  "archive": {
+    "name": "zoko-1.2.3.zip",
+    "bytes": 1378536,
+    "sha256": "aa1f1a816a7c8a1e74f1f60bcb2115802c0d635c8dc30e802b75b66aa1f7736a"
+  },
+  "sourceCommit": "c4e7fc93460dbadf315b28f535223dd6e6dee7f0",
+  "packageSourcesClean": true,
+  "packageMatchesCheckout": true,
+  "files": [
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "bytes": 349,
+      "sha256": "d54304a64c5860df10c1edb810e20269bf64f921ba56390ff4cebe23f9ff9f64"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1464,
+      "sha256": "1e134dca65b003928e8870d7cac2ea2431439a77be420b2d469ef6b587b8737f"
+    },
+    {
+      "path": "plugins/zoko/.codex-plugin/plugin.json",
+      "bytes": 3245,
+      "sha256": "552083ab0c5b3c1d5508c21ff41e487b705f292e47c4174e37edeec6258557b6"
+    },
+    {
+      "path": "plugins/zoko/LICENSE.txt",
+      "bytes": 1290,
+      "sha256": "346f204207437ee62f0d61fcd85ac6adc365f49c9ce9a2c342a4d8343b7d5fc0"
+    },
+    {
+      "path": "plugins/zoko/README.md",
+      "bytes": 4890,
+      "sha256": "102fe5d5434316a6a472b2330de58e04fd6bc5c07d92fcf2b6763b6b84c1e9cd"
+    },
+    {
+      "path": "plugins/zoko/THIRD_PARTY_NOTICES.txt",
+      "bytes": 1106,
+      "sha256": "92f6918c38bf98efa634de8edf4d02b64f84c179b233d4170fd5dfca6109bb2c"
+    },
+    {
+      "path": "plugins/zoko/assets/composer-icon.png",
+      "bytes": 588699,
+      "sha256": "2cf02749df483f03d5a92730ff9e185bcb8e21ee6fad224cd284e7c3e3cadc9b"
+    },
+    {
+      "path": "plugins/zoko/assets/logo.png",
+      "bytes": 588699,
+      "sha256": "2cf02749df483f03d5a92730ff9e185bcb8e21ee6fad224cd284e7c3e3cadc9b"
+    },
+    {
+      "path": "plugins/zoko/integrity.json",
+      "bytes": 17986,
+      "sha256": "5664f73eb278288d64506eeb1214d0faee74c965701ffec19768f9fa2cb0cb0e"
+    },
+    {
+      "path": "plugins/zoko/plugin.json",
+      "bytes": 3359,
+      "sha256": "83d26db6dc7c7f72a49326ec1000425c8a0c26b2047c82717a621381b8ab74fe"
+    },
+    {
+      "path": "plugins/zoko/runtime/cli.mjs",
+      "bytes": 480486,
+      "sha256": "d0665f5d9100b225806b6bd8a35abd11956ea1721c2cc15ba8a058fd7d800c60"
+    },
+    {
+      "path": "plugins/zoko/runtime/client.mjs",
+      "bytes": 11194,
+      "sha256": "394d9988d10196ccace3f724a4e937b6f2e2cbadd1d9bcda4e294778f8f499ac"
+    },
+    {
+      "path": "plugins/zoko/runtime/protocol.mjs",
+      "bytes": 455977,
+      "sha256": "6f52905e91a27d4fd71165aafe247b04173c2d3d62db601489acb3ff359ebc91"
+    },
+    {
+      "path": "plugins/zoko/skills/buy-decision/SKILL.md",
+      "bytes": 5691,
+      "sha256": "8e85a03cf4c02676ee6a8f6ef2d43a24e19126451218732311cf1835a9cb86e9"
+    },
+    {
+      "path": "plugins/zoko/skills/buy-decision/agents/openai.yaml",
+      "bytes": 265,
+      "sha256": "d0d9941b24dfcbc7514ad6094428d6b1c7f7a2f430517e24beefb736e63d667e"
+    },
+    {
+      "path": "plugins/zoko/skills/buy-decision/references/decision-contract.md",
+      "bytes": 2413,
+      "sha256": "e458d15eac10ae39dc25d966dbabab8a5177d28f91f82983e0487d5b5570af0b"
+    },
+    {
+      "path": "plugins/zoko/skills/buy-decision/references/recovery.md",
+      "bytes": 3539,
+      "sha256": "3dcd8cad63b51da9dcbb7dffd7e0d31f28190e6d1c01cfbb1afee681eccc5e75"
+    },
+    {
+      "path": "plugins/zoko/skills/connect-marketplace/SKILL.md",
+      "bytes": 3413,
+      "sha256": "7761d903527c62fc8f547ca384ecac7b611225dca7ba1e206be9ec5a28db127b"
+    },
+    {
+      "path": "plugins/zoko/skills/connect-marketplace/agents/openai.yaml",
+      "bytes": 261,
+      "sha256": "c1571023caae8a43c8449425ff9feeb8e3d8c9b1bfb87cfd0d7844e7aa15e210"
+    },
+    {
+      "path": "plugins/zoko/skills/connect-marketplace/references/connection.md",
+      "bytes": 2689,
+      "sha256": "220681212b2b9d6e83769182c7ad688e5b4d23f92c9f4c9656cfb86837542c7b"
+    },
+    {
+      "path": "plugins/zoko/skills/sell-decisions/SKILL.md",
+      "bytes": 4040,
+      "sha256": "f524e131846353d02851371f4fef347b7973dc1419abaa2ffe521fe8a0b5a3b4"
+    },
+    {
+      "path": "plugins/zoko/skills/sell-decisions/agents/openai.yaml",
+      "bytes": 268,
+      "sha256": "1bb07243c34b61d95f25f01865af5bcda4031c62c548adc9b6524cd782e640f8"
+    },
+    {
+      "path": "plugins/zoko/skills/sell-decisions/references/endpoint-contract.md",
+      "bytes": 3630,
+      "sha256": "bbc3ec71d9e62393139c85d2d5bc1c426945244d12b3f63cd4114461c13fc331"
+    }
+  ]
+}
