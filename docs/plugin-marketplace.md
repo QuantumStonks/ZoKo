@@ -61,9 +61,9 @@ Inspect command results for the marketplace `zoko`, plugin `zoko`, and expected 
 
 ## Published Git catalog
 
-The [public catalog branch](https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace) is published and its Git reference was read back on 2026-09-29. Version 1.2.3 is at catalog commit `bcda4cb040c18d4726d82a308d3997b1e0956e31`, exported from source commit `c4e7fc93460dbadf315b28f535223dd6e6dee7f0`, with archive SHA-256 `aa1f1a816a7c8a1e74f1f60bcb2115802c0d635c8dc30e802b75b66aa1f7736a`.
+The [public catalog branch](https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace) is published and its Git reference was read back on 2026-09-29. Version 1.3.0 is at catalog commit `63c121fadb8c9ea4a4dd2ac88aceebd42d6dbd13`, exported from source commit `5b6a40329be11374af064eeb758aba6d054dcdc1`, with archive SHA-256 `d8da60ee46ceac3edf804469b0982088ff13ee0b8954b6af66fd12a37c6de0ee`.
 
-Official Codex 0.159.0 anonymously cloned the published catalog in an isolated configuration, verified the pinned checkout, provenance, and archive, installed all 21 package files, and loaded all three skills enabled with zero loader errors. The private receipt is `.local/plugin-evidence/remote-codex-marketplace-1.2.3.json`, SHA-256 `b860deb3a5f4ff21692b9fe9bb723894569575f7dcf49b395b50eacee1fbfbdc`. This proves remote catalog installation and skill loading for that release and host; it does not establish a completed live purchase, universal-directory publication, or other users' installations.
+Official Codex 0.159.0 anonymously cloned the published catalog in an isolated configuration, verified the pinned checkout, provenance, and archive, installed all 22 package files, and loaded all three skills enabled with zero loader errors. The private receipt is `.local/plugin-evidence/remote-codex-marketplace-1.3.0.json`, SHA-256 `b00531e89dfe6d1678bed85f07337f8761e526b509b643911e2c5b14f2f9e01b`. This proves remote catalog installation and skill loading for that release and host; it does not establish a completed live purchase, universal-directory publication, or other users' installations. Version 1.3.0 supports seller job delivery from an active owner agent session; a connected marketplace and timely seller execution remain necessary.
 
 Register the published branch with a supported Codex CLI:
 

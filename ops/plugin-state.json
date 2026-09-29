@@ -5,14 +5,14 @@
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/zoko-plugin",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "1.3.0_local_release_validation_complete_public_catalog_and_remote_CI_pending",
+  "implementation": "1.3.0_validated_published_independent_catalog_private_account_updated",
   "distribution": {
     "package": "built_1.3.0_isolated_archive_tests_passed",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
     "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.3.0",
     "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
     "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
-    "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.2.3"
+    "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.3.0"
   },
   "publisher": {
     "displayName": "ZoKo",
@@ -42,7 +42,7 @@
     "pluginRoot": "C:/Users/admin/plugins/zoko",
     "inventoryVerifiedFiles": 20,
     "version": "1.2.2",
-    "note": "Historical personal scaffold; account plugin is 1.3.0, published Git catalog is 1.2.3 pending verified update. Active desktop installation remains unverified."
+    "note": "Historical personal scaffold; current 1.3.0 release is available through the published Git catalog and private account plugin. Active desktop installation remains unverified."
   },
   "automation": {
     "id": "maintain-zoko-plugin",
@@ -160,13 +160,25 @@
       "result": "PRIVATE USER, 22 files; portable manifest, license, integrity and native-agent reference exact; compatibility manifest equivalent after provider path normalization",
       "receipt": ".local/plugin-evidence/private-readback-1.3.0.json",
       "sha256": "13331c47675eae1a9c9e0fd01cbc295ed86f8d548c35647122dbe9ecbf2a8e2c"
+    },
+    {
+      "check": "1.3.0 public Git marketplace",
+      "result": "Anonymous isolated Codex 0.159.0 pinned clone, exact 22 files, installation enabled, CLI startup and all three skills with zero loader errors; no model calls, credentials or funds",
+      "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.3.0.json",
+      "sha256": "b00531e89dfe6d1678bed85f07337f8761e526b509b643911e2c5b14f2f9e01b"
+    },
+    {
+      "check": "1.3.0 remote CI",
+      "result": "Exact source Linux verification including PostgreSQL and production container smoke; Windows and macOS plugin portability all succeeded",
+      "receipt": ".local/plugin-evidence/remote-ci-5b6a403.json",
+      "sha256": "6513c479c48f408fa31d94c43d609e4774831fffd98fbc85e6e07ce19e2f1f9a"
     }
   ],
   "blockers": [
     "Universal directory only: paid digital AI-decision commerce appears to conflict with its published rule. This is an interpretation, not a provider rejection. Independent Git catalog distribution remains separate.",
     "Universal directory only: XECKZ Inc. is user-designated; provider verification, submission attestations and final public policy URLs remain incomplete.",
     "Live service: hosting and XEC limits are authorized and native active-Codex inference is implemented. Render OAuth still requires account sign-in; protected service secrets, verified recovery backup and actual funding remain pending. No service, paid decision or withdrawal is live.",
-    "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.2.3 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
+    "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.3.0 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
@@ -184,14 +196,23 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": null,
+  "testedImplementationCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
   "pullRequest": {
     "state": "OPEN",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
     "draft": true
   },
   "remoteCI": {
-    "status": "1.3.0_not_dispatched_yet",
+    "status": "completed_success",
+    "implementationCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36637662033",
+    "jobs": [
+      "plugin-portability (macos-latest): success",
+      "verify: success",
+      "plugin-portability (windows-latest): success"
+    ],
+    "receipt": ".local/plugin-evidence/remote-ci-5b6a403.json",
+    "receiptSha256": "6513c479c48f408fa31d94c43d609e4774831fffd98fbc85e6e07ce19e2f1f9a",
     "previousRelease": {
       "status": "completed_success",
       "implementationCommit": "fbe6f5f5c6d6bdf3540cc1a3ba524dad8f2b7fd5",
@@ -218,28 +239,28 @@
     "directory": "dist/plugin-marketplace",
     "name": "zoko",
     "pluginId": "zoko@zoko",
-    "version": "1.2.3",
+    "version": "1.3.0",
     "source": "./plugins/zoko",
     "sourceContainsBuiltRuntime": true,
     "publishedGitRef": "codex/zoko-marketplace",
-    "publishedCommit": "bcda4cb040c18d4726d82a308d3997b1e0956e31",
-    "sourceCommitAtValidation": "c4e7fc93460dbadf315b28f535223dd6e6dee7f0",
+    "publishedCommit": "63c121fadb8c9ea4a4dd2ac88aceebd42d6dbd13",
+    "sourceCommitAtValidation": "5b6a40329be11374af064eeb758aba6d054dcdc1",
     "url": "https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace",
     "catalogSha256": "d54304a64c5860df10c1edb810e20269bf64f921ba56390ff4cebe23f9ff9f64",
-    "provenanceSha256": "fe5a6f7d09a8327615bd8a1bcfeb72133b06fcfe22575f9b05ecd7088de92d24",
-    "builderSha256": "ed8c2b5e30d1f58ed4018992bfdecb2938c6d06e6abb794ffa6fd143a4f6b9e7",
+    "provenanceSha256": "289abe8a018c536255e1cf44e767366dbf58124cd9d16600448e3d9b49e617d6",
+    "builderSha256": "fdc5047a2428432e59dc00628cc6cc46f3bde5d1330bb2fd2849385ae7c65e61",
     "testSha256": "f5828e68e04e41c72813a77aa2e55e6ed03af6e01d3ffe6e39eb3c06c1f19408",
     "hostCliVersion": "0.159.0",
     "scope": "public Git catalog, anonymously registered at immutable commit and installed in a fresh isolated host profile",
     "activeDesktopProfileInstalled": false,
-    "publicationReceipt": ".local/plugin-evidence/public-marketplace-1.2.3.json",
-    "publicationReceiptSha256": "360723c1f2bef4a06a4b59d041c518089da329c091f04ed303d39329e4e4bf86",
-    "remoteHostReceipt": ".local/plugin-evidence/remote-codex-marketplace-1.2.3.json",
-    "remoteHostReceiptSha256": "b860deb3a5f4ff21692b9fe9bb723894569575f7dcf49b395b50eacee1fbfbdc"
+    "publicationReceipt": ".local/plugin-evidence/public-marketplace-1.3.0.json",
+    "publicationReceiptSha256": "f7350632ae246898397bbdee8f4cdf7cff403eb15f063321cf1eda794e99d20e",
+    "remoteHostReceipt": ".local/plugin-evidence/remote-codex-marketplace-1.3.0.json",
+    "remoteHostReceiptSha256": "b00531e89dfe6d1678bed85f07337f8761e526b509b643911e2c5b14f2f9e01b"
   },
   "hostedMarketplace": {
     "requestedAt": "2026-09-29",
-    "status": "prepared_native_agent_delivery_not_provisioned",
+    "status": "prepared_CI_verified_native_agent_release_not_provisioned",
     "providerCandidate": "Render",
     "providerConnection": "installation_started_oauth_sign_in_pending_not_verified",
     "monthlyCap": 50,
