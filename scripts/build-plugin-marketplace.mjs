@@ -120,11 +120,11 @@ async function canonicalDestination(path) {
 
 const installationReadme = (version) => Buffer.from([
   '# ZoKo marketplace export', '',
-  `Prepared for review, version ${version}. This staged directory is not a published marketplace or a global directory listing. Public end-user license terms still require the rights holder's review; see plugins/zoko/LICENSE.txt.`, '',
+  `ZoKo version ${version}. You may download, install, and execute unmodified official plugin releases for your authorized work under plugins/zoko/LICENSE.txt, without requesting individual permission. Modification, redistribution, sublicensing, and sale rights remain reserved. Marketplace charges and service terms apply separately. Generating this directory does not publish it or establish global directory approval.`, '',
   'Use Node.js 24. Check that your Codex CLI exposes the documented commands with `codex plugin --help` and `codex plugin marketplace add --help`. Older CLI builds may not support plugin add/list or --json.', '',
-  'From this directory, after installation is authorized:', '',
+  'Install from this directory:', '',
   '```sh', 'codex plugin marketplace add . --json', 'codex plugin add zoko@zoko --json', 'codex plugin list --available --json', '```', '',
-  "For a future Git distribution, publish this complete directory at the root of an explicitly chosen branch, retaining hidden directories. Then register that exact branch with `codex plugin marketplace add QuantumStonks/ZoKo --ref <published-marketplace-ref> --json` before adding zoko@zoko. The development branch's raw plugins/zoko directory does not contain the bundled runtime.", '',
+  "The chosen official Git distribution ref is `codex/zoko-marketplace`. After that ref is published with this complete directory at its root, verify provenance and register it with `codex plugin marketplace add QuantumStonks/ZoKo --ref codex/zoko-marketplace --json` before adding zoko@zoko. Retain hidden directories when publishing. The development branch's raw plugins/zoko directory does not contain the bundled runtime.", '',
   'Inspect provenance.json for archive SHA-256, source commit, source cleanliness and every exported file hash. The plugin still requires a user-selected ZoKo marketplace and account. Installation does not provide a marketplace, funds or sellers.', '',
 ].join('\n'));
 

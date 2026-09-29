@@ -1,14 +1,22 @@
 Copyright (c) 2026 ZoKo contributors. All rights reserved.
 
-This project is proprietary. Private use and distribution require authorization
-from the applicable rights holder. No general license to use, copy, modify,
-redistribute, sublicense, or sell this software is granted by its availability
-in a repository or a plugin listing.
+Permission is granted to download, install, and execute unmodified official ZoKo
+plugin releases for work the user is authorized to perform. Copies needed for
+installation, host-managed caching, execution, and backup are permitted. Keep
+the copyright, license, and third-party notices intact. No additional individual
+permission is required for this use.
 
-The project owner has authorized preparation of ZoKo for public distribution
-while retaining all rights. That authorization does not itself grant the public
-a use or redistribution license or change ownership of contributions. Public
-end-user license terms remain subject to the rights holder's review.
+This public-use permission applies to official plugin release packages supplied
+through the project's authorized distribution channels. ZoKo remains proprietary.
+Source modification, alteration of release contents, redistribution,
+sublicensing, and sale of ZoKo software require separate authorization from
+the applicable rights holders. No license to other project components is
+granted by this notice. All rights not expressly granted remain reserved;
+ownership of contributions is unchanged.
+
+Marketplace accounts, services, transactions, charges, and applicable service
+terms are separate from this plugin-use permission. This permission does not
+provide an account, funds, seller services, or authority to make a transaction.
 
 Third-party components remain subject to their respective licenses. The plugin
 package includes THIRD_PARTY_NOTICES.txt for its bundled dependencies.

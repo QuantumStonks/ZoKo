@@ -5,14 +5,14 @@
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/zoko-plugin",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "validated_locally_and_remote_linux_windows_macos",
+  "implementation": "1.2.3_validated_locally_remote_CI_pending",
   "distribution": {
     "package": "built_and_validated",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
-    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.2.2",
+    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.2.3",
     "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
     "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
-    "independentMarketplace": "staged_catalog_discovered_installed_and_skills_loaded_in_isolated_Codex_0.159.0"
+    "independentMarketplace": "1.2.3_staged_publication_in_progress"
   },
   "publisher": {
     "displayName": "ZoKo",
@@ -20,18 +20,19 @@
     "verification": "pending",
     "license": "LicenseRef-Proprietary",
     "countryTargeting": "all_available",
-    "authorization": "standing_task_and_cumulative_limits_no_per_action_reapproval"
+    "authorization": "standing_task_and_cumulative_limits_no_per_action_reapproval",
+    "licensePermission": "Official unmodified plugin releases may be downloaded, installed and executed for authorized work; proprietary ownership and other rights remain reserved."
   },
   "package": {
-    "version": "1.2.2",
-    "archive": "dist/plugins/zoko-1.2.2.zip",
-    "sha256": "6af286c7d32cdf58e7a23f6957192694eb6bc046fb51c10723e92c755431c775",
+    "version": "1.2.3",
+    "archive": "dist/plugins/zoko-1.2.3.zip",
+    "sha256": "aa1f1a816a7c8a1e74f1f60bcb2115802c0d635c8dc30e802b75b66aa1f7736a",
     "files": 21,
-    "bytes": 1378136
+    "bytes": 1378536
   },
   "accountPlugin": {
     "pluginId": "plugins_6abc19b188e8819185ecd292ad424e42",
-    "releaseId": "pluginrel_6abc1ebf8f6481918ec4b0c07f67b78f",
+    "releaseId": "pluginrel_6abc236773188191b766b6fd5d771f84",
     "url": "https://chatgpt.com/plugins/plugins_6abc19b188e8819185ecd292ad424e42",
     "scope": "USER",
     "discoverability": "PRIVATE"
@@ -114,21 +115,32 @@
       "result": "24 exported files include the exact 21-file installable package; 6 targeted tests and all 125 tests passed; independent review found no actionable defects",
       "receipt": ".local/plugin-evidence/marketplace-export-1.2.2.json",
       "sha256": "e9e3a864f1dbc5ecaf4bbbb39593a0f153be4e433623c3a4a167363e3822dfe5"
+    },
+    {
+      "check": "1.2.3 release",
+      "result": "125 tests, check, application build, plugin build and marketplace export passed; no client/server behavioral changes",
+      "receipt": ".local/plugin-evidence/release-1.2.3-package.json",
+      "sha256": "b133d105f383b1741f7d35a2c598b0549754c1ab83918e38fdb2cd50882034a9"
+    },
+    {
+      "check": "1.2.3 private account readback",
+      "result": "Version 1.2.3, PRIVATE USER, 21 files; portable manifest, license and integrity exact; compatibility differs only in provider-normalized skills trailing slash",
+      "receipt": ".local/plugin-evidence/private-readback-1.2.3.json",
+      "sha256": "effa4a6fa6cf7f6585b7333b5ff007194a94ab738bd76a6b2997542989f4c089"
     }
   ],
   "blockers": [
-    "Universal-directory eligibility appears to conflict with the published digital-service commerce rule. This is an interpretation, not a provider rejection; it does not establish that independent Git marketplace distribution is unavailable.",
-    "XECKZ Inc. is user-designated; provider identity verification and legal attestations are incomplete.",
-    "Public website/support/privacy/terms drafts are not hosted or verified; proprietary public end-user terms require rights-holder review.",
-    "No production hosting account, marketplace URL or approved real seller is configured; real paid buyer/seller acceptance remains unverified.",
-    "Isolated current CLI installation and host skill loading are verified; installation in the active desktop profile and a real agent task remain unverified. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
+    "Universal directory only: paid digital AI-decision commerce appears to conflict with its published rule. This is an interpretation, not a provider rejection. Independent Git catalog distribution remains separate.",
+    "Universal directory only: XECKZ Inc. is user-designated; provider verification, submission attestations and final public policy URLs remain incomplete.",
+    "Live service only: no production marketplace URL, authorized funded account or approved real seller is configured. Real paid buyer/seller acceptance is unverified. Users can select their own compatible marketplace.",
+    "Active desktop profile only: installation and a real agent task remain unverified. Isolated Codex 0.159.0 local discovery/install/skill loading passed for 1.2.2; the app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
   ],
   "nextActions": [
-    "Prepare public catalog promotion with final distribution terms. Commit 4435a08 passed Linux, Windows and macOS CI, including marketplace export. Existing authorization to proceed toward public distribution remains valid; universal-directory approval is separate.",
-    "Keep the declined support inquiry unsent. Reassess directory eligibility only against authoritative current evidence; advance independent marketplace work separately.",
-    "Complete public end-user terms review, company verification where required, and deploy/verify public policy/support pages before public release.",
-    "Provision authorized hosting and real seller endpoint; complete live acceptance only within existing spending authority and without fabricated balances or inference.",
-    "Install into the intended real host profile, verify an authorized task end to end on a real marketplace, and measure successful first use separately from repository proxies."
+    "Publish the clean committed 1.2.3 export to codex/zoko-marketplace under existing public-distribution authorization; verify anonymous remote registration, installation, installed bytes and skills.",
+    "Verify remote CI for 1.2.3 and record immutable catalog/source/package hashes.",
+    "Keep the declined support inquiry unsent; reassess universal-directory eligibility only against authoritative new evidence.",
+    "Advance authorized hosting and real seller setup separately; perform live paid acceptance only within existing spending authority.",
+    "Measure successful first use and retention when an authoritative source exists; repository metrics remain proxies."
   ],
   "policyEvidence": {
     "clarificationDraft": "docs/plugin-policy-review.md",
@@ -180,11 +192,13 @@
     "publishedGitRef": null,
     "catalogSha256": "d54304a64c5860df10c1edb810e20269bf64f921ba56390ff4cebe23f9ff9f64",
     "hostCliVersion": "0.159.0",
-    "scope": "isolated owner-authorized local install",
+    "scope": "1.2.2 local isolated test verified; 1.2.3 public remote publication pending",
     "activeDesktopProfileInstalled": false,
     "provenanceSha256": "4af6f714a460c07db690caef3d13044d301beb1b279b93f59906885fdd814a60",
     "builderSha256": "39a0a4d234fcb0dbc74fe424a36ac535bb08fa4aa2c914749f49cd9f7147b6e9",
     "testSha256": "f5828e68e04e41c72813a77aa2e55e6ed03af6e01d3ffe6e39eb3c06c1f19408",
-    "sourceCommitAtValidation": "4b9149ff67c2a3de08d170a8119d6d74bbcab115"
+    "sourceCommitAtValidation": "4b9149ff67c2a3de08d170a8119d6d74bbcab115",
+    "previousVerifiedVersion": "1.2.2",
+    "plannedGitRef": "codex/zoko-marketplace"
   }
 }

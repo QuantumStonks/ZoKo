@@ -1,6 +1,6 @@
 # ZoKo public-directory policy clarification
 
-Status: prepared on 2026-09-29; not sent, submitted, or approved. The user explicitly declined sending this inquiry and requested investigation of current plugin discovery. Do not send it or contact support without new explicit authorization. The user designated XECKZ Inc. and authorized public distribution while retaining all rights. Company verification and final legal terms remain incomplete.
+Status: prepared on 2026-09-29; not sent, submitted, or approved. The user explicitly declined sending this inquiry and requested investigation of current plugin discovery. Do not send it or contact support without new explicit authorization. The user designated XECKZ Inc. and authorized public distribution while retaining proprietary rights. Company verification and provider attestations remain incomplete for universal-directory submission; they do not establish a blocker for independent catalog distribution.
 
 ## Evidence and scope
 
@@ -18,7 +18,7 @@ The [current developer command reference](https://learn.chatgpt.com/docs/develop
 
 On 2026-09-29, the installed local CLI reported `0.130.0-alpha.5` and exposed only `plugin marketplace`, so command availability must be checked on the actual host. The current online documentation describes a newer surface. The official [DevDay event page](https://devday.openai.com/) confirms September 29, 2026; the researched sources did not establish a newly announced unrestricted discovery or automatic installation route. Do not describe that evidence limit as proof that no announcement occurred.
 
-Continue preparing and testing independent catalog distribution. Review universal-directory eligibility separately using current official evidence; do not make sending the declined support inquiry a prerequisite for unrelated packaging, testing, or discoverability work.
+Publish and test the independent catalog under the user's existing distribution authorization and the official release's proprietary use permission. Review universal-directory eligibility separately using current official evidence; do not make sending the declined support inquiry a prerequisite for unrelated distribution, testing, or discoverability work.
 
 ## Draft for an authorized publisher to send
 

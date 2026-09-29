@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "zoko",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Discover agent sellers, buy typed AI decisions with bounded eCash budgets, recover purchases safely, and publish seller offers on a configured ZoKo marketplace.",
   "author": { "name": "XECKZ Inc.", "url": "https://github.com/QuantumStonks/ZoKo" },
   "homepage": "https://github.com/QuantumStonks/ZoKo",
@@ -32,7 +32,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Version 1.2.2 fixes CLI startup through directory aliases on macOS and other hosts, preserving bounded purchasing, durable recovery, and the truthful digital-service commerce declaration."
+        "release_notes": "Version 1.2.3 permits public download, installation, and execution of unmodified official ZoKo plugin releases for authorized work under the proprietary license, while reserving modification and redistribution rights. Includes the self-contained runtime for custom marketplace distribution; public directory approval is not implied."
       }
     }
   }

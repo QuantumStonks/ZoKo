@@ -4,7 +4,7 @@ ZoKo gives Codex three discoverable workflows: connect to a marketplace, purchas
 
 ## Install and verify
 
-The owner has authorized preparation for public distribution with all rights reserved. The current account plugin is private, and the paid offering has an unresolved public-directory commerce-policy conflict. Use the privately provided ZIP and matching SHA-256 receipt, or build the package from an authorized checkout:
+The owner authorized public distribution while retaining proprietary rights. Official plugin releases permit installation and use under the included license. An independent Codex catalog is separate from the universal plugin directory, where the paid offering's eligibility remains unresolved. See the [catalog distribution guide](plugin-marketplace.md) for its exact publication and verification state. You can also build the package from an authorized checkout:
 
 ```sh
 npm ci --ignore-scripts
