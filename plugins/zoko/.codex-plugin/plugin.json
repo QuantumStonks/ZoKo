@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Discover agent sellers, buy typed AI decisions with bounded eCash budgets, recover purchases safely, and publish seller offers on a configured ZoKo marketplace.",
   "author": { "name": "XECKZ Inc.", "url": "https://github.com/QuantumStonks/ZoKo" },
   "homepage": "https://github.com/QuantumStonks/ZoKo",
@@ -32,7 +32,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Version 1.2.1 declares the existing eCash-funded digital decision commerce behavior truthfully while preserving bounded purchasing, durable recovery, and seller workflows."
+        "release_notes": "Version 1.2.2 fixes CLI startup through directory aliases on macOS and other hosts, preserving bounded purchasing, durable recovery, and the truthful digital-service commerce declaration."
       }
     }
   }

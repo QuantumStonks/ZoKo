@@ -216,7 +216,8 @@ export async function buildPlugin({ outputDirectory = resolve(project, 'dist/plu
   return { directory: destination, archive: archivePath, sha256: digest, files: files.size, bytes: archive.length };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+const entryPath = process.argv[1] ? await realpath(process.argv[1]).catch(() => undefined) : undefined;
+if (entryPath && entryPath === await realpath(fileURLToPath(import.meta.url))) {
   if (process.argv.length > 2) throw new Error('Usage: node scripts/build-plugin.mjs');
   process.stdout.write(`${JSON.stringify(await buildPlugin(), null, 2)}\n`);
 }

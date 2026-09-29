@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { lstat, mkdir, open, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, open, realpath, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -341,7 +341,10 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   throw new Error(`Unknown command: ${words.join(' ')}. Run help for available commands.`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Node resolves module paths through directory aliases (for example macOS /var).
+// Canonicalize both sides so direct execution still works without running on import.
+const entryPath = process.argv[1] ? await realpath(process.argv[1]).catch(() => undefined) : undefined;
+if (entryPath && entryPath === await realpath(fileURLToPath(import.meta.url))) {
   main().catch((error: unknown) => {
     if (error instanceof AmbiguousDecisionError) {
       process.stderr.write(`${JSON.stringify({ error: error.name, message: error.message, quoteId: error.quoteId, idempotencyKey: error.idempotencyKey, decisionId: error.decisionId })}\n`);

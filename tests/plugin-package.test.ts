@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve, sep } from 'node:path';
@@ -97,6 +97,25 @@ test('plugin archives are deterministic, contain only portable assets and run af
   assert.match(help.stdout, /execute --journal/);
   assert.match(help.stdout, /seller register/);
   assert.equal(help.stderr, '');
+  const alias = join(temporary, 'plugin-alias');
+  await symlink(root, alias, process.platform === 'win32' ? 'junction' : 'dir');
+  for (const flags of [[], ['--preserve-symlinks-main']]) {
+    const linkedHelp = await exec(process.execPath, [...flags, join(alias, 'runtime/cli.mjs'), 'help'], { cwd: extract, env });
+    assert.equal(linkedHelp.stdout, help.stdout, 'CLI runs through a directory alias with either Node entrypoint resolution mode');
+    assert.equal(linkedHelp.stderr, '');
+  }
+  const importer = join(temporary, 'import-cli.mjs');
+  await writeFile(importer, `const cli = await import(${JSON.stringify(pathToFileURL(join(alias, 'runtime/cli.mjs')).href)}); console.log(typeof cli.main);\n`);
+  const importedCli = await exec(process.execPath, [importer], { cwd: extract, env });
+  assert.equal(importedCli.stdout.trim(), 'function', 'importing the CLI does not dispatch a command');
+  assert.equal(importedCli.stderr, '');
+  const projectAlias = join(temporary, 'source-alias');
+  await symlink(project, projectAlias, process.platform === 'win32' ? 'junction' : 'dir');
+  await assert.rejects(
+    exec(process.execPath, [join(projectAlias, 'scripts/build-plugin.mjs'), 'unsupported-argument'], { cwd: temporary, env }),
+    /Usage: node scripts\/build-plugin\.mjs/,
+    'builder executes its argument guard through a directory alias instead of silently succeeding',
+  );
   const imported = await exec(process.execPath, ['--input-type=module', '-e', `const client = await import(${JSON.stringify(pathToFileURL(join(root, 'runtime/client.mjs')).href)}); const protocol = await import(${JSON.stringify(pathToFileURL(join(root, 'runtime/protocol.mjs')).href)}); console.log(JSON.stringify({amount: client.formatXec(client.parseXec('12345678901234567890.000000001')), valid: protocol.DecisionInputSchema.safeParse({state:'observed task',questions:{answer:{type:'noul'}}}).success}));`], { cwd: extract, env });
   assert.deepEqual(JSON.parse(imported.stdout), { amount: '12345678901234567890.000000001', valid: true });
   assert.deepEqual((await readdir(root)).sort(), ['.codex-plugin', 'LICENSE.txt', 'README.md', 'THIRD_PARTY_NOTICES.txt', 'assets', 'integrity.json', 'plugin.json', 'runtime', 'skills'].sort());
