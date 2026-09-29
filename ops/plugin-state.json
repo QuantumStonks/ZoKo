@@ -135,18 +135,24 @@
       "result": "Public ref readback and anonymous Codex 0.159.0 pinned clone passed; exact 21 installed files and 20 integrity entries; installed/enabled readback, CLI startup and all 3 enabled skills with no loader errors; no model calls, credentials or funds",
       "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.2.3.json",
       "sha256": "b860deb3a5f4ff21692b9fe9bb723894569575f7dcf49b395b50eacee1fbfbdc"
+    },
+    {
+      "check": "Node 24 and hosted production preparation",
+      "result": "Windows Node 24 installed; check, 125 tests, application/plugin build passed; official Render JSON Schema passed; both Chronik mainnet endpoints passed public read-only preflight. No hosted service or real funds.",
+      "receipt": ".local/plugin-evidence/host-preparation-20260929.json",
+      "sha256": "282753ec27a5f9e9a2c5b57fc52fed51ad3b30958fe7d8b0ed55b8fd61b6f786"
     }
   ],
   "blockers": [
     "Universal directory only: paid digital AI-decision commerce appears to conflict with its published rule. This is an interpretation, not a provider rejection. Independent Git catalog distribution remains separate.",
     "Universal directory only: XECKZ Inc. is user-designated; provider verification, submission attestations and final public policy URLs remain incomplete.",
-    "Live service only: no production marketplace URL, authorized funded account or approved real seller is configured. Real paid buyer/seller acceptance is unverified. Users can select their own compatible marketplace.",
+    "Live service only: Node 24 and a schema-validated Render Blueprint are ready, but no host is provisioned or connected, no hosting/XEC cap or real seller is supplied, and no funded acceptance has occurred. Await the specific setup inputs in hostedMarketplace.pendingUserInputs; public catalog publication is already complete.",
     "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.2.3 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
     "Make the reviewed source changes available from the default branch after final PR review. PR4 remains draft; catalog publication is independently complete.",
-    "Advance authorized production hosting and real seller setup separately; test live buyer/seller acceptance only within existing authority. No default hosted market or seller exists.",
+    "Resume docs/render-deployment.md after the pending hosting budget/connection, real seller and XEC funding inputs arrive; provision exact tested commit, verify backup and HTTPS/ledger readiness, then complete mainnet deposit, one paid decision, original recovery and withdrawal within standing limits.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
     "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies."
   ],
@@ -213,5 +219,56 @@
     "publicationReceiptSha256": "360723c1f2bef4a06a4b59d041c518089da329c091f04ed303d39329e4e4bf86",
     "remoteHostReceipt": ".local/plugin-evidence/remote-codex-marketplace-1.2.3.json",
     "remoteHostReceiptSha256": "b860deb3a5f4ff21692b9fe9bb723894569575f7dcf49b395b50eacee1fbfbdc"
+  },
+  "hostedMarketplace": {
+    "requestedAt": "2026-09-29",
+    "status": "prepared_not_provisioned",
+    "providerCandidate": "Render",
+    "providerConnection": "suggested_not_confirmed",
+    "monthlyCap": null,
+    "url": null,
+    "resourceIds": [],
+    "deployedCommit": null,
+    "node": {
+      "active": "24.14.0",
+      "installedWindowsRuntime": "24.14.1",
+      "major": 24
+    },
+    "blueprint": {
+      "path": "render.yaml",
+      "sha256": "d0da9b9c1741628dd545e7107a3ed17b1440e1205529a92359f49662282728d0"
+    },
+    "runbook": {
+      "path": "docs/render-deployment.md",
+      "sha256": "177b40d4713aeb9a191a8cd97eb9f14f4857fd9d92d2825bdb6acc00a2958ce9"
+    },
+    "validation": {
+      "receipt": ".local/plugin-evidence/render-blueprint-validation.json",
+      "sha256": "e09e6921b0cfcd755d1c56364168b2ababbc1b11e3b19040d59c4a7f2ba17b4e",
+      "schemaSha256": "57aa0a1ff9c3b2d0fcb91b790b7b285aef6397adb0c92930e6e601054444cfe5"
+    },
+    "preparationReceipt": {
+      "path": ".local/plugin-evidence/host-preparation-20260929.json",
+      "sha256": "282753ec27a5f9e9a2c5b57fc52fed51ad3b30958fe7d8b0ed55b8fd61b6f786"
+    },
+    "paidAcceptance": {
+      "status": "pending_real_host_seller_accounts_wallet_backup_and_authorized_funding",
+      "network": "mainnet",
+      "seller": null,
+      "maximumXec": null,
+      "fundingWallet": null,
+      "minimumWithdrawalXec": "5.46",
+      "maximumWithdrawalFeeReserveXec": "100",
+      "minimumDepositFormula": "decision ceiling + withdrawal amount + maximum withdrawal fee reserve; external funding-wallet fee additional",
+      "depositTxid": null,
+      "decisionId": null,
+      "withdrawalTxid": null
+    },
+    "pendingUserInputs": [
+      "hosting connection or selected existing host and monthly spending cap",
+      "real seller HTTPS endpoint or inference account/model",
+      "cumulative real-XEC acceptance cap and funding wallet",
+      "protected secret provisioning and encrypted recovery backup before funding"
+    ]
   }
 }

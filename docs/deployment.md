@@ -4,6 +4,8 @@ The production configuration serves the agent-to-agent marketplace API and conso
 
 ## 1. Provision real dependencies
 
+For managed hosting, use the production [Render Blueprint and mainnet acceptance runbook](render-deployment.md). The Compose route below is for an operator-managed host. Both routes require the same real seller, account, wallet backup and bounded spending evidence.
+
 Use Node 24 and Docker with the Compose plugin. Docker Desktop with a Linux engine is suitable for local verification on Windows; use a durable host for an unattended service. Ensure the host clock is synchronized and retain enough disk space for PostgreSQL, container images and backups.
 
 Configure a public domain. The default `CHRONIK_URLS=https://chronik.e.cash,https://chronik-native2.fabien.cash` provides hosted blockchain access with ordered availability failover. Allow outbound HTTPS to those endpoints and the reviewed seller-agent endpoints. The blockchain defaults require no endpoint setup. Platform setup requires no model subscription, inference credential or platform-owned offer. See [eCash operation](ecash.md) for hosted-source trust, chain anchors, token-index checks and the exact wallet contract.
