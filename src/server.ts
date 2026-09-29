@@ -19,6 +19,7 @@ const Names = z.string().trim().min(1).max(120);
 const CreateAccountSchema = z.object({name:Names,dailyLimitNanos:MoneySchema,maxPriceNanos:MoneySchema,allowedSellers:z.array(SellerId).max(100).optional()}).strict();
 const AccountPolicySchema = z.object({dailyLimitNanos:MoneySchema.optional(),maxPriceNanos:MoneySchema.optional(),allowedSellers:z.array(SellerId).max(100).nullable().optional(),disabled:z.boolean().optional()}).strict();
 const AgentOfferSchema = z.object({id:SellerId,name:Names,endpoint:z.string().url().max(2048),apiKey:z.string().min(1).max(4096),model:z.string().min(1).max(100),priceNanos:PositiveMoneySchema}).strict();
+const SessionOfferSchema = AgentOfferSchema.omit({endpoint:true,apiKey:true});
 const SellerSchema = AgentOfferSchema.extend({payoutAccountId:Uuid,enabled:z.boolean().optional()});
 const OfferPatchSchema = z.object({priceNanos:PositiveMoneySchema.optional(),apiKey:z.string().min(1).max(4096).optional(),paused:z.boolean().optional()}).strict().refine(value=>Object.keys(value).length>0,'Provide an offer change');
 
@@ -68,7 +69,7 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     return key;
   }
   const accountView=(a:Record<string,any>)=>({id:a.id,name:a.name,dailyLimitNanos:a.daily_limit_nanos,maxPriceNanos:a.max_price_nanos,allowedSellers:a.allowed_sellers,disabled:a.disabled});
-  const offerView=(s:Record<string,any>)=>({id:s.id,name:s.name,endpoint:s.endpoint,model:s.model,priceNanos:s.price_nanos,payoutAccountId:s.payout_account_id,enabled:s.enabled,paused:s.paused,commissionBps:config.platformFeeBps});
+  const offerView=(s:Record<string,any>)=>({id:s.id,name:s.name,endpoint:s.delivery_mode==='agent'?null:s.endpoint,deliveryMode:s.delivery_mode,readyUntil:s.agent_ready_until,model:s.model,priceNanos:s.price_nanos,payoutAccountId:s.payout_account_id,enabled:s.enabled,paused:s.paused,commissionBps:config.platformFeeBps});
   async function createOffer(ownerId:string,offer:z.infer<typeof AgentOfferSchema>,enabled:boolean,actor:string) {
     const endpoint=validateEndpoint(offer.endpoint,config.providerHosts);
     return transaction(db,async tx=>{
@@ -87,13 +88,15 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     return result;
   };
 
-  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.2.0'}));
+  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.3.0'}));
   app.get('/health/ready',async(_req,reply)=>{
     try {
       const migration=await db.query('SELECT max(version)::integer AS version FROM zoko_migrations');
       if(migration.rows[0]?.version!==SCHEMA_VERSION)throw new Error('Unsupported schema');
       const count = await db.query(`SELECT count(*)::integer AS n FROM sellers s JOIN accounts a ON a.id=s.payout_account_id
-        WHERE s.enabled AND NOT s.paused AND NOT a.disabled AND (s.circuit_until IS NULL OR s.circuit_until<=clock_timestamp())`);
+        WHERE s.enabled AND NOT s.paused AND NOT a.disabled AND (s.circuit_until IS NULL OR s.circuit_until<=clock_timestamp())
+        AND (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
+          (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running')))`);
       const paymentStatus = payments.status() as {ready?:boolean;enabled?:boolean};
       const ready=!config.payments.enabled || paymentStatus.ready===true;
       reply.code(ready?200:503);
@@ -102,10 +105,11 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
   });
   app.get('/v1/catalog',async()=>({sellers:await market.catalog()}));
   app.get('/.well-known/zoko.json',async()=>({
-    name:'Zoko',version:'1.2.0',protocol:'typesafe-systemone-v1',
+    name:'Zoko',version:'1.3.0',protocol:'typesafe-systemone-v1',
     catalog:'/v1/catalog',quote:'/v1/quotes',execute:'/v1/decisions',
     authentication:{scheme:'Bearer',provisioning:'operator_issued_scoped_account_key',accountRoles:['buyer','seller']},
     marketplace:{role:'intermediary',sellerOffers:'/v1/seller/offers',approvalRequired:true,ownership:'authenticated_seller_account',sellerPaysDeliveryCosts:true},
+    agentDelivery:{register:'/v1/seller/agent-offers',claim:'/v1/seller/jobs/claim',complete:'/v1/seller/jobs/:id/complete',presenceSeconds:120,capacityPerOffer:1,tokenUsage:'unavailable',inference:'active_seller_session',credentials:'seller_local_only'},
     payment:{currency:'XEC',ledgerUnit:'nanoXEC',unitsPerXec:'1000000000',unitsPerOnChainAtom:'10000000',method:'custodial_prepaid_balance',network:config.payments.network,verification:'hosted_chronik',fundingWallet:'cashtab',depositHistory:'/v1/deposits'},
     billing:{quoteTtlSeconds:config.quoteTtlSeconds,idempotencyHeader:'Idempotency-Key',successfulResponseIsBillable:true,lowConfidenceResponseIsBillable:true,failedExecutionIsRefunded:true,platformCommissionBps:config.platformFeeBps,commissionPolicy:'deducted_from_seller_price'},
     limits:{inputBytes:32768,questions:20,maximumProviderTimeoutMs:config.providerMaxTimeoutMs},
@@ -168,6 +172,33 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     const created=await createOffer(ownerId,offer,false,`agent:${ownerId}`);
     reply.code(201);return created;
   });
+  app.post('/v1/seller/agent-offers',async(req,reply)=>{
+    const ownerId=await agentAccount(req.headers),offer=SessionOfferSchema.parse(req.body);
+    const created=await transaction(db,async tx=>{
+      const owner=await tx.query('SELECT id FROM accounts WHERE id=$1 AND NOT disabled FOR UPDATE',[ownerId]);
+      if(!owner.rowCount)throw new AppError(403,'account_disabled','Seller account is unavailable');
+      const result=await tx.query(`INSERT INTO sellers(id,name,endpoint,api_key_encrypted,model,price_nanos,payout_account_id,enabled,paused,delivery_mode)
+        VALUES($1,$2,'','',$3,$4,$5,false,false,'agent') ON CONFLICT(id) DO NOTHING RETURNING *`,[offer.id,offer.name,offer.model,offer.priceNanos,ownerId]);
+      if(!result.rowCount)throw new AppError(409,'seller_exists','Seller offer ID already exists');
+      await tx.query('INSERT INTO audit_events(actor,action,subject,metadata) VALUES($1,$2,$3,$4)',[`agent:${ownerId}`,'seller.created',offer.id,JSON.stringify({deliveryMode:'agent',enabled:false,priceNanos:offer.priceNanos})]);
+      return offerView(result.rows[0]);
+    });
+    reply.code(201);return created;
+  });
+  app.post('/v1/seller/offers/:id/ready',async req=>{
+    const ownerId=await agentAccount(req.headers),id=SellerId.parse((req.params as {id:string}).id);
+    const {ready}=z.object({ready:z.boolean()}).strict().parse(req.body);
+    return market.agentReady(ownerId,id,ready);
+  });
+  app.post('/v1/seller/jobs/claim',async req=>{
+    const ownerId=await agentAccount(req.headers),{sellerId}=z.object({sellerId:SellerId}).strict().parse(req.body);
+    return market.claimAgentJob(ownerId,sellerId,idem(req.headers));
+  });
+  app.post('/v1/seller/jobs/:id/complete',async req=>{
+    const ownerId=await agentAccount(req.headers),id=Uuid.parse((req.params as {id:string}).id);
+    const body=z.object({claimToken:Uuid,result:z.unknown()}).strict().parse(req.body);
+    return market.completeAgentJob(ownerId,id,body.claimToken,body.result);
+  });
   app.patch('/v1/seller/offers/:id',async req=>{
     const ownerId=await agentAccount(req.headers),id=SellerId.parse((req.params as {id:string}).id),input=OfferPatchSchema.parse(req.body);
     return transaction(db,async tx=>{
@@ -177,6 +208,7 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
       const found=await tx.query('SELECT * FROM sellers WHERE id=$1 AND payout_account_id=$2 FOR UPDATE',[id,ownerId]);
       if(!found.rowCount)throw new AppError(404,'seller_not_found','Seller offer not found');
       const current=found.rows[0];
+      if(current.delivery_mode==='agent' && input.apiKey)throw new AppError(400,'invalid_agent_change','Active-agent offers do not use an inference API key');
       const changed=await tx.query(`UPDATE sellers SET price_nanos=$1,api_key_encrypted=$2,paused=$3
         WHERE id=$4 AND payout_account_id=$5 RETURNING *`,[input.priceNanos??current.price_nanos,input.apiKey?encrypt(input.apiKey,config.encryptionKey):current.api_key_encrypted,input.paused??current.paused,id,ownerId]);
       await tx.query('INSERT INTO audit_events(actor,action,subject,metadata) VALUES($1,$2,$3,$4)',
@@ -234,7 +266,8 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
       if(s.payout_account_id!==ownerId)throw new AppError(409,'seller_owner_changed','Seller ownership changed during the request');
       const enabled=input.enabled??s.enabled;
       if(enabled&&(!owner?.rowCount||owner.rows[0].disabled))throw new AppError(400,'invalid_payout_account','Approval requires an active seller account');
-      if(enabled)validateEndpoint(s.endpoint,config.providerHosts);
+      if(s.delivery_mode==='agent'&&input.apiKey)throw new AppError(400,'invalid_agent_change','Active-agent offers do not use an inference API key');
+      if(enabled&&s.delivery_mode==='https')validateEndpoint(s.endpoint,config.providerHosts);
       await tx.query('UPDATE sellers SET enabled=$1,price_nanos=$2,api_key_encrypted=$3 WHERE id=$4',[enabled,input.priceNanos??s.price_nanos,input.apiKey?encrypt(input.apiKey,config.encryptionKey):s.api_key_encrypted,id]);
       await tx.query('INSERT INTO audit_events(actor,action,subject,metadata) VALUES($1,$2,$3,$4)',['admin','seller.updated',id,JSON.stringify({...input,apiKey:input.apiKey?'rotated':undefined})]);
     });

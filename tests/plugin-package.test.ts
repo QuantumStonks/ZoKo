@@ -80,7 +80,7 @@ test('plugin archives are deterministic, contain only portable assets and run af
     assert.equal(digest(bytes), expected.sha256, expected.path);
   }
   for (const input of integrity.inputs) {
-    assert.match(input.path, /^(?:src\/(?:client|cli|protocol)\.ts|node_modules\/zod\/)/);
+    assert.match(input.path, /^(?:src\/(?:client|cli|protocol|agent-journal|provider|security)\.ts|node_modules\/zod\/)/);
     assert.equal(digest(await readFile(join(project, input.path))), input.sha256);
   }
   const extract = join(temporary, 'extracted');
@@ -96,6 +96,8 @@ test('plugin archives are deterministic, contain only portable assets and run af
   assert.match(help.stdout, /quote --input/);
   assert.match(help.stdout, /execute --journal/);
   assert.match(help.stdout, /seller register/);
+  assert.match(help.stdout, /seller claim/);
+  assert.match(help.stdout, /seller complete/);
   assert.equal(help.stderr, '');
   const alias = join(temporary, 'plugin-alias');
   await symlink(root, alias, process.platform === 'win32' ? 'junction' : 'dir');

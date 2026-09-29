@@ -15,6 +15,7 @@ export interface ProviderResult {
   answers: Record<string, Answer>;
   usage: { input_tokens: number; output_tokens: number };
 }
+export type AgentResult = Omit<ProviderResult,'usage'> & { usage: null };
 export interface Provider {
   /** Complete endpoint URL, e.g. https://api.typesafe.ai/v1/systemone. */
   endpoint: string;
@@ -65,8 +66,8 @@ function invalidResult(): never {
   throw new ProviderError('provider_invalid_result', 'Provider returned an invalid or inconsistent typed result');
 }
 
-function validateResult(value: unknown, input: DecisionInput, model: string): ProviderResult {
-  const parsed = ResultSchema.safeParse(value);
+function validateTypedResult(value: unknown, input: DecisionInput, model: string, agent: boolean): ProviderResult | AgentResult {
+  const parsed = (agent ? ResultSchema.extend({usage:z.null()}) : ResultSchema).safeParse(value);
   if (!parsed.success) invalidResult();
   const result = parsed.data;
   const resolvesAlias = (model === 'jev-latest' || model === 'jev-preview') && /^jev-[0-9]+\.[0-9]+\.[0-9]+$/.test(result.model);
@@ -95,7 +96,15 @@ function validateResult(value: unknown, input: DecisionInput, model: string): Pr
       if (answer.score < 0 || answer.score > maximum || Math.abs(answer.score - expectation) > PROBABILITY_TOLERANCE * Math.max(1, maximum)) invalidResult();
     }
   }
-  return result as ProviderResult;
+  return result as ProviderResult | AgentResult;
+}
+
+function validateResult(value:unknown,input:DecisionInput,model:string):ProviderResult {
+  return validateTypedResult(value,input,model,false) as ProviderResult;
+}
+/** Active agents do not expose a reliable per-job token meter. Never invent one. */
+export function validateAgentResult(value:unknown,input:DecisionInput,model:string):AgentResult {
+  return validateTypedResult(value,DecisionInputSchema.parse(input),model,true) as AgentResult;
 }
 
 /**
@@ -204,7 +213,7 @@ export async function evaluateProvider(
  * Minimum reported confidence across Choice/Score answers. For Noul only, use the
  * derived concentration max(p, 1-p). Neither is a proof of real-world correctness.
  */
-export function resultConfidence(result: ProviderResult): number {
+export function resultConfidence(result: ProviderResult | AgentResult): number {
   const answers = Object.values(result.answers);
   if (answers.length === 0) throw new ProviderError('provider_invalid_result', 'Provider returned no answers');
   let minimum = 1;

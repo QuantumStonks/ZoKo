@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { DecisionInput } from './protocol.js';
-import type { ProviderResult } from './provider.js';
+import type { ProviderResult, AgentResult } from './provider.js';
 
 /** Integer nanoXEC at every wire boundary. One XEC is 1,000,000,000 nanoXEC. */
 export type NanoXec = string;
@@ -8,7 +8,9 @@ export type NanoXec = string;
 export interface SellerOffer {
   id: string;
   name: string;
-  endpoint: string;
+  endpoint: string | null;
+  deliveryMode?: 'https' | 'agent';
+  readyUntil?: string | null;
   model: string;
   priceNanos: NanoXec;
   payoutAccountId: string;
@@ -67,7 +69,7 @@ export interface DecisionReceipt {
   priceNanos?: NanoXec;
   schemaHash?: string;
   requestHash?: string;
-  result?: ProviderResult | null;
+  result?: ProviderResult | AgentResult | null;
   confidence?: number | null;
   accepted?: boolean | null;
   latencyMs?: number | null;

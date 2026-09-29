@@ -42,9 +42,9 @@ services:
       - key: XEC_WALLET_SEED_HEX
         sync: false
       - key: ZOKO_PROVIDER_HOSTS
-        sync: false
+        value: ""
       - key: ZOKO_PROVIDER_TIMEOUT_MS
-        value: "10000"
+        value: "60000"
       - key: ZOKO_PLATFORM_FEE_BPS
         value: "1000"
       - key: ZOKO_QUOTE_TTL_SECONDS

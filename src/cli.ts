@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AmbiguousDecisionError, ZokoApiError, ZokoClient, parseXec, validateIdempotencyKey, type PurchasePolicy, type Quote, type RegisterSellerOfferInput, type UpdateSellerOfferInput } from './client.js';
 import { DecisionInputSchema, type DecisionInput } from './protocol.js';
+import { claimWithJournal, completeWithJournal } from './agent-journal.js';
 
 const help = `Zoko — typed decisions, exact XEC accounting
 
@@ -37,6 +38,10 @@ Commands:
   seller list [--limit N] [--after ID]         Read your own bounded offer page
   seller register --input FILE               Submit your own offer for approval
   seller update --id ID --input FILE          Change own price/key/pause state
+  seller agent-register --input FILE          Publish an active-session offer (pending approval)
+  seller ready --id ID --ready true|false      Renew 120-second presence or go offline
+  seller claim --id ID --journal FILE          Durably claim/recover one typed decision
+  seller complete --journal FILE [--input FILE] Submit/recover its original typed result
   api METHOD /v1/PATH [--input FILE] [--key KEY]
                                              Explicit API call; no automatic retries
   help                                       Show this message
@@ -312,6 +317,24 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     allowedFlags(flags, ['name', 'daily-limit', 'max-price', 'sellers']); positional(words, 2);
     output(await client.request('POST', '/v1/admin/accounts', { name: requireFlag(flags, 'name'), dailyLimitNanos: parseXec(requireFlag(flags, 'daily-limit')), maxPriceNanos: parseXec(requireFlag(flags, 'max-price')), ...(flags.sellers ? { allowedSellers: flags.sellers.split(',').map((s) => s.trim()).filter(Boolean) } : {}) }));
     return;
+  }
+  if(command==='seller'&&words[1]==='agent-register'){
+    allowedFlags(flags,['input']);positional(words,2);
+    output(await client.request('POST','/v1/seller/agent-offers',await jsonFile(requireFlag(flags,'input'))));return;
+  }
+  if(command==='seller'&&words[1]==='ready'){
+    allowedFlags(flags,['id','ready']);positional(words,2);
+    const id=requireFlag(flags,'id'),ready=requireFlag(flags,'ready');
+    if(!/^[a-z0-9][a-z0-9_-]{0,63}$/.test(id)||!['true','false'].includes(ready))throw new Error('Provide a valid offer ID and --ready true or false.');
+    output(await client.request('POST',`/v1/seller/offers/${id}/ready`,{ready:ready==='true'}));return;
+  }
+  if(command==='seller'&&words[1]==='claim'){
+    allowedFlags(flags,['id','journal']);positional(words,2);
+    output(await claimWithJournal(client,resolve(requireFlag(flags,'journal')),requireFlag(flags,'id')));return;
+  }
+  if(command==='seller'&&words[1]==='complete'){
+    allowedFlags(flags,['journal','input']);positional(words,2);
+    output(await completeWithJournal(client,resolve(requireFlag(flags,'journal')),flags.input?await jsonFile(flags.input):undefined));return;
   }
   if (command === 'seller' && words[1] === 'add') {
     allowedFlags(flags, ['input']); positional(words, 2);

@@ -95,7 +95,7 @@ async function sourceProvenance(files, integrity) {
   if (!Array.isArray(integrity.inputs) || !integrity.inputs.length) throw new Error('Missing runtime input provenance.');
   const paths = new Set();
   for (const input of integrity.inputs) {
-    if (!input || !safeName(input.path) || !/^(?:src\/(?:cli|client|protocol)\.ts|node_modules\/zod\/.+)$/.test(input.path) || paths.has(input.path)) throw new Error('Invalid runtime input provenance.');
+    if (!input || !safeName(input.path) || !/^(?:src\/(?:cli|client|protocol|agent-journal|provider|security)\.ts|node_modules\/zod\/.+)$/.test(input.path) || paths.has(input.path)) throw new Error('Invalid runtime input provenance.');
     paths.add(input.path);
     if (hash(await regularFile(resolve(project, input.path))) !== input.sha256) throw new Error(`Built runtime input differs from checkout: ${input.path}`);
   }
@@ -103,7 +103,7 @@ async function sourceProvenance(files, integrity) {
   const { stdout } = await exec('git', ['rev-parse', '--verify', 'HEAD'], { cwd: project });
   const sourceCommit = stdout.trim();
   if (!/^[0-9a-f]{40,64}$/.test(sourceCommit)) throw new Error('Cannot establish checkout commit.');
-  const status = await exec('git', ['status', '--porcelain', '--untracked-files=all', '--', 'plugins/zoko', 'src/cli.ts', 'src/client.ts', 'src/protocol.ts', 'scripts/build-plugin.mjs', 'package-lock.json'], { cwd: project });
+  const status = await exec('git', ['status', '--porcelain', '--untracked-files=all', '--', 'plugins/zoko', ...[...paths].filter(path => path.startsWith('src/')), 'scripts/build-plugin.mjs', 'scripts/build-plugin-marketplace.mjs', 'package.json', 'package-lock.json'], { cwd: project });
   return { sourceCommit, packageSourcesClean: status.stdout.trim() === '', packageMatchesCheckout: true };
 }
 

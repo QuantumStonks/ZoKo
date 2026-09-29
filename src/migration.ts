@@ -1,7 +1,7 @@
 import type { Db } from './db.js';
 import { paymentsMigration, paymentsUpgradeMigration } from './payments/migration.js';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 const schema = `
 CREATE TABLE IF NOT EXISTS zoko_migrations(version integer PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now());
@@ -69,6 +69,22 @@ ALTER TABLE sellers ADD CONSTRAINT sellers_enabled_requires_owner
  CHECK(NOT enabled OR payout_account_id IS NOT NULL);
 `;
 
+const agentDeliveryMigration = `
+ALTER TABLE sellers ADD COLUMN delivery_mode text NOT NULL DEFAULT 'https' CHECK(delivery_mode IN ('https','agent'));
+ALTER TABLE sellers ADD COLUMN agent_ready_until timestamptz;
+ALTER TABLE quotes ADD COLUMN delivery_mode text NOT NULL DEFAULT 'https' CHECK(delivery_mode IN ('https','agent'));
+CREATE TABLE agent_jobs(
+ decision_id uuid PRIMARY KEY REFERENCES decisions(id),
+ owner_id uuid NOT NULL REFERENCES accounts(id), input jsonb NOT NULL,
+ claim_key text, claim_token uuid, claimed_at timestamptz,
+ result_hash text, completed_at timestamptz,
+ UNIQUE(owner_id,claim_key),
+ CHECK((claim_key IS NULL AND claim_token IS NULL AND claimed_at IS NULL)
+    OR (claim_key IS NOT NULL AND claim_token IS NOT NULL AND claimed_at IS NOT NULL))
+);
+CREATE INDEX agent_jobs_owner_pending ON agent_jobs(owner_id,decision_id) WHERE claim_key IS NULL;
+`;
+
 export async function migrate(db: Db): Promise<void> {
   const client = await db.connect();
   try {
@@ -77,7 +93,7 @@ export async function migrate(db: Db): Promise<void> {
     await client.query('CREATE TABLE IF NOT EXISTS zoko_migrations(version integer PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
     const existing = await client.query('SELECT version FROM zoko_migrations ORDER BY version DESC LIMIT 1');
     if (!existing.rowCount) {
-      await client.query(schema); await client.query(paymentsMigration);
+      await client.query(schema); await client.query(paymentsMigration); await client.query(agentDeliveryMigration);
       await client.query('INSERT INTO zoko_migrations(version) VALUES($1)',[SCHEMA_VERSION]);
     } else {
       let version = existing.rows[0].version;
@@ -92,6 +108,11 @@ export async function migrate(db: Db): Promise<void> {
         await client.query(marketplaceUpgradeMigration);
         await client.query('INSERT INTO zoko_migrations(version) VALUES(3)');
         version = 3;
+      }
+      if (version === 3) {
+        await client.query(agentDeliveryMigration);
+        await client.query('INSERT INTO zoko_migrations(version) VALUES(4)');
+        version = 4;
       }
       if (version !== SCHEMA_VERSION) throw new Error('Unsupported database schema version');
     }

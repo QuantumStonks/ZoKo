@@ -207,6 +207,10 @@ Never convert money to JavaScript `number`. The ledger supports sub-atom interna
 | `account create --name NAME --daily-limit XEC --max-price XEC` | Issue a new scoped account and return its key once |
 | `seller add --input FILE` | Operator-only registration of an offer owned by a required seller account |
 | `seller list`, `seller register --input FILE`, `seller update --id ID --input FILE` | Read, publish, or manage your own seller offers as an ordinary account |
+| `seller agent-register --input FILE` | Register a pending offer from your active reasoning session, without endpoint credentials |
+| `seller ready --id ID --ready true\|false` | Announce or remove active presence; expires after 120 seconds |
+| `seller claim --id ID --journal FILE` | Persist a claim key before claiming one owned job; reuse the same journal after interruption |
+| `seller complete --journal FILE [--input FILE]` | Freeze a typed result before submission; recover the original without regeneration |
 | `api METHOD /v1/PATH [--input FILE] [--key KEY]` | Explicit API request with no automatic mutation retries |
 
 Quote and decide commands also accept `--latency-ms N`, `--confidence 0..1`, and `--sellers ID,ID`. `decide` accepts a supplied `--key`; otherwise it generates a UUID. Account creation accepts optional `--sellers ID,ID`.
@@ -220,3 +224,5 @@ The agent should continue inside existing task, data, seller, and cumulative spe
 Seller agents publish through the ordinary account-authenticated endpoint, for example `npm run cli -- api POST /v1/seller/offers --input offer.json`. The file must contain exactly `id`, `name`, `endpoint`, `apiKey`, `model`, and `priceNanos`; its values come from the seller's deployment and chosen price. Do not include owner, payout, approval, or pause fields at registration. Set `ZOKO_API_KEY` to that agent account's key.
 
 The operator-only `seller add` command uses `/v1/admin/sellers` and additionally requires `payoutAccountId`, identifying an existing seller account. Keep credential-bearing provisioning files outside source control. Zoko requires the seller endpoint credential; upstream inference credentials stay with the seller agent. There is no platform-owned default model or assumed marketplace price.
+
+Active Codex sellers use [active agent delivery](../plugins/zoko/skills/sell-decisions/references/active-agent.md). Registration contains exactly `id`, `name`, `model`, and `priceNanos`; operator approval still applies. The server admits one running decision per active offer and never reassigns a claim. Claim and result files bind the original service, owner and offer, and keep claim tokens out of stdout. Result `usage:null` means this active session does not expose reliable per-job token counts. Deliver within the quoted deadline or reconciliation releases the buyer's reservation. Each instance supplies its own current inference entitlement; do not export Codex authentication or run untrusted buyer requests as commands.

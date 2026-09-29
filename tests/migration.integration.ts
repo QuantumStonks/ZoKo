@@ -28,8 +28,15 @@ describe('Durable marketplace and payment schema upgrades with PostgreSQL',{
     if(db)await db.end();
     if(control){try{await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);}finally{await control.end();}}
   });
+  async function removeAgentSchema(){
+    await db.query('DROP TABLE agent_jobs');
+    await db.query('ALTER TABLE sellers DROP COLUMN delivery_mode,DROP COLUMN agent_ready_until');
+    await db.query('ALTER TABLE quotes DROP COLUMN delivery_mode');
+    await db.query('DELETE FROM zoko_migrations WHERE version=4');
+  }
 
   test('version 1 upgrades through versions 2 and 3 while retaining accounts, liabilities and legacy wallet evidence',async()=>{
+    await removeAgentSchema();
     // Remove the version-3 offer fields and version-2 HD additions to reconstruct
     // version 1 with its original tables, journal, constraints and payment fields.
     await db.query('ALTER TABLE sellers DROP CONSTRAINT sellers_enabled_requires_owner');
@@ -46,7 +53,7 @@ describe('Durable marketplace and payment schema upgrades with PostgreSQL',{
     const before=await db.query('SELECT * FROM transfers ORDER BY id');
     await migrate(db);
     await migrate(db);
-    assert.deepEqual((await db.query('SELECT version FROM zoko_migrations ORDER BY version')).rows.map(r=>r.version),[1,2,SCHEMA_VERSION]);
+    assert.deepEqual((await db.query('SELECT version FROM zoko_migrations ORDER BY version')).rows.map(r=>r.version),[1,2,3,SCHEMA_VERSION]);
     assert.deepEqual((await db.query("SELECT value FROM payments_state WHERE key='wallet-identity'")).rows[0].value,identity);
     assert.deepEqual((await db.query('SELECT * FROM transfers ORDER BY id')).rows,before.rows);
     assert.equal((await db.query('SELECT balance::text FROM wallets WHERE id=$1',[`available:${account.id}`])).rows[0].balance,'100000000000');
@@ -62,6 +69,7 @@ describe('Durable marketplace and payment schema upgrades with PostgreSQL',{
   });
 
   test('version 2 disables legacy ownerless offers without rewriting quotes, receipts or financial history',async()=>{
+    await removeAgentSchema();
     await db.query('ALTER TABLE sellers DROP CONSTRAINT sellers_enabled_requires_owner');
     await db.query('ALTER TABLE sellers DROP COLUMN paused');
     await db.query('DELETE FROM zoko_migrations WHERE version=3');
@@ -102,7 +110,7 @@ describe('Durable marketplace and payment schema upgrades with PostgreSQL',{
       [{enabled:false,paused:false,payout_account_id:null}]);
     assert.deepEqual((await db.query('SELECT enabled,paused,payout_account_id FROM sellers WHERE id=$1',[ownedId])).rows,
       [{enabled:true,paused:false,payout_account_id:seller.id}]);
-    assert.deepEqual((await db.query('SELECT * FROM quotes ORDER BY id')).rows,before.quotes);
+    assert.deepEqual((await db.query('SELECT * FROM quotes ORDER BY id')).rows,before.quotes.map(q=>({...q,delivery_mode:'https'})));
     assert.deepEqual((await db.query('SELECT * FROM decisions ORDER BY id')).rows,before.decisions);
     assert.deepEqual((await db.query('SELECT * FROM transfers ORDER BY id')).rows,before.transfers);
     assert.deepEqual((await db.query('SELECT * FROM wallets ORDER BY id')).rows,before.wallets);

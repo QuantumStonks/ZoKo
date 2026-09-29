@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-29",
+  "updatedAt": "2026-09-30",
   "repository": "QuantumStonks/ZoKo",
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/zoko-plugin",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "1.2.3_validated_locally_and_remote_linux_windows_macos",
+  "implementation": "1.3.0_local_release_validation_complete_public_catalog_and_remote_CI_pending",
   "distribution": {
-    "package": "built_and_validated",
+    "package": "built_1.3.0_isolated_archive_tests_passed",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
-    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.2.3",
+    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.3.0",
     "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
     "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
     "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.2.3"
@@ -24,15 +24,15 @@
     "licensePermission": "Official unmodified plugin releases may be downloaded, installed and executed for authorized work; proprietary ownership and other rights remain reserved."
   },
   "package": {
-    "version": "1.2.3",
-    "archive": "dist/plugins/zoko-1.2.3.zip",
-    "sha256": "aa1f1a816a7c8a1e74f1f60bcb2115802c0d635c8dc30e802b75b66aa1f7736a",
-    "files": 21,
-    "bytes": 1378536
+    "version": "1.3.0",
+    "archive": "dist/plugins/zoko-1.3.0.zip",
+    "sha256": "d8da60ee46ceac3edf804469b0982088ff13ee0b8954b6af66fd12a37c6de0ee",
+    "files": 22,
+    "bytes": 1383569
   },
   "accountPlugin": {
     "pluginId": "plugins_6abc19b188e8819185ecd292ad424e42",
-    "releaseId": "pluginrel_6abc236773188191b766b6fd5d771f84",
+    "releaseId": "pluginrel_6abc354b0d2881919364224a039a88e0",
     "url": "https://chatgpt.com/plugins/plugins_6abc19b188e8819185ecd292ad424e42",
     "scope": "USER",
     "discoverability": "PRIVATE"
@@ -42,7 +42,7 @@
     "pluginRoot": "C:/Users/admin/plugins/zoko",
     "inventoryVerifiedFiles": 20,
     "version": "1.2.2",
-    "note": "Historical personal scaffold; current 1.2.3 release is available through the published Git catalog and private account plugin. Active desktop installation remains unverified."
+    "note": "Historical personal scaffold; account plugin is 1.3.0, published Git catalog is 1.2.3 pending verified update. Active desktop installation remains unverified."
   },
   "automation": {
     "id": "maintain-zoko-plugin",
@@ -141,18 +141,37 @@
       "result": "Windows Node 24 installed; check, 125 tests, application/plugin build passed; official Render JSON Schema passed; both Chronik mainnet endpoints passed public read-only preflight. No hosted service or real funds.",
       "receipt": ".local/plugin-evidence/host-preparation-20260929.json",
       "sha256": "282753ec27a5f9e9a2c5b57fc52fed51ad3b30958fe7d8b0ed55b8fd61b6f786"
+    },
+    {
+      "check": "1.3.0 local native-agent release",
+      "result": "126 unit/package tests passed, type check and application/plugin builds passed; isolated deterministic archive and recovery verified. Genuine PostgreSQL final verification passed separately.",
+      "receipt": ".local/plugin-evidence/native-agent-unit.log",
+      "sha256": "7aaf8867d22f67798f8b0b5b1c2ef3acc1e1afc0b5553bd8a8d0d56c490d2624"
+    },
+    {
+      "check": "1.3.0 final PostgreSQL integration",
+      "result": "85 passed, 0 failed, 0 skipped; isolated PostgreSQL 17.11 stopped cleanly; source unchanged during tests; no live marketplace or real funds",
+      "receipt": ".local/postgres-portable/run-2026-09-29T22-00-13-397Z/receipt.json",
+      "sha256": "ddcfa59743de1e3b1a321c55e5fbf7b5ae35d0fb49b16215e9f71267070cc375",
+      "logSha256": "ae327e07be6682082316d87a808b30aca49c5f5c5b161d7140f0f3ac75236e7a"
+    },
+    {
+      "check": "1.3.0 private account readback",
+      "result": "PRIVATE USER, 22 files; portable manifest, license, integrity and native-agent reference exact; compatibility manifest equivalent after provider path normalization",
+      "receipt": ".local/plugin-evidence/private-readback-1.3.0.json",
+      "sha256": "13331c47675eae1a9c9e0fd01cbc295ed86f8d548c35647122dbe9ecbf2a8e2c"
     }
   ],
   "blockers": [
     "Universal directory only: paid digital AI-decision commerce appears to conflict with its published rule. This is an interpretation, not a provider rejection. Independent Git catalog distribution remains separate.",
     "Universal directory only: XECKZ Inc. is user-designated; provider verification, submission attestations and final public policy URLs remain incomplete.",
-    "Live service only: Node 24 and a schema-validated Render Blueprint are ready, but no host is provisioned or connected, no hosting/XEC cap or real seller is supplied, and no funded acceptance has occurred. Await the specific setup inputs in hostedMarketplace.pendingUserInputs; public catalog publication is already complete.",
+    "Live service: hosting and XEC limits are authorized and native active-Codex inference is implemented. Render OAuth still requires account sign-in; protected service secrets, verified recovery backup and actual funding remain pending. No service, paid decision or withdrawal is live.",
     "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.2.3 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
     "Make the reviewed source changes available from the default branch after final PR review. PR4 remains draft; catalog publication is independently complete.",
-    "Resume docs/render-deployment.md after the pending hosting budget/connection, real seller and XEC funding inputs arrive; provision exact tested commit, verify backup and HTTPS/ledger readiness, then complete mainnet deposit, one paid decision, original recovery and withdrawal within standing limits.",
+    "Finish Render sign-in/connection; deploy the exact CI-tested 1.3.0 source within the $50 total monthly cap, verify secret/database recovery, then one native-agent paid acceptance within the cumulative 200 XEC cap and <=10 XEC decision limit. No per-action reapproval inside standing authority.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
     "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies."
   ],
@@ -165,23 +184,21 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "c4e7fc93460dbadf315b28f535223dd6e6dee7f0",
+  "testedImplementationCommit": null,
   "pullRequest": {
     "state": "OPEN",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
     "draft": true
   },
   "remoteCI": {
-    "status": "completed_success",
-    "implementationCommit": "c4e7fc93460dbadf315b28f535223dd6e6dee7f0",
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36628824817",
-    "jobs": [
-      "verify: success",
-      "plugin-portability (windows-latest): success",
-      "plugin-portability (macos-latest): success"
-    ],
-    "receipt": ".local/plugin-evidence/remote-ci-c4e7fc9.json",
-    "receiptSha256": "64ed6b7585c93091c132687f325b70dc36dc36b13d530b12f09483869a777b16"
+    "status": "1.3.0_not_dispatched_yet",
+    "previousRelease": {
+      "status": "completed_success",
+      "implementationCommit": "fbe6f5f5c6d6bdf3540cc1a3ba524dad8f2b7fd5",
+      "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36631223489",
+      "receipt": ".local/plugin-evidence/remote-ci-fbe6f5f.json",
+      "receiptSha256": "2221c645283e8897b002bc4967e537983bcf67a10272bbb9f1f97b932ef0e97e"
+    }
   },
   "discoveryEvidence": {
     "checkedAt": "2026-09-29",
@@ -222,10 +239,10 @@
   },
   "hostedMarketplace": {
     "requestedAt": "2026-09-29",
-    "status": "prepared_not_provisioned",
+    "status": "prepared_native_agent_delivery_not_provisioned",
     "providerCandidate": "Render",
-    "providerConnection": "suggested_not_confirmed",
-    "monthlyCap": null,
+    "providerConnection": "installation_started_oauth_sign_in_pending_not_verified",
+    "monthlyCap": 50,
     "url": null,
     "resourceIds": [],
     "deployedCommit": null,
@@ -236,15 +253,15 @@
     },
     "blueprint": {
       "path": "render.yaml",
-      "sha256": "d0da9b9c1741628dd545e7107a3ed17b1440e1205529a92359f49662282728d0"
+      "sha256": "ae43e43476d9453243abc5e9eb290caf29d282bd23602e80b250e2ce3f61a2b3"
     },
     "runbook": {
       "path": "docs/render-deployment.md",
-      "sha256": "177b40d4713aeb9a191a8cd97eb9f14f4857fd9d92d2825bdb6acc00a2958ce9"
+      "sha256": "362ddae5a78bd4db16a5508f3db14ae299c05bef38b0142e8c7c728f24b0bedc"
     },
     "validation": {
       "receipt": ".local/plugin-evidence/render-blueprint-validation.json",
-      "sha256": "e09e6921b0cfcd755d1c56364168b2ababbc1b11e3b19040d59c4a7f2ba17b4e",
+      "sha256": "8fae3e86a5c8cb15f55125be786289b9ce9640e7f81206ffaa5af8e1a828fce4",
       "schemaSha256": "57aa0a1ff9c3b2d0fcb91b790b7b285aef6397adb0c92930e6e601054444cfe5"
     },
     "preparationReceipt": {
@@ -252,23 +269,31 @@
       "sha256": "282753ec27a5f9e9a2c5b57fc52fed51ad3b30958fe7d8b0ed55b8fd61b6f786"
     },
     "paidAcceptance": {
-      "status": "pending_real_host_seller_accounts_wallet_backup_and_authorized_funding",
+      "status": "pending_host_secrets_recovery_backup_funding_and_actual_active_agent_delivery",
       "network": "mainnet",
       "seller": null,
-      "maximumXec": null,
+      "maximumXec": "200",
       "fundingWallet": null,
       "minimumWithdrawalXec": "5.46",
       "maximumWithdrawalFeeReserveXec": "100",
       "minimumDepositFormula": "decision ceiling + withdrawal amount + maximum withdrawal fee reserve; external funding-wallet fee additional",
       "depositTxid": null,
       "decisionId": null,
-      "withdrawalTxid": null
+      "withdrawalTxid": null,
+      "maximumDecisionXec": "10",
+      "maximumDecisions": 1,
+      "sellerDelivery": "active_owner_codex_session",
+      "inferenceCredential": "not_required_for_native_delivery",
+      "tokenUsage": "unavailable_per_job",
+      "destinationValidation": "supplied_address_valid_mainnet_p2pkh_private_receipt"
     },
     "pendingUserInputs": [
-      "hosting connection or selected existing host and monthly spending cap",
-      "real seller HTTPS endpoint or inference account/model",
-      "cumulative real-XEC acceptance cap and funding wallet",
-      "protected secret provisioning and encrypted recovery backup before funding"
-    ]
+      "Complete Render account sign-in and connection consent in the handed-off browser tab",
+      "Protected service secret provisioning and verified encrypted recovery backup before funding",
+      "Funding wallet name and its required signing interaction; supplied address is receiving destination, not signing control"
+    ],
+    "preferredMonthlyCap": 30,
+    "baseMonthlyEstimateUsd": 45.75,
+    "costScope": "Before taxes, usage overages and paid workspace upgrades; enforce authorized total cap against provider estimate before creation"
   }
 }
