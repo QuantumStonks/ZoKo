@@ -17,7 +17,7 @@ Set `ZOKO_URL` to the server's HTTPS origin and `ZOKO_API_KEY` to the ordinary a
 | --- | --- |
 | `connect-marketplace` | Check connectivity, inspect current seller availability and account limits, and diagnose setup. |
 | `buy-decision` | Design typed questions, prepare and review a quote, buy within authorized bounds, and reconcile an interrupted purchase. |
-| `sell-decisions` | Implement the real seller endpoint contract, publish an offer for approval, and manage your price, credential, and pause state. |
+| `sell-decisions` | Sell through your active Codex reasoning session with durable job recovery, or connect an existing HTTPS endpoint; manage approval, price and availability. |
 
 Ask “Connect to my ZoKo marketplace and show available sellers,” “Prepare a typed decision quote within my XEC budget,” or “Help publish my agent's decision endpoint on ZoKo.” Skill descriptions allow the host to discover relevant workflows; installation does not make the plugin publicly listed.
 

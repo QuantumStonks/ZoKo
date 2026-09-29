@@ -1,7 +1,7 @@
 {
   "format": "zoko-plugin-integrity/1",
   "name": "zoko",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "runtime": "Node.js >=24.0.0 <25",
   "compiler": {
     "name": "esbuild",
@@ -389,23 +389,35 @@
       "sha256": "01d9b119e318d8b9f1a8fa720d06424457429425a61d0730984b750e6a5edf7d"
     },
     {
+      "path": "src/agent-journal.ts",
+      "sha256": "452052ed8bb4335f326a0b917f533157688cc1272afac76e47449b6062494696"
+    },
+    {
       "path": "src/cli.ts",
-      "sha256": "1152d06733d913c2874e137e9bfee721a29890a693a17f48ed4a69d0478c3abe"
+      "sha256": "1d3a3552fde00190c9d2398b0a850c3c4a54e5a0b70d680cf9a4009bc6677c00"
     },
     {
       "path": "src/client.ts",
-      "sha256": "45f5fa3983521643634bf9d54f361865bb63410e0302388d10c32a7d54199eea"
+      "sha256": "f9c05e5d705b14a2b1555a63d542a3db536e006b5e3f32891ef85665ccd14d18"
     },
     {
       "path": "src/protocol.ts",
       "sha256": "39d3410d43dd3f279f561cfd315e69a45af73a466338033a42fa478deff8cca1"
+    },
+    {
+      "path": "src/provider.ts",
+      "sha256": "85a105044ebb8e9f10ca49d8a3fcdba6ff345b80b992276e057fc5c112201d2f"
+    },
+    {
+      "path": "src/security.ts",
+      "sha256": "658b9f334b13a9d8f262264cf9761ed2b29968f5a05b3421a56dd9b4d8e994f5"
     }
   ],
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "bytes": 3245,
-      "sha256": "552083ab0c5b3c1d5508c21ff41e487b705f292e47c4174e37edeec6258557b6"
+      "bytes": 3297,
+      "sha256": "91672bc5c857d42da4b57a9c22e89814a0625bca90a724af5409373662a6a2df"
     },
     {
       "path": "LICENSE.txt",
@@ -414,8 +426,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4890,
-      "sha256": "102fe5d5434316a6a472b2330de58e04fd6bc5c07d92fcf2b6763b6b84c1e9cd"
+      "bytes": 4918,
+      "sha256": "7aa16c61fee09a4e68301e79e103d8fbdecbe4cde0f0ca3b86dccca3fdbef233"
     },
     {
       "path": "THIRD_PARTY_NOTICES.txt",
@@ -434,18 +446,18 @@
     },
     {
       "path": "plugin.json",
-      "bytes": 3359,
-      "sha256": "83d26db6dc7c7f72a49326ec1000425c8a0c26b2047c82717a621381b8ab74fe"
+      "bytes": 3423,
+      "sha256": "289e73a61bc205db32b16b5708e83171f5f8fb18ce6d76374ce4a2b902a0faa8"
     },
     {
       "path": "runtime/cli.mjs",
-      "bytes": 480486,
-      "sha256": "d0665f5d9100b225806b6bd8a35abd11956ea1721c2cc15ba8a058fd7d800c60"
+      "bytes": 487482,
+      "sha256": "5704707c86a1d12244a8022d15613395fbf949ca929124ad471dd40779882500"
     },
     {
       "path": "runtime/client.mjs",
       "bytes": 11194,
-      "sha256": "394d9988d10196ccace3f724a4e937b6f2e2cbadd1d9bcda4e294778f8f499ac"
+      "sha256": "bd99e34c7d35f12f2913121cbd83c3e0b39edfed4fea186bf7ccc09ae721aa8c"
     },
     {
       "path": "runtime/protocol.mjs",
@@ -489,13 +501,18 @@
     },
     {
       "path": "skills/sell-decisions/SKILL.md",
-      "bytes": 4040,
-      "sha256": "f524e131846353d02851371f4fef347b7973dc1419abaa2ffe521fe8a0b5a3b4"
+      "bytes": 5224,
+      "sha256": "03f5d95f3ed7e4bc124b2cb5af3aa78065b2d7112b37431f10020ce1eb97114c"
     },
     {
       "path": "skills/sell-decisions/agents/openai.yaml",
-      "bytes": 268,
-      "sha256": "1bb07243c34b61d95f25f01865af5bcda4031c62c548adc9b6524cd782e640f8"
+      "bytes": 294,
+      "sha256": "15b2e1632a93c55c975d9223e06d79d403a34b37e55079cfdf541fc8a4d90f66"
+    },
+    {
+      "path": "skills/sell-decisions/references/active-agent.md",
+      "bytes": 4382,
+      "sha256": "7f3e8a58b612e4a497fe54508906d4ccf8e682352c1d7e9b9624cc3ab2e5688f"
     },
     {
       "path": "skills/sell-decisions/references/endpoint-contract.md",
