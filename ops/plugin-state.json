@@ -99,19 +99,19 @@
     },
     {
       "check": "isolated current Codex host",
-      "result": "Codex0.159.0 discovered and installed zoko@zoko1.2.2; installed/enabled readback;21files and20integrity entries verified; installedCLI help passed",
+      "result": "Codex 0.159.0 discovered and installed zoko@zoko 1.2.2; installed/enabled readback; 21 files and 20 integrity entries verified; installed CLI help passed",
       "receipt": ".local/plugin-evidence/isolated-codex-discovery-1.2.2.json",
       "sha256": "f747c05931ede1da6d45e40ee66000969a5337cc377c4cd82a2cef0f4db48b22"
     },
     {
       "check": "host skill discovery",
-      "result": "App-server0.159.0 loaded all3enabled ZoKo skills through initialize and skills/list;0loadererrors; no model call/login/auth/funds",
+      "result": "App-server 0.159.0 loaded all 3 enabled ZoKo skills through initialize and skills/list; 0 loader errors; no model call, login, credentials or funds",
       "receipt": ".local/plugin-evidence/isolated-codex-skills-1.2.2.json",
       "sha256": "231a12fd61a4479670a9e8f7b703be347a0f2152e2437c6cbed95136d3492dd6"
     },
     {
       "check": "independent marketplace export",
-      "result": "24 exported files include the exact21-file installable package;6 targeted tests and full125tests passed; independent review found no actionable defects",
+      "result": "24 exported files include the exact 21-file installable package; 6 targeted tests and all 125 tests passed; independent review found no actionable defects",
       "receipt": ".local/plugin-evidence/marketplace-export-1.2.2.json",
       "sha256": "e9e3a864f1dbc5ecaf4bbbb39593a0f153be4e433623c3a4a167363e3822dfe5"
     }
@@ -121,10 +121,10 @@
     "XECKZ Inc. is user-designated; provider identity verification and legal attestations are incomplete.",
     "Public website/support/privacy/terms drafts are not hosted or verified; proprietary public end-user terms require rights-holder review.",
     "No production hosting account, marketplace URL or approved real seller is configured; real paid buyer/seller acceptance remains unverified.",
-    "Isolated currentCLI installation and host skill loading are verified; installation in the active desktop profile and a real agent task remain unverified. The app-bundled CLI0.130.0-alpha.5 lacks current add/list commands."
+    "Isolated current CLI installation and host skill loading are verified; installation in the active desktop profile and a real agent task remain unverified. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
   ],
   "nextActions": [
-    "Verify remoteCI for catalog export changes, then prepare public catalog promotion with final distribution terms. Existing user authorization to proceed toward public distribution remains valid; directory approval is a separate question.",
+    "Prepare public catalog promotion with final distribution terms. Commit 4435a08 passed Linux, Windows and macOS CI, including marketplace export. Existing authorization to proceed toward public distribution remains valid; universal-directory approval is separate.",
     "Keep the declined support inquiry unsent. Reassess directory eligibility only against authoritative current evidence; advance independent marketplace work separately.",
     "Complete public end-user terms review, company verification where required, and deploy/verify public policy/support pages before public release.",
     "Provision authorized hosting and real seller endpoint; complete live acceptance only within existing spending authority and without fabricated balances or inference.",
@@ -139,7 +139,7 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "4b9149ff67c2a3de08d170a8119d6d74bbcab115",
+  "testedImplementationCommit": "4435a08e7fde121d108dc4832cac74c959964822",
   "pullRequest": {
     "state": "OPEN",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
@@ -147,14 +147,15 @@
   },
   "remoteCI": {
     "status": "completed_success",
-    "implementationCommit": "4b9149ff67c2a3de08d170a8119d6d74bbcab115",
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36626276721",
+    "implementationCommit": "4435a08e7fde121d108dc4832cac74c959964822",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36627585703",
     "jobs": [
-      "verify: success",
       "plugin-portability (macos-latest): success",
-      "plugin-portability (windows-latest): success"
+      "plugin-portability (windows-latest): success",
+      "verify: success"
     ],
-    "receipt": ".local/plugin-evidence/remote-ci-4b9149f.json"
+    "receipt": ".local/plugin-evidence/remote-ci-4435a08.json",
+    "receiptSha256": "7ca2b60fa0f7fdf16f3d57c49d3cef2dd12e00f217918fed2b961f47aff474d4"
   },
   "discoveryEvidence": {
     "checkedAt": "2026-09-29",
