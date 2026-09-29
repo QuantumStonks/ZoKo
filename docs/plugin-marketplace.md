@@ -1,8 +1,8 @@
-# Staged Codex marketplace distribution
+# Independent Codex marketplace distribution
 
 The marketplace exporter prepares a complete Git marketplace checkout for review. It neither publishes a branch nor registers or installs anything in a user's Codex account. A custom Git marketplace and OpenAI's global plugin directory are separate distribution mechanisms. This export does not establish public directory approval or eligibility.
 
-ZoKo remains proprietary with all rights reserved. The owner authorized public distribution preparation, but public end-user license terms still require rights-holder review. The existing `LICENSE.txt` and third-party notices travel unchanged with the package. Do not present this export as a grant of public use or redistribution rights.
+The owner authorized public distribution under XECKZ Inc. while retaining proprietary rights. The package's `LICENSE.txt` permits downloading, installing, and executing unmodified official plugin releases for authorized work, including the copies required for installation, host-managed caching, execution, and backup. No additional individual permission is required for that use. Modification, redistribution, sublicensing, and sale rights remain reserved; contribution ownership is unchanged. Preserve the license and third-party notices in the export.
 
 ## Prepare and inspect
 
@@ -47,9 +47,9 @@ codex plugin marketplace add --help
 
 Older CLI builds may lack `plugin add`, `plugin list` or `--json`; the machine's original `0.130.0-alpha.5` CLI does. Documentation support does not prove support in that binary. Use a supported official Codex version and verify its help instead of silently changing global installation or authentication. An isolated CLI test must use separate configuration and leave the user's existing marketplaces and credentials untouched.
 
-The staged version 1.2.2 was also tested with official `@openai/codex` 0.159.0 in an isolated configuration: local marketplace discovery, installation, installed/enabled readback, all 21 cached package files and CLI startup passed. App-server initialization and `skills/list` loaded all three namespaced skills from the installed cache, enabled and with no loader errors. The private receipts are `.local/plugin-evidence/isolated-codex-discovery-1.2.2.json` and `.local/plugin-evidence/isolated-codex-skills-1.2.2.json`. This establishes a local host test, not public publication or general account installation. No model conversation or live marketplace workflow was exercised.
+The earlier staged version 1.2.2 was tested with official `@openai/codex` 0.159.0 in an isolated configuration: local marketplace discovery, installation, installed/enabled readback, all 21 cached package files and CLI startup passed. App-server initialization and `skills/list` loaded all three namespaced skills from the installed cache, enabled and with no loader errors. The private receipts are `.local/plugin-evidence/isolated-codex-discovery-1.2.2.json` and `.local/plugin-evidence/isolated-codex-skills-1.2.2.json`. This establishes a local host test for that version, not public publication or validation of a later release. No model conversation or live marketplace workflow was exercised. Consult `ops/plugin-state.json` for the current release's evidence.
 
-After installation is authorized, run these commands from the staged export root, or replace `.` with its absolute path:
+To install the staged export in the chosen Codex profile, run these commands from its root, or replace `.` with its absolute path:
 
 ```sh
 codex plugin marketplace add . --json
@@ -57,20 +57,22 @@ codex plugin add zoko@zoko --json
 codex plugin list --available --json
 ```
 
-Inspect command results for the marketplace `zoko`, plugin `zoko`, and expected version. Keep registration, installation, enabled status, runtime startup, and a completed marketplace workflow as distinct evidence. ZoKo requires Node.js 24, a user-selected marketplace URL and account; installation does not provide funds or seller availability.
+Inspect command results for the marketplace `zoko`, plugin `zoko`, and expected version. Keep registration, installation, enabled status, runtime startup, and a completed marketplace workflow as distinct evidence. Execution requires Node.js 24; marketplace workflows require a user-selected marketplace URL and, for authenticated operations, an account. Installation does not provide funds or seller availability.
 
-## Future Git branch distribution
+## Published Git catalog
 
-Publishing requires its own authorized action and resolved distribution terms. Place the **complete staged directory** at the root of the chosen distribution branch, including `.agents` and `.codex-plugin`. Do not copy only visible files. Record the resulting immutable Git commit and release archive hash in the distribution receipt.
+The [public catalog branch](https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace) is published and its Git reference was read back on 2026-09-29. Version 1.2.3 is at catalog commit `bcda4cb040c18d4726d82a308d3997b1e0956e31`, exported from source commit `c4e7fc93460dbadf315b28f535223dd6e6dee7f0`, with archive SHA-256 `aa1f1a816a7c8a1e74f1f60bcb2115802c0d635c8dc30e802b75b66aa1f7736a`.
 
-After that branch actually exists, substitute its real name for the placeholder:
+Official Codex 0.159.0 anonymously cloned the published catalog in an isolated configuration, verified the pinned checkout, provenance, and archive, installed all 21 package files, and loaded all three skills enabled with zero loader errors. The private receipt is `.local/plugin-evidence/remote-codex-marketplace-1.2.3.json`, SHA-256 `b860deb3a5f4ff21692b9fe9bb723894569575f7dcf49b395b50eacee1fbfbdc`. This proves remote catalog installation and skill loading for that release and host; it does not establish a completed live purchase, universal-directory publication, or other users' installations.
+
+Register the published branch with a supported Codex CLI:
 
 ```sh
-codex plugin marketplace add QuantumStonks/ZoKo --ref <published-marketplace-ref> --json
+codex plugin marketplace add QuantumStonks/ZoKo --ref codex/zoko-marketplace --json
 codex plugin add zoko@zoko --json
 codex plugin list --available --json
 ```
 
-The placeholder is not a published branch or an assertion of availability. Prefer an immutable published commit for reproducible registration where the target CLI supports a commit as `--ref`. Test the Git source separately after publication; successful local-root installation alone does not prove remote clone, update or end-user access.
+For subsequent releases, publish the **complete staged directory** at the catalog branch's root, including `.agents` and `.codex-plugin`; do not copy only visible files. Record the new immutable Git commit and archive hash. Prefer an immutable published commit for reproducible registration where the target CLI supports a commit as `--ref`. Test each Git release separately; successful local-root installation alone does not prove remote clone, update or end-user access. Consult `ops/plugin-state.json` for the remote test result.
 
-The current paid AI-decision product also has an unresolved public directory commerce-policy conflict; see [the policy review](plugin-policy-review.md). Preparing a Git export does not resolve that policy or confer directory approval.
+The current paid AI-decision product also has an unresolved universal-directory commerce-policy conflict; see [the policy review](plugin-policy-review.md). Provider company verification and directory attestations belong to that submission process, not this independent catalog release. A hosted marketplace, eligible sellers, funded accounts, and bounded spending authorization are needed to prove real paid use; they are not prerequisites for publishing the installable plugin. Independent publication does not confer directory approval or imply an exemption from any applicable policy. The user declined the policy inquiry, which remains unsent.

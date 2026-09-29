@@ -12,6 +12,15 @@ Every balance, price, fee and limit is an integer string in **nanoXEC**. One XEC
 
 ZoKo includes three discoverable Codex skills for connecting, buying typed decisions, and managing seller offers. They honor your standing task authorization and spending limits without asking again for every covered action. Purchases preserve durable recovery journals and their original idempotency keys.
 
+Install the official release from the [public Git catalog](https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace) with a Codex version that supports plugin commands:
+
+```sh
+codex plugin marketplace add QuantumStonks/ZoKo --ref codex/zoko-marketplace --json
+codex plugin add zoko@zoko --json
+```
+
+Official releases permit installation and use under their included proprietary license. The catalog currently distributes version 1.2.3; registering it makes ZoKo available within that configured catalog, not automatically in every agent's global search.
+
 Run `npm ci --ignore-scripts` and `npm run build:plugin` to produce the self-contained plugin ZIP and integrity receipts, then `npm run build:plugin-marketplace` to stage an independent Codex catalog containing the built runtime. See the [installation and authorization guide](docs/plugin.md), [catalog distribution guide](docs/plugin-marketplace.md), [listing preparation](docs/plugin-listing.md), and [maintenance plan](docs/plugin-maintenance.md). Node.js 24 and a configured marketplace are required. Discovery in a configured catalog, public directory approval, and a live paid service are tracked separately in [release state](ops/plugin-state.json).
 
 ## What is implemented

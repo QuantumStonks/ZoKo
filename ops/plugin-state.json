@@ -5,14 +5,14 @@
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/zoko-plugin",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "1.2.3_validated_locally_remote_CI_pending",
+  "implementation": "1.2.3_validated_locally_and_remote_linux_windows_macos",
   "distribution": {
     "package": "built_and_validated",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
     "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.2.3",
     "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
     "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
-    "independentMarketplace": "1.2.3_staged_publication_in_progress"
+    "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.2.3"
   },
   "publisher": {
     "displayName": "ZoKo",
@@ -40,7 +40,9 @@
   "localMarketplace": {
     "manifest": "C:/Users/admin/.agents/plugins/marketplace.json",
     "pluginRoot": "C:/Users/admin/plugins/zoko",
-    "inventoryVerifiedFiles": 20
+    "inventoryVerifiedFiles": 20,
+    "version": "1.2.2",
+    "note": "Historical personal scaffold; current 1.2.3 release is available through the published Git catalog and private account plugin. Active desktop installation remains unverified."
   },
   "automation": {
     "id": "maintain-zoko-plugin",
@@ -127,20 +129,26 @@
       "result": "Version 1.2.3, PRIVATE USER, 21 files; portable manifest, license and integrity exact; compatibility differs only in provider-normalized skills trailing slash",
       "receipt": ".local/plugin-evidence/private-readback-1.2.3.json",
       "sha256": "effa4a6fa6cf7f6585b7333b5ff007194a94ab738bd76a6b2997542989f4c089"
+    },
+    {
+      "check": "1.2.3 public Git marketplace",
+      "result": "Public ref readback and anonymous Codex 0.159.0 pinned clone passed; exact 21 installed files and 20 integrity entries; installed/enabled readback, CLI startup and all 3 enabled skills with no loader errors; no model calls, credentials or funds",
+      "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.2.3.json",
+      "sha256": "b860deb3a5f4ff21692b9fe9bb723894569575f7dcf49b395b50eacee1fbfbdc"
     }
   ],
   "blockers": [
     "Universal directory only: paid digital AI-decision commerce appears to conflict with its published rule. This is an interpretation, not a provider rejection. Independent Git catalog distribution remains separate.",
     "Universal directory only: XECKZ Inc. is user-designated; provider verification, submission attestations and final public policy URLs remain incomplete.",
     "Live service only: no production marketplace URL, authorized funded account or approved real seller is configured. Real paid buyer/seller acceptance is unverified. Users can select their own compatible marketplace.",
-    "Active desktop profile only: installation and a real agent task remain unverified. Isolated Codex 0.159.0 local discovery/install/skill loading passed for 1.2.2; the app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
+    "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.2.3 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
   ],
   "nextActions": [
-    "Publish the clean committed 1.2.3 export to codex/zoko-marketplace under existing public-distribution authorization; verify anonymous remote registration, installation, installed bytes and skills.",
-    "Verify remote CI for 1.2.3 and record immutable catalog/source/package hashes.",
-    "Keep the declined support inquiry unsent; reassess universal-directory eligibility only against authoritative new evidence.",
-    "Advance authorized hosting and real seller setup separately; perform live paid acceptance only within existing spending authority.",
-    "Measure successful first use and retention when an authoritative source exists; repository metrics remain proxies."
+    "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
+    "Make the reviewed source changes available from the default branch after final PR review. PR4 remains draft; catalog publication is independently complete.",
+    "Advance authorized production hosting and real seller setup separately; test live buyer/seller acceptance only within existing authority. No default hosted market or seller exists.",
+    "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
+    "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies."
   ],
   "policyEvidence": {
     "clarificationDraft": "docs/plugin-policy-review.md",
@@ -151,7 +159,7 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "4435a08e7fde121d108dc4832cac74c959964822",
+  "testedImplementationCommit": "c4e7fc93460dbadf315b28f535223dd6e6dee7f0",
   "pullRequest": {
     "state": "OPEN",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
@@ -159,15 +167,15 @@
   },
   "remoteCI": {
     "status": "completed_success",
-    "implementationCommit": "4435a08e7fde121d108dc4832cac74c959964822",
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36627585703",
+    "implementationCommit": "c4e7fc93460dbadf315b28f535223dd6e6dee7f0",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36628824817",
     "jobs": [
-      "plugin-portability (macos-latest): success",
+      "verify: success",
       "plugin-portability (windows-latest): success",
-      "verify: success"
+      "plugin-portability (macos-latest): success"
     ],
-    "receipt": ".local/plugin-evidence/remote-ci-4435a08.json",
-    "receiptSha256": "7ca2b60fa0f7fdf16f3d57c49d3cef2dd12e00f217918fed2b961f47aff474d4"
+    "receipt": ".local/plugin-evidence/remote-ci-c4e7fc9.json",
+    "receiptSha256": "64ed6b7585c93091c132687f325b70dc36dc36b13d530b12f09483869a777b16"
   },
   "discoveryEvidence": {
     "checkedAt": "2026-09-29",
@@ -187,18 +195,23 @@
     "directory": "dist/plugin-marketplace",
     "name": "zoko",
     "pluginId": "zoko@zoko",
+    "version": "1.2.3",
     "source": "./plugins/zoko",
     "sourceContainsBuiltRuntime": true,
-    "publishedGitRef": null,
+    "publishedGitRef": "codex/zoko-marketplace",
+    "publishedCommit": "bcda4cb040c18d4726d82a308d3997b1e0956e31",
+    "sourceCommitAtValidation": "c4e7fc93460dbadf315b28f535223dd6e6dee7f0",
+    "url": "https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace",
     "catalogSha256": "d54304a64c5860df10c1edb810e20269bf64f921ba56390ff4cebe23f9ff9f64",
-    "hostCliVersion": "0.159.0",
-    "scope": "1.2.2 local isolated test verified; 1.2.3 public remote publication pending",
-    "activeDesktopProfileInstalled": false,
-    "provenanceSha256": "4af6f714a460c07db690caef3d13044d301beb1b279b93f59906885fdd814a60",
-    "builderSha256": "39a0a4d234fcb0dbc74fe424a36ac535bb08fa4aa2c914749f49cd9f7147b6e9",
+    "provenanceSha256": "fe5a6f7d09a8327615bd8a1bcfeb72133b06fcfe22575f9b05ecd7088de92d24",
+    "builderSha256": "ed8c2b5e30d1f58ed4018992bfdecb2938c6d06e6abb794ffa6fd143a4f6b9e7",
     "testSha256": "f5828e68e04e41c72813a77aa2e55e6ed03af6e01d3ffe6e39eb3c06c1f19408",
-    "sourceCommitAtValidation": "4b9149ff67c2a3de08d170a8119d6d74bbcab115",
-    "previousVerifiedVersion": "1.2.2",
-    "plannedGitRef": "codex/zoko-marketplace"
+    "hostCliVersion": "0.159.0",
+    "scope": "public Git catalog, anonymously registered at immutable commit and installed in a fresh isolated host profile",
+    "activeDesktopProfileInstalled": false,
+    "publicationReceipt": ".local/plugin-evidence/public-marketplace-1.2.3.json",
+    "publicationReceiptSha256": "360723c1f2bef4a06a4b59d041c518089da329c091f04ed303d39329e4e4bf86",
+    "remoteHostReceipt": ".local/plugin-evidence/remote-codex-marketplace-1.2.3.json",
+    "remoteHostReceiptSha256": "b860deb3a5f4ff21692b9fe9bb723894569575f7dcf49b395b50eacee1fbfbdc"
   }
 }

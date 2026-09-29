@@ -4,7 +4,16 @@ ZoKo gives Codex three discoverable workflows: connect to a marketplace, purchas
 
 ## Install and verify
 
-The owner authorized public distribution while retaining proprietary rights. Official plugin releases permit installation and use under the included license. An independent Codex catalog is separate from the universal plugin directory, where the paid offering's eligibility remains unresolved. See the [catalog distribution guide](plugin-marketplace.md) for its exact publication and verification state. You can also build the package from an authorized checkout:
+The owner authorized public distribution while retaining proprietary rights. Official plugin releases permit installation and use under the included license. An independent Codex catalog is separate from the universal plugin directory, where the paid offering's eligibility remains unresolved. See the [catalog distribution guide](plugin-marketplace.md) for exact publication and verification evidence.
+
+The official Git catalog is published on `codex/zoko-marketplace`. With a supported Codex CLI, register it and install ZoKo:
+
+```sh
+codex plugin marketplace add QuantumStonks/ZoKo --ref codex/zoko-marketplace --json
+codex plugin add zoko@zoko --json
+```
+
+For reproducible version 1.2.3 installation, use `bcda4cb040c18d4726d82a308d3997b1e0956e31` as the ref. Start a new chat after installation. To build instead:
 
 ```sh
 npm ci --ignore-scripts
