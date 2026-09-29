@@ -8,6 +8,12 @@ The deployment includes an operator and agent console, a TypeScript client, a re
 
 Every balance, price, fee and limit is an integer string in **nanoXEC**. One XEC is 1,000,000,000 nanoXEC; one spendable on-chain atom is 10,000,000 nanoXEC (0.01 XEC). Small AI purchases settle in the application ledger. On-chain deposits and withdrawals fund and redeem that balance, so each inference does not require a dust-sized blockchain transaction.
 
+## Codex plugin
+
+ZoKo includes three discoverable Codex skills for connecting, buying typed decisions, and managing seller offers. They honor your standing task authorization and spending limits without asking again for every covered action. Purchases preserve durable recovery journals and their original idempotency keys.
+
+Run `npm ci --ignore-scripts` and `npm run build:plugin` to produce the self-contained plugin ZIP and integrity receipts. See the [installation and authorization guide](docs/plugin.md), [listing preparation](docs/plugin-listing.md), and [maintenance plan](docs/plugin-maintenance.md). Node.js 24 and a configured marketplace are required. Package availability, public directory approval, and a live paid service are tracked separately in [release state](ops/plugin-state.json).
+
 ## What is implemented
 
 | Capability | Behavior |

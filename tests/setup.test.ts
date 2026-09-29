@@ -21,7 +21,7 @@ function invoke(directory: string, ...args: string[]) {
   return spawnSync(process.execPath, [join(directory, 'scripts/init-env.mjs'), ...args], { encoding: 'utf8', timeout: 10_000 });
 }
 function setting(content: string, name: string): string {
-  const line = content.split('\n').find(value => value.startsWith(`${name}=`));
+  const line = content.split(/\r?\n/).find(value => value.startsWith(`${name}=`));
   assert.ok(line, `${name} must be present`);
   return line.slice(name.length + 1);
 }

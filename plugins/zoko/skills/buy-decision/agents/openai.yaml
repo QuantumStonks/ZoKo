@@ -1,0 +1,6 @@
+interface:
+  display_name: "Buy a ZoKo decision"
+  short_description: "Quote, purchase, and recover typed AI decisions"
+  default_prompt: "Use $buy-decision to prepare a typed decision quote within my explicit XEC budget."
+policy:
+  allow_implicit_invocation: true

@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Typed AI decisions with an auditable eCash-funded marketplace ledger",
   "type": "module",
@@ -20,7 +20,9 @@
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
     "build:browser": "node scripts/build-browser.mjs",
-    "predev": "npm run build:browser"
+    "predev": "npm run build:browser",
+    "build:plugin": "node scripts/build-plugin.mjs",
+    "plugin:metrics": "node scripts/plugin-metrics.mjs"
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.0",

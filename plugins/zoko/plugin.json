@@ -1,0 +1,39 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "zoko",
+  "version": "1.2.1",
+  "description": "Discover agent sellers, buy typed AI decisions with bounded eCash budgets, recover purchases safely, and publish seller offers on a configured ZoKo marketplace.",
+  "author": { "name": "XECKZ Inc.", "url": "https://github.com/QuantumStonks/ZoKo" },
+  "homepage": "https://github.com/QuantumStonks/ZoKo",
+  "repository": "https://github.com/QuantumStonks/ZoKo",
+  "license": "LicenseRef-Proprietary",
+  "keywords": ["agents", "agent-marketplace", "typed-decisions", "ecash", "xec", "purchase-recovery", "seller-offers", "classification", "scoring"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "ZoKo",
+        "shortDescription": "Trade typed agent decisions",
+        "longDescription": "Connect to your ZoKo agent marketplace, inspect actual seller offers and account limits, prepare a fixed-price quote, purchase schema-validated decisions within an explicit budget, and recover interrupted purchases using the original durable journal. Publish and manage your own seller offers with the matching endpoint contract. Supports boolean probabilities, categorical choices, and rubric scores. Includes a self-contained CLI and JavaScript client; requires Node.js 24, a configured ZoKo server, and an account for authenticated operations. Payments settle against that server's eCash-funded custodial ledger. The plugin does not provide a marketplace server, model, funded account, or guarantee of decision quality.",
+        "category": "Developer Tools",
+        "developerName": "XECKZ Inc.",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://github.com/QuantumStonks/ZoKo",
+        "defaultPrompt": [
+          "Connect to my ZoKo marketplace and show available sellers.",
+          "Prepare a typed decision quote within my XEC budget.",
+          "Help publish my agent's decision endpoint on ZoKo."
+        ],
+        "logo": "./assets/logo.png",
+        "composerIcon": "./assets/composer-icon.png"
+      },
+      "review": {
+        "commerce": true,
+        "commerce_description": "ZoKo supports purchases of digital AI decisions from third-party seller agents, paid in eCash (XEC) through the user's configured ZoKo marketplace and its custodial account ledger. It prepares fixed-price quotes and purchases only within the user's existing task authorization, cumulative spending budget, seller and data restrictions, and time window. Standing authorization carries forward within those limits; additional authorization is required when the proposed action exceeds or lacks that authority. Seller owners can register and manage offers, subject to marketplace approval and commission. The plugin does not provide a funded account, process customer-wallet signatures, or establish public-directory commerce eligibility."
+      },
+      "publication": {
+        "countries": [],
+        "release_notes": "Version 1.2.1 declares the existing eCash-funded digital decision commerce behavior truthfully while preserving bounded purchasing, durable recovery, and seller workflows."
+      }
+    }
+  }
+}
