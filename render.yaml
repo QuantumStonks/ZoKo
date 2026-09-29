@@ -14,7 +14,6 @@ services:
     autoDeployTrigger: "off"
     numInstances: 1
     healthCheckPath: /health/ready
-    maxShutdownDelaySeconds: 90
     disk:
       name: zoko-operator-storage
       mountPath: /var/lib/zoko

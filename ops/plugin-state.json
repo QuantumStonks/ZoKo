@@ -271,10 +271,11 @@
       "oauthScope": "all_workspaces_accessible_to_account_with_account_equivalent_permissions",
       "oauthFinalAction": "Allow_clicked_after_explicit_owner_action_time_confirmation",
       "pluginReadback": "Render_ENABLED_installed_true",
-      "billingGate": "Blueprint_creation_requires_human_card_and_billing_address_verification",
-      "cardVerification": "Render_UI_states_temporary_1_USD_authorization_not_a_charge",
-      "receipt": ".local/plugin-evidence/render-account-handoff-20260930.json",
-      "receiptSha256": "77693ca042abc03ee07108d047469a2219281ba4be672634b491d84a28b62ac2"
+      "billingGate": "completed_by_owner_planner_loaded",
+      "cardVerification": "owner_completed_in_provider_UI_no_billing_data_recorded",
+      "receipt": ".local/plugin-evidence/render-plan-fix-20260930.json",
+      "receiptSha256": "d65147ef58dffc6c1f5e2f6c76c5e3c7bfbc612e105a5f18cab1093629346f59",
+      "planner": "rejected_custom_shutdown_delay_with_disk_corrected_source_live_recheck_pending"
     },
     "monthlyCap": 50,
     "url": null,
@@ -287,15 +288,15 @@
     },
     "blueprint": {
       "path": "render.yaml",
-      "sha256": "ae43e43476d9453243abc5e9eb290caf29d282bd23602e80b250e2ce3f61a2b3"
+      "sha256": "5aada62351cb1464ec922fcf5da796e534f65e9e9d46ea0bf5ff8ad50a2b5600"
     },
     "runbook": {
       "path": "docs/render-deployment.md",
-      "sha256": "362ddae5a78bd4db16a5508f3db14ae299c05bef38b0142e8c7c728f24b0bedc"
+      "sha256": "40fb70c24bdd41c2148b5e96063ddd920c65ca1657df4a20db711d505755b752"
     },
     "validation": {
       "receipt": ".local/plugin-evidence/render-blueprint-validation.json",
-      "sha256": "8fae3e86a5c8cb15f55125be786289b9ce9640e7f81206ffaa5af8e1a828fce4",
+      "sha256": "53c062b19a01a4e01695a03a7c6c482b1480fceeaeb6272bfd8533b9dcba95fb",
       "schemaSha256": "57aa0a1ff9c3b2d0fcb91b790b7b285aef6397adb0c92930e6e601054444cfe5"
     },
     "preparationReceipt": {
@@ -322,7 +323,6 @@
       "destinationValidation": "supplied_address_valid_mainnet_p2pkh_private_receipt"
     },
     "pendingUserInputs": [
-      "Complete Render card and billing-address verification directly in the handed-off Brave Blueprint tab; no card data should be sent through chat",
       "Protected service secret provisioning and verified encrypted recovery backup before funding",
       "Funding wallet name and its required signing interaction; supplied address is receiving destination, not signing control"
     ],
