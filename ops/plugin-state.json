@@ -433,8 +433,8 @@
       "depositTxidLocation": ".local/plugin-evidence/hetzner-deposit-receipt.json",
       "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md",
       "lastWakeup": {
-        "checkedAt": "2026-09-30T00:57:51.907Z",
-        "outcome": "paid_decision_success_and_withdrawal_validation_fix_deployed_same_bytes_broadcast",
+        "checkedAt": "2026-09-30T01:07:11.021Z",
+        "outcome": "paid_decision_succeeded_original_withdrawal_pending",
         "buyerHistoryCount": 1,
         "withdrawalCount": 1,
         "sellerPaused": true,
@@ -464,7 +464,7 @@
         "buyerReservedNanos": "110000000000",
         "sameOriginalJournal": true,
         "privateReceipt": ".local/plugin-evidence/hetzner-withdrawal-receipt.json",
-        "receiptSha256": "9b003aa0f4997413e2eecc7038d8b7ccac6e418592d8d4ffbd94fa82da3cf8e0",
+        "receiptSha256": "a10bb88def9e8a5ea8c277630783e8b4a8165357a8c7813305a52791a9722d6b",
         "confirmations": 0,
         "requiredConfirmations": 6,
         "avalanchePreconsensusFinalized": true,
@@ -475,8 +475,8 @@
         "unusedFeeReserveXec": "97.81",
         "expectedBuyerBalanceAfterSettlementXec": "102.81",
         "privateChainReceipt": ".local/plugin-evidence/original-withdrawal-chain.json",
-        "chainReceiptSha256": "0d3bc04f9d92209511ad35a7e71714e84a856eeb1f0665891298a7e410841be9",
-        "lastCheckedAt": "2026-09-30T00:55:12.150Z"
+        "chainReceiptSha256": "b647e8b78ffcbffef1a74525fd385bcc2fa505cac7c48c5c4e91a477135b0287",
+        "lastCheckedAt": "2026-09-30T01:06:05.985Z"
       }
     },
     "pendingUserInputs": [
@@ -624,8 +624,12 @@
       },
       "crossPlatformVerification": {
         "receipt": ".local/plugin-evidence/hetzner-cross-platform-recovery.json",
-        "sha256": "bb0bb90df4cc7807588b64fbb8fdf86d666c43604d2422fed4773bafcd54d7ce",
-        "linuxEncryptedWindowsDecrypted": true
+        "sha256": "795b7a4a009f1d140bde2c888e846c8a76af008bcd7fec2d28342b826e20f48a",
+        "linuxEncryptedWindowsDecrypted": true,
+        "completedAt": "2026-09-30T03:01:49.887218+02:00",
+        "encryptedSha256": "aa13117a255c48880f5dc3e6c65d867108586850f8031eb44ffda06d6d7cf9dc",
+        "plaintextSha256": "6a0af05c13b279ce06d96e737d0a93274f786c2f30ba4c410b1db97cdc5ae989",
+        "offHostCopyVerified": true
       },
       "serverAlwaysOnBackupScheduler": true,
       "serverBackups": {
@@ -635,6 +639,12 @@
         "cadence": "hourly",
         "retentionDays": 30,
         "independentOffsiteScheduler": false
+      },
+      "sshCompatibility": {
+        "status": "PowerShell_Core_wrapper_verified_using_Windows_PowerShell_delegated_identity",
+        "receipt": ".local/plugin-evidence/maintenance-20260930-0101.json",
+        "sha256": "c87007dc1d6d2a58612d997498a3b464a309d3e8bfc524c57598025b72201230",
+        "gridzHelperUnchanged": true
       }
     },
     "liveVerification": {
@@ -653,7 +663,7 @@
       "withdrawal": "broadcast_verified_not_yet_settled"
     }
   },
-  "lastOperationAt": "2026-09-30T00:57:51.907Z",
+  "lastOperationAt": "2026-09-30T01:08:59.692Z",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
