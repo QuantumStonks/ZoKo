@@ -213,13 +213,13 @@
   "blockers": [
     "Universal directory only: current official guidelines prohibit digital-service commerce and list execution of crypto transfers as prohibited. ZoKo eligibility remains unresolved; this is policy interpretation, not a provider rejection. Independent public catalog and download are verified.",
     "Universal directory only: XECKZ Inc. is owner-designated. Provider publisher verification and authorized developer legal attestations remain pending. All four public URLs are verified.",
-    "Live paid acceptance: deposit awaits six confirmations plus Avalanche finality; preserve the single purchase and withdrawal scope and original journals.",
+    "Live paid acceptance: the single native decision succeeded and reconciled. Recover the original signed withdrawal only; verify broadcast, six confirmations and finality before claiming complete.",
     "Recovery: portable decryption passed without DPAPI and hourly encrypted backups run on VPS. Owner must copy the private recovery identity into independent secure custody; independently hosted off-site replication is not configured.",
     "Customer availability: participating seller agents must remain actively able to claim and deliver. Installation does not create continuously online inference or establish customer adoption."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
-    "Resume the already funded Hetzner acceptance from .local/plugin-evidence/hetzner-acceptance-handoff.md after credit: exactly one native decision at the prepared 1 XEC price, reconcile buyer/seller/platform, then the one 10 XEC withdrawal to the authorized destination using its original idempotency key. Preserve all journals and remaining funds; return maintenance to daily after the test is terminal.",
+    "Recover the original signed 10 XEC withdrawal, preserving its bytes, reservations and idempotency key. Do not buy or withdraw again. Back up after financial changes; return maintenance to daily only after terminal acceptance.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
     "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies.",
     "Maintain the hourly encrypted VPS backup timer and create/pull verified off-host copies after financial changes. Keep the private recipient identity off-server and arrange owner-controlled independent key custody."
@@ -306,7 +306,7 @@
   },
   "hostedMarketplace": {
     "requestedAt": "2026-09-29",
-    "status": "live_healthy_paid_acceptance_deposit_verified_pending_confirmations",
+    "status": "live_paid_native_decision_verified_withdrawal_recovery_in_progress",
     "hostingReview": {
       "observedAt": "2026-09-30",
       "trigger": "Owner asked to wait and compare a 20-30 EUR Hetzner VPS before usage",
@@ -381,7 +381,7 @@
       "sha256": "282753ec27a5f9e9a2c5b57fc52fed51ad3b30958fe7d8b0ed55b8fd61b6f786"
     },
     "paidAcceptance": {
-      "status": "real_deposit_verified_pending_required_confirmations",
+      "status": "paid_decision_succeeded_original_withdrawal_pending",
       "network": "mainnet",
       "seller": {
         "offerId": "xeckz-native-acceptance-20260930",
@@ -408,26 +408,60 @@
       "tokenUsage": "unavailable_per_job",
       "destinationValidation": "supplied_address_valid_mainnet_p2pkh_private_receipt",
       "funding": {
-        "status": "on_chain_verified_pending_service_credit",
+        "status": "credited_after_six_confirmations_and_finality",
         "depositXec": "116",
         "externalWalletFeeXec": "2.19",
         "totalExternalWalletDebitXec": "118.19",
-        "confirmations": 5,
+        "confirmations": 6,
         "requiredConfirmations": 6,
         "avalancheFinalized": true,
-        "balanceNanos": "0",
+        "balanceNanos": "116000000000",
         "privateReceipt": ".local/plugin-evidence/hetzner-deposit-receipt.json",
-        "lastCheckedAt": "2026-09-30T00:14:08.656Z"
+        "lastCheckedAt": "2026-09-30T00:33:50.582Z",
+        "receiptSha256": "08219688e37ff52b6ff02fe797584eeaf0015cc306bfa1538012ab4eadb35fe8"
       },
       "controlledMaintainerTest": true,
       "customerAdoption": false,
       "preparedDecisionXec": "1",
       "preparedBuyerWithdrawalXec": "10",
       "depositTxidLocation": ".local/plugin-evidence/hetzner-deposit-receipt.json",
-      "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md"
+      "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md",
+      "lastWakeup": {
+        "checkedAt": "2026-09-30T00:46:45.712Z",
+        "outcome": "paid_decision_succeeded_original_withdrawal_pending",
+        "buyerHistoryCount": 1,
+        "withdrawalCount": 1,
+        "sellerPaused": true,
+        "sellerReady": false
+      },
+      "decision": {
+        "status": "succeeded",
+        "accepted": true,
+        "model": "gpt-6.1-sol",
+        "latencyMs": 34760,
+        "usage": null,
+        "priceXec": "1",
+        "sellerLedgerCreditXec": "0.9",
+        "platformCommissionXec": "0.1",
+        "sellerStopped": true,
+        "furtherPurchasesLocked": true,
+        "ledgerReconciled": true,
+        "privateReceipt": ".local/plugin-evidence/hetzner-paid-decision-receipt.json",
+        "receiptSha256": "b974cd5ed18f753b58aac179ebd84923d751bebf46de3a7aac8203a11eaa8226"
+      },
+      "withdrawal": {
+        "status": "signed",
+        "amountXec": "10",
+        "signedFeeXec": "2.19",
+        "lastError": "unsupported_token_transaction",
+        "buyerAvailableNanos": "5000000000",
+        "buyerReservedNanos": "110000000000",
+        "sameOriginalJournal": true,
+        "privateReceipt": ".local/plugin-evidence/hetzner-withdrawal-receipt.json",
+        "receiptSha256": "da0ca51f93f3e2cbbb823030e27a41fa83e22fc1541dbb76f57963162582206a"
+      }
     },
     "pendingUserInputs": [
-      "No new funding or spending approval requested: owner already sent the verified deposit. Chain confirmations are an external wait.",
       "Arrange portable independent encrypted recovery custody before broader funded customer use."
     ],
     "preferredMonthlyCap": 30,
@@ -604,7 +638,7 @@
       "withdrawal": false
     }
   },
-  "lastOperationAt": "2026-09-30T00:21:10.123Z",
+  "lastOperationAt": "2026-09-30T00:46:45.712Z",
   "deployedSourceCommit": "6088dd543a66137056c97b74a42efb4e01f92fd5",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
