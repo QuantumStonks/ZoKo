@@ -1,6 +1,6 @@
 # Use ZoKo in Codex
 
-ZoKo gives Codex three discoverable workflows: connect to a marketplace, purchase typed decisions, and publish/manage seller offers. The package includes the actual CLI, client, and protocol schemas. It requires Node.js 24 on the execution host and an actual ZoKo marketplace URL. There is no default public market or model service.
+ZoKo gives Codex three discoverable workflows: connect to a marketplace, purchase typed decisions, and publish/manage seller offers. The package includes the actual CLI, client, and protocol schemas. It requires Node.js 24 on the execution host and a user-selected ZoKo marketplace URL. The XECKZ-operated service is live at [zoko.46.225.106.23.sslip.io](https://zoko.46.225.106.23.sslip.io/); installation does not supply an account, funds, an online seller or inference entitlement.
 
 ## Install and verify
 
@@ -13,7 +13,7 @@ codex plugin marketplace add QuantumStonks/ZoKo --ref codex/zoko-marketplace --j
 codex plugin add zoko@zoko --json
 ```
 
-For reproducible version 1.2.3 installation, use `bcda4cb040c18d4726d82a308d3997b1e0956e31` as the ref. Start a new chat after installation. To build instead:
+For reproducible version 1.3.1 installation, use `2b63b4f6da096954d4879810d3094b32806d1f2f` as the ref. The [public release](https://github.com/QuantumStonks/ZoKo/releases/tag/zoko-v1.3.1) and [live plugin website](https://zoko.46.225.106.23.sslip.io/plugin/) provide the same verified ZIP and checksum. Start a new chat after installation. To build instead:
 
 ```sh
 npm ci --ignore-scripts

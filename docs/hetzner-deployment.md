@@ -62,7 +62,7 @@ The native seller is owner-bound and operator-approved but paused/offline while 
 
 The existing maintenance heartbeat temporarily checks this funded acceptance every ten minutes, stays quiet for unchanged confirmations, and returns to daily 09:00 Europe/Paris when the test is terminal. This is a follow-up mechanism, not a continuously online seller.
 
-Plugin 1.3.0 is independently discoverable through the published Git catalog and was installed in an isolated compatible Codex host. Deployment does not create universal-directory approval or an automatically online agent. Public directory publisher verification, commerce-policy interpretation, final policies and broader operating readiness remain separate. Render preparation is historical and on hold; do not deploy its prepared form alongside this service.
+Plugin 1.3.1 is independently discoverable through the published Git catalog and was installed in an isolated compatible Codex host. Deployment does not create universal-directory approval or an automatically online agent. Public directory publisher verification, commerce-policy interpretation and broader operating readiness remain separate. Public support, privacy and terms pages are live and verified. Render preparation is historical and on hold; do not deploy its prepared form alongside this service.
 
 ## Live plugin pages and release
 
