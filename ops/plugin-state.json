@@ -5,14 +5,15 @@
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/zoko-plugin",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "1.3.1_validated_live_download_and_private_account_updated_catalog_publication_pending",
+  "implementation": "1.3.1_live_website_public_release_independent_catalog_and_private_account_verified",
   "distribution": {
     "package": "built_1.3.1_isolated_archive_tests_passed",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
     "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.3.1",
     "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
     "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
-    "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.3.0"
+    "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.3.1",
+    "publicRelease": "published_GitHub_release_provider_digest_and_anonymous_archive_bytes_verified_1.3.1"
   },
   "publisher": {
     "displayName": "ZoKo",
@@ -42,7 +43,7 @@
     "pluginRoot": "C:/Users/admin/plugins/zoko",
     "inventoryVerifiedFiles": 20,
     "version": "1.2.2",
-    "note": "Historical personal scaffold; current 1.3.1 account plugin and hosted download verified. Desktop activation and new Git catalog release require separate readback."
+    "note": "Historical personal scaffold only; public 1.3.1 Git catalog, anonymous installation and private account release are independently verified."
   },
   "automation": {
     "id": "maintain-zoko-plugin",
@@ -201,26 +202,28 @@
       "check": "1.3.1 private account release",
       "result": "guarded update and 22-file inventory plus both manifest readback passed; PRIVATE USER",
       "releaseId": "pluginrel_6abc512b4ed48191b2417f9e881e4150"
+    },
+    {
+      "check": "public 1.3.1 catalog",
+      "result": "public ref readback; anonymous official Codex 0.159.0 exact pinned Git installation; 22 files and all three enabled skills, zero loader errors",
+      "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.3.1.json",
+      "sha256": "7f4bfc5fece0cd1ff225e71ac847d59692651fabb68b8d0ecd895af47aa5f14b"
     }
   ],
   "blockers": [
-    "Universal directory only: paid digital AI-decision commerce appears to conflict with its published rule. This is an interpretation, not a provider rejection. Independent Git catalog distribution remains separate.",
-    "Universal directory only: XECKZ Inc. is user-designated; provider verification, submission attestations and final public policy URLs remain incomplete.",
-    "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.3.0 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands.",
-    "Live paid acceptance: the real 116 XEC deposit is verified on-chain but awaits six confirmations plus Avalanche finality. A purchase or withdrawal has not occurred; keep seller offline until credited and this session can deliver. Resume the preserved private acceptance handoff without new funding or repeated approval.",
-    "Broader production recovery: verified encrypted off-VPS copies currently depend on the original Windows account DPAPI keys. Independent portable encrypted recovery custody and an externally hosted backup scheduler are not configured.",
-    "Live paid acceptance: the real 116 XEC deposit is verified on-chain but awaits six confirmations plus Avalanche finality. A purchase or withdrawal has not occurred; keep seller offline until credited and this session can deliver. Resume the preserved private acceptance handoff without new funding or repeated approval.",
-    "Broader production recovery: verified encrypted off-VPS copies currently depend on the original Windows account DPAPI keys. Independent portable encrypted recovery custody and an externally hosted backup scheduler are not configured."
+    "Universal directory only: current official guidelines prohibit digital-service commerce and list execution of crypto transfers as prohibited. ZoKo eligibility remains unresolved; this is policy interpretation, not a provider rejection. Independent public catalog and download are verified.",
+    "Universal directory only: XECKZ Inc. is owner-designated. Provider publisher verification and authorized developer legal attestations remain pending. All four public URLs are verified.",
+    "Live paid acceptance: deposit awaits six confirmations plus Avalanche finality; preserve the single purchase and withdrawal scope and original journals.",
+    "Recovery: portable decryption passed without DPAPI and hourly encrypted backups run on VPS. Owner must copy the private recovery identity into independent secure custody; independently hosted off-site replication is not configured.",
+    "Customer availability: participating seller agents must remain actively able to claim and deliver. Installation does not create continuously online inference or establish customer adoption."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
     "Make the reviewed source changes available from the default branch after final PR review. PR4 remains draft; catalog publication is independently complete.",
     "Resume the already funded Hetzner acceptance from .local/plugin-evidence/hetzner-acceptance-handoff.md after credit: exactly one native decision at the prepared 1 XEC price, reconcile buyer/seller/platform, then the one 10 XEC withdrawal to the authorized destination using its original idempotency key. Preserve all journals and remaining funds; return maintenance to daily after the test is terminal.",
-    "Maintain public HTTPS, exact release provenance, shared resource pressure and encrypted off-host backup freshness. Arrange independently portable recovery before wider funded customer use; isolate future public untrusted execution away from the custody host.",
-    "Resume the already funded Hetzner acceptance from .local/plugin-evidence/hetzner-acceptance-handoff.md after credit: exactly one native decision at the prepared 1 XEC price, reconcile buyer/seller/platform, then the one 10 XEC withdrawal to the authorized destination using its original idempotency key. Preserve all journals and remaining funds; return maintenance to daily after the test is terminal.",
-    "Maintain public HTTPS, exact release provenance, shared resource pressure and encrypted off-host backup freshness. Arrange independently portable recovery before wider funded customer use; isolate future public untrusted execution away from the custody host.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
-    "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies."
+    "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies.",
+    "Maintain the hourly encrypted VPS backup timer and create/pull verified off-host copies after financial changes. Keep the private recipient identity off-server and arrange owner-controlled independent key custody."
   ],
   "policyEvidence": {
     "clarificationDraft": "docs/plugin-policy-review.md",
@@ -231,7 +234,7 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
+  "testedImplementationCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
   "pullRequest": {
     "state": "OPEN",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
@@ -239,21 +242,33 @@
   },
   "remoteCI": {
     "status": "completed_success",
-    "implementationCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36637662033",
+    "implementationCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36648395826",
     "jobs": [
       "plugin-portability (macos-latest): success",
-      "verify: success",
-      "plugin-portability (windows-latest): success"
+      "plugin-portability (windows-latest): success",
+      "verify: success"
     ],
-    "receipt": ".local/plugin-evidence/remote-ci-5b6a403.json",
-    "receiptSha256": "6513c479c48f408fa31d94c43d609e4774831fffd98fbc85e6e07ce19e2f1f9a",
+    "receipt": ".local/plugin-evidence/remote-ci-1.3.1.json",
+    "receiptSha256": "b421e711f32b61a97905c6901114d0264097d660fecacaf322286ea67a4404e9",
     "previousRelease": {
       "status": "completed_success",
-      "implementationCommit": "fbe6f5f5c6d6bdf3540cc1a3ba524dad8f2b7fd5",
-      "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36631223489",
-      "receipt": ".local/plugin-evidence/remote-ci-fbe6f5f.json",
-      "receiptSha256": "2221c645283e8897b002bc4967e537983bcf67a10272bbb9f1f97b932ef0e97e"
+      "implementationCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
+      "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36637662033",
+      "jobs": [
+        "plugin-portability (macos-latest): success",
+        "verify: success",
+        "plugin-portability (windows-latest): success"
+      ],
+      "receipt": ".local/plugin-evidence/remote-ci-5b6a403.json",
+      "receiptSha256": "6513c479c48f408fa31d94c43d609e4774831fffd98fbc85e6e07ce19e2f1f9a",
+      "previousRelease": {
+        "status": "completed_success",
+        "implementationCommit": "fbe6f5f5c6d6bdf3540cc1a3ba524dad8f2b7fd5",
+        "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36631223489",
+        "receipt": ".local/plugin-evidence/remote-ci-fbe6f5f.json",
+        "receiptSha256": "2221c645283e8897b002bc4967e537983bcf67a10272bbb9f1f97b932ef0e97e"
+      }
     }
   },
   "discoveryEvidence": {
@@ -271,27 +286,35 @@
     "registryStableCli": "0.159.0"
   },
   "independentMarketplace": {
-    "directory": "dist/plugin-marketplace",
-    "name": "zoko",
-    "pluginId": "zoko@zoko",
-    "version": "1.3.0",
-    "source": "./plugins/zoko",
-    "sourceContainsBuiltRuntime": true,
-    "publishedGitRef": "codex/zoko-marketplace",
-    "publishedCommit": "63c121fadb8c9ea4a4dd2ac88aceebd42d6dbd13",
-    "sourceCommitAtValidation": "5b6a40329be11374af064eeb758aba6d054dcdc1",
+    "observedAt": "2026-09-30T00:03:39.681Z",
+    "repository": "QuantumStonks/ZoKo",
+    "branch": "codex/zoko-marketplace",
+    "commit": "2b63b4f6da096954d4879810d3094b32806d1f2f",
+    "parentCommit": "63c121fadb8c9ea4a4dd2ac88aceebd42d6dbd13",
+    "sourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
+    "version": "1.3.1",
+    "archive": {
+      "name": "zoko-1.3.1.zip",
+      "bytes": 1383768,
+      "sha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640"
+    },
+    "provenanceSha256": "9610db8670e46af22adbf9226c261395555e493c6e0bf12a10d8bb508b1d2129",
+    "files": 25,
+    "remoteRefVerified": true,
     "url": "https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace",
-    "catalogSha256": "d54304a64c5860df10c1edb810e20269bf64f921ba56390ff4cebe23f9ff9f64",
-    "provenanceSha256": "289abe8a018c536255e1cf44e767366dbf58124cd9d16600448e3d9b49e617d6",
-    "builderSha256": "fdc5047a2428432e59dc00628cc6cc46f3bde5d1330bb2fd2849385ae7c65e61",
-    "testSha256": "f5828e68e04e41c72813a77aa2e55e6ed03af6e01d3ffe6e39eb3c06c1f19408",
-    "hostCliVersion": "0.159.0",
-    "scope": "public Git catalog, anonymously registered at immutable commit and installed in a fresh isolated host profile",
-    "activeDesktopProfileInstalled": false,
-    "publicationReceipt": ".local/plugin-evidence/public-marketplace-1.3.0.json",
-    "publicationReceiptSha256": "f7350632ae246898397bbdee8f4cdf7cff403eb15f063321cf1eda794e99d20e",
-    "remoteHostReceipt": ".local/plugin-evidence/remote-codex-marketplace-1.3.0.json",
-    "remoteHostReceiptSha256": "b00531e89dfe6d1678bed85f07337f8761e526b509b643911e2c5b14f2f9e01b"
+    "scope": "public independent Git catalog; no universal-directory publication or live paid workflow",
+    "publicationReceipt": {
+      "receipt": ".local/plugin-evidence/public-marketplace-1.3.1.json",
+      "sha256": "8c7f93e9ff1e8062e4fe1dc7d15b5713d49dbb617c3fcfa0f11548c7532a0c0f"
+    },
+    "installationReceipt": {
+      "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.3.1.json",
+      "sha256": "7f4bfc5fece0cd1ff225e71ac847d59692651fabb68b8d0ecd895af47aa5f14b"
+    },
+    "anonymous": true,
+    "installedFiles": 22,
+    "enabledSkills": 3,
+    "universalDirectory": false
   },
   "hostedMarketplace": {
     "requestedAt": "2026-09-29",
@@ -401,11 +424,12 @@
         "depositXec": "116",
         "externalWalletFeeXec": "2.19",
         "totalExternalWalletDebitXec": "118.19",
-        "confirmations": 2,
+        "confirmations": 5,
         "requiredConfirmations": 6,
         "avalancheFinalized": true,
         "balanceNanos": "0",
-        "privateReceipt": ".local/plugin-evidence/hetzner-deposit-receipt.json"
+        "privateReceipt": ".local/plugin-evidence/hetzner-deposit-receipt.json",
+        "lastCheckedAt": "2026-09-30T00:14:08.656Z"
       },
       "controlledMaintainerTest": true,
       "customerAdoption": false,
@@ -592,7 +616,7 @@
       "withdrawal": false
     }
   },
-  "lastOperationAt": "2026-09-30T00:02:52.597Z",
+  "lastOperationAt": "2026-09-30T00:15:58.616Z",
   "deployedSourceCommit": "6088dd543a66137056c97b74a42efb4e01f92fd5",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -608,5 +632,12 @@
     "verifiedSignedOutFiles": 8,
     "version": "1.3.1",
     "downloadUrl": "https://zoko.46.225.106.23.sslip.io/plugin/downloads/zoko-1.3.1.zip"
+  },
+  "release": {
+    "version": "1.3.1",
+    "url": "https://github.com/QuantumStonks/ZoKo/releases/tag/zoko-v1.3.1",
+    "sourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
+    "receipt": ".local/plugin-evidence/github-release-1.3.1.json",
+    "sha256": "09ff93ddc89152c434965a9c3a1d743d33092bf0b556118124b010d5efa39277"
   }
 }
