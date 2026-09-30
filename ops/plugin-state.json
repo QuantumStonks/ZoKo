@@ -433,17 +433,12 @@
       "depositTxidLocation": ".local/plugin-evidence/hetzner-deposit-receipt.json",
       "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md",
       "lastWakeup": {
-        "checkedAt": "2026-09-30T01:34:25.185Z",
+        "checkedAt": "2026-09-30T01:41:55.235Z",
         "outcome": "paid_decision_succeeded_original_withdrawal_pending",
         "buyerHistoryCount": 1,
         "withdrawalCount": 1,
         "sellerPaused": true,
-        "sellerReady": false,
-        "connectionCheck": {
-          "status": "transient_read_timeout_recovered_public_readiness_and_account_reads_passed",
-          "receipt": ".local/plugin-evidence/maintenance-network-20260930T0131.json",
-          "sha256": "c269f6735c78cfa722ebcef80e6a4342938321c4aedd69901b152a2abba8cfef"
-        }
+        "sellerReady": false
       },
       "decision": {
         "status": "succeeded",
@@ -469,7 +464,7 @@
         "buyerReservedNanos": "110000000000",
         "sameOriginalJournal": true,
         "privateReceipt": ".local/plugin-evidence/hetzner-withdrawal-receipt.json",
-        "receiptSha256": "165b54b102ad272d71aa0970a67402fbf388f85410e6a260ebef3d7da35dee4a",
+        "receiptSha256": "b11a160552e7187c0b033ff8599aa571737352e3aad50a0202d974a08555575f",
         "confirmations": 1,
         "requiredConfirmations": 6,
         "avalanchePreconsensusFinalized": true,
@@ -480,8 +475,8 @@
         "unusedFeeReserveXec": "97.81",
         "expectedBuyerBalanceAfterSettlementXec": "102.81",
         "privateChainReceipt": ".local/plugin-evidence/original-withdrawal-chain.json",
-        "chainReceiptSha256": "55152d87b8a70c5e05f870c9edcbe173fafea20829c65c116e937be997216256",
-        "lastCheckedAt": "2026-09-30T01:31:47.860Z"
+        "chainReceiptSha256": "5c8437265e56940a96dd221b0b75b28052fcfc6af36717991115c6d21984150e",
+        "lastCheckedAt": "2026-09-30T01:41:47.398Z"
       }
     },
     "pendingUserInputs": [
@@ -668,7 +663,7 @@
       "withdrawal": "broadcast_verified_not_yet_settled"
     }
   },
-  "lastOperationAt": "2026-09-30T01:34:25.185Z",
+  "lastOperationAt": "2026-09-30T01:41:55.235Z",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
