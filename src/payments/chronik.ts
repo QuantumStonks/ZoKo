@@ -46,8 +46,13 @@ export class ChronikGateway {
   tx(id: string): Promise<Tx> { return this.client.tx(id); }
 }
 
-export function assertPlainXec(tx: Tx): void {
-  if (tx.tokenStatus !== 'TOKEN_STATUS_NON_TOKEN' || tx.tokenEntries.length !== 0 ||
+export function assertPlainXec(tx: Tx, source: 'indexed' | 'validation' = 'indexed'): void {
+  // /validate-tx reports NORMAL even for native-only transactions. Accept that
+  // status only for validation responses with no token data whatsoever; indexed
+  // parents and on-chain payouts must still explicitly report NON_TOKEN.
+  const nativeStatus = tx.tokenStatus === 'TOKEN_STATUS_NON_TOKEN' ||
+    (source === 'validation' && tx.tokenStatus === 'TOKEN_STATUS_NORMAL');
+  if (!nativeStatus || tx.tokenEntries.length !== 0 ||
       tx.tokenFailedParsings.length !== 0 || tx.inputs.some(input => input.token !== undefined) ||
       tx.outputs.some(output => output.token !== undefined)) {
     throw new PaymentError('unsupported_token_transaction', 'Zoko accepts native XEC transactions without token inputs or outputs', 400);

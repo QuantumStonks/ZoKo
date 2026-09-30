@@ -688,7 +688,7 @@ export class Payments {
         // Validation also exposes spendable bytes. It belongs behind the same
         // durable signing and account-permission boundary as broadcast.
         const validated = await gateway.client.validateRawTx(row.signed_hex!);
-        verifyChronikTransaction(decoded, validated); assertPlainXec(validated);
+        verifyChronikTransaction(decoded, validated); assertPlainXec(validated, 'validation');
         const sent = await gateway.client.broadcastTx(row.signed_hex!, false);
         if (txid(sent.txid) !== row.txid) throw new PaymentError('payout_txid_mismatch', 'Chronik broadcast returned an unexpected transaction ID');
         await tx.query("UPDATE payments_withdrawals SET status='broadcast',last_error=NULL,updated_at=now() WHERE id=$1 AND status IN ('signed','broadcast')", [row.id]);

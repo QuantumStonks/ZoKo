@@ -50,7 +50,7 @@
     "status": "ACTIVE",
     "schedule": "temporary every 10 minutes until funded acceptance terminal; then daily 09:00 Europe/Paris",
     "notificationIntent": "meaningful changes or required action only",
-    "receipt": "official automation update and local TOML readback on 2026-09-30"
+    "receipt": "official update and readback 2026-09-30; public 1.3.1 and portable encrypted recovery prompt current"
   },
   "evidence": [
     {
@@ -213,14 +213,13 @@
   "blockers": [
     "Universal directory only: current official guidelines prohibit digital-service commerce and list execution of crypto transfers as prohibited. ZoKo eligibility remains unresolved; this is policy interpretation, not a provider rejection. Independent public catalog and download are verified.",
     "Universal directory only: XECKZ Inc. is owner-designated. Provider publisher verification and authorized developer legal attestations remain pending. All four public URLs are verified.",
-    "Live paid acceptance: deposit awaits six confirmations plus Avalanche finality; preserve the single purchase and withdrawal scope and original journals.",
+    "Live paid acceptance: the single native decision succeeded and reconciled. Recover the original signed withdrawal only; verify broadcast, six confirmations and finality before claiming complete.",
     "Recovery: portable decryption passed without DPAPI and hourly encrypted backups run on VPS. Owner must copy the private recovery identity into independent secure custody; independently hosted off-site replication is not configured.",
     "Customer availability: participating seller agents must remain actively able to claim and deliver. Installation does not create continuously online inference or establish customer adoption."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
-    "Make the reviewed source changes available from the default branch after final PR review. PR4 remains draft; catalog publication is independently complete.",
-    "Resume the already funded Hetzner acceptance from .local/plugin-evidence/hetzner-acceptance-handoff.md after credit: exactly one native decision at the prepared 1 XEC price, reconcile buyer/seller/platform, then the one 10 XEC withdrawal to the authorized destination using its original idempotency key. Preserve all journals and remaining funds; return maintenance to daily after the test is terminal.",
+    "Recover the original signed 10 XEC withdrawal, preserving its bytes, reservations and idempotency key. Do not buy or withdraw again. Back up after financial changes; return maintenance to daily only after terminal acceptance.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
     "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies.",
     "Maintain the hourly encrypted VPS backup timer and create/pull verified off-host copies after financial changes. Keep the private recipient identity off-server and arrange owner-controlled independent key custody."
@@ -234,42 +233,31 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
+  "testedImplementationCommit": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
   "pullRequest": {
-    "state": "OPEN",
+    "headRefOid": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
+    "mergeCommit": {
+      "oid": "3f45d9d6c2592a05c868137ca62153dc0f8c76f9"
+    },
+    "mergedAt": "2026-09-30T00:20:21Z",
+    "state": "MERGED",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
-    "draft": true
+    "draft": false,
+    "receipt": ".local/plugin-evidence/source-merge-1.3.1.json",
+    "sha256": "20fdec1ada5e998292a4013575c19eb41e6d639bf8bb87b987afe74c72ba0776"
   },
   "remoteCI": {
     "status": "completed_success",
-    "implementationCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36648395826",
+    "implementationCommit": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36649697932",
     "jobs": [
+      "verify: success",
       "plugin-portability (macos-latest): success",
-      "plugin-portability (windows-latest): success",
-      "verify: success"
+      "plugin-portability (windows-latest): success"
     ],
-    "receipt": ".local/plugin-evidence/remote-ci-1.3.1.json",
-    "receiptSha256": "b421e711f32b61a97905c6901114d0264097d660fecacaf322286ea67a4404e9",
-    "previousRelease": {
-      "status": "completed_success",
-      "implementationCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
-      "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36637662033",
-      "jobs": [
-        "plugin-portability (macos-latest): success",
-        "verify: success",
-        "plugin-portability (windows-latest): success"
-      ],
-      "receipt": ".local/plugin-evidence/remote-ci-5b6a403.json",
-      "receiptSha256": "6513c479c48f408fa31d94c43d609e4774831fffd98fbc85e6e07ce19e2f1f9a",
-      "previousRelease": {
-        "status": "completed_success",
-        "implementationCommit": "fbe6f5f5c6d6bdf3540cc1a3ba524dad8f2b7fd5",
-        "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36631223489",
-        "receipt": ".local/plugin-evidence/remote-ci-fbe6f5f.json",
-        "receiptSha256": "2221c645283e8897b002bc4967e537983bcf67a10272bbb9f1f97b932ef0e97e"
-      }
-    }
+    "receipt": ".local/plugin-evidence/source-merge-1.3.1.json",
+    "receiptSha256": "20fdec1ada5e998292a4013575c19eb41e6d639bf8bb87b987afe74c72ba0776",
+    "releasePackageSourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd"
   },
   "discoveryEvidence": {
     "checkedAt": "2026-09-29",
@@ -318,7 +306,7 @@
   },
   "hostedMarketplace": {
     "requestedAt": "2026-09-29",
-    "status": "live_healthy_paid_acceptance_deposit_verified_pending_confirmations",
+    "status": "live_paid_native_decision_verified_withdrawal_recovery_in_progress",
     "hostingReview": {
       "observedAt": "2026-09-30",
       "trigger": "Owner asked to wait and compare a 20-30 EUR Hetzner VPS before usage",
@@ -393,7 +381,7 @@
       "sha256": "282753ec27a5f9e9a2c5b57fc52fed51ad3b30958fe7d8b0ed55b8fd61b6f786"
     },
     "paidAcceptance": {
-      "status": "real_deposit_verified_pending_required_confirmations",
+      "status": "paid_decision_succeeded_original_withdrawal_pending",
       "network": "mainnet",
       "seller": {
         "offerId": "xeckz-native-acceptance-20260930",
@@ -420,26 +408,60 @@
       "tokenUsage": "unavailable_per_job",
       "destinationValidation": "supplied_address_valid_mainnet_p2pkh_private_receipt",
       "funding": {
-        "status": "on_chain_verified_pending_service_credit",
+        "status": "credited_after_six_confirmations_and_finality",
         "depositXec": "116",
         "externalWalletFeeXec": "2.19",
         "totalExternalWalletDebitXec": "118.19",
-        "confirmations": 5,
+        "confirmations": 6,
         "requiredConfirmations": 6,
         "avalancheFinalized": true,
-        "balanceNanos": "0",
+        "balanceNanos": "116000000000",
         "privateReceipt": ".local/plugin-evidence/hetzner-deposit-receipt.json",
-        "lastCheckedAt": "2026-09-30T00:14:08.656Z"
+        "lastCheckedAt": "2026-09-30T00:33:50.582Z",
+        "receiptSha256": "08219688e37ff52b6ff02fe797584eeaf0015cc306bfa1538012ab4eadb35fe8"
       },
       "controlledMaintainerTest": true,
       "customerAdoption": false,
       "preparedDecisionXec": "1",
       "preparedBuyerWithdrawalXec": "10",
       "depositTxidLocation": ".local/plugin-evidence/hetzner-deposit-receipt.json",
-      "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md"
+      "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md",
+      "lastWakeup": {
+        "checkedAt": "2026-09-30T00:46:45.712Z",
+        "outcome": "paid_decision_succeeded_original_withdrawal_pending",
+        "buyerHistoryCount": 1,
+        "withdrawalCount": 1,
+        "sellerPaused": true,
+        "sellerReady": false
+      },
+      "decision": {
+        "status": "succeeded",
+        "accepted": true,
+        "model": "gpt-6.1-sol",
+        "latencyMs": 34760,
+        "usage": null,
+        "priceXec": "1",
+        "sellerLedgerCreditXec": "0.9",
+        "platformCommissionXec": "0.1",
+        "sellerStopped": true,
+        "furtherPurchasesLocked": true,
+        "ledgerReconciled": true,
+        "privateReceipt": ".local/plugin-evidence/hetzner-paid-decision-receipt.json",
+        "receiptSha256": "b974cd5ed18f753b58aac179ebd84923d751bebf46de3a7aac8203a11eaa8226"
+      },
+      "withdrawal": {
+        "status": "signed",
+        "amountXec": "10",
+        "signedFeeXec": "2.19",
+        "lastError": "unsupported_token_transaction",
+        "buyerAvailableNanos": "5000000000",
+        "buyerReservedNanos": "110000000000",
+        "sameOriginalJournal": true,
+        "privateReceipt": ".local/plugin-evidence/hetzner-withdrawal-receipt.json",
+        "receiptSha256": "da0ca51f93f3e2cbbb823030e27a41fa83e22fc1541dbb76f57963162582206a"
+      }
     },
     "pendingUserInputs": [
-      "No new funding or spending approval requested: owner already sent the verified deposit. Chain confirmations are an external wait.",
       "Arrange portable independent encrypted recovery custody before broader funded customer use."
     ],
     "preferredMonthlyCap": 30,
@@ -616,7 +638,7 @@
       "withdrawal": false
     }
   },
-  "lastOperationAt": "2026-09-30T00:15:58.616Z",
+  "lastOperationAt": "2026-09-30T00:46:45.712Z",
   "deployedSourceCommit": "6088dd543a66137056c97b74a42efb4e01f92fd5",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -639,5 +661,12 @@
     "sourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
     "receipt": ".local/plugin-evidence/github-release-1.3.1.json",
     "sha256": "09ff93ddc89152c434965a9c3a1d743d33092bf0b556118124b010d5efa39277"
+  },
+  "metrics": {
+    "observedAt": "2026-09-30T00:16:00.562Z",
+    "receipt": ".local/plugin-metrics/20260930T0017-release.json",
+    "coverage": "complete",
+    "adoption": "unavailable",
+    "maintainerChecksExcluded": true
   }
 }

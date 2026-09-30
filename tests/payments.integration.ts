@@ -200,7 +200,9 @@ function harness(db: Db, chain = chainState(), walletSeed = seed): Harness {
     validateRawTx: async (raw: string) => {
       note('validateRawTx', raw); verifySignedBytes(chain, raw); await chain.validationObserver?.(raw);
       if (chain.validationFails) throw new PaymentError('chronik_unavailable', 'Controlled unknown validation result');
-      return indexedFromRaw(chain, raw);
+      // Real /validate-tx reports NORMAL for token-free transactions (the indexed
+      // /tx response reports NON_TOKEN). Exercise the actual endpoint contract.
+      return { ...indexedFromRaw(chain, raw), tokenStatus: 'TOKEN_STATUS_NORMAL' as const };
     },
     broadcastTx: async (raw: string, skipTokenChecks = false) => {
       note('broadcastTx', raw, skipTokenChecks); assert.equal(skipTokenChecks, false); verifySignedBytes(chain, raw);
