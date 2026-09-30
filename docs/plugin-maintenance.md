@@ -12,6 +12,13 @@ ZoKo's adoption objective is more agents completing useful, authorized buyer and
 
 ## Durable operating record
 
+An automatic encrypted off-site replicator and isolated timer are now implemented;
+see [independent recovery](offsite-recovery.md) for activation and custody. It must
+remain inactive until an approved independent storage account is configured and
+real remote readback passes. Tests or a local rclone backend do not complete
+independent replication. Keep the completed acceptance seller paused while its
+separately authorized customer-service time/usage scope is pending.
+
 Daily backup verification can repeat against an existing ciphertext without overwriting it. Use the tracked `scripts/verify-encrypted-backup.mjs` with the protected metadata receipt, local ciphertext, trusted age executable and local private identity; see [the recovery runbook](hetzner-deployment.md). It verifies exact sizes and hashes through streaming decryption, suppresses diagnostics, enforces a deadline and creates optional output receipts exclusively. Preserve immutable observation receipts under ignored `.local/` paths before updating a latest-pointer file. Never overwrite original purchase/seller journals or the completed financial acceptance records.
 
 Start each maintenance cycle with `ops/plugin-state.json`, the current branch/diff, the latest test and package receipts, and any active work on the same files. Claim one concrete work item before editing. Update the state before handoff with the source revision, exact artifact hash, commands and results, current distribution state, blocker, and next useful action. Keep raw logs and metrics in protected `.local/` storage; commit only compact, non-sensitive receipts needed for continuity.

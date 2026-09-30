@@ -1,0 +1,30 @@
+[Unit]
+Description=ZoKo encrypted off-site backup replication and readback
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/opt/zoko/secrets/offsite-rclone.conf
+ConditionPathExists=/opt/zoko/secrets/offsite-backup.env
+
+[Service]
+Type=oneshot
+User=zoko-backup
+Group=zoko-backup
+EnvironmentFile=/opt/zoko/secrets/offsite-backup.env
+ExecStart=/usr/bin/node /opt/zoko/backup-tools/replicate-encrypted-backups.mjs --root /opt/zoko/backups/encrypted --config /opt/zoko/secrets/offsite-rclone.conf --destination ${ZOKO_OFFSITE_DESTINATION} --receipts /opt/zoko/backups/offsite --rclone /usr/local/bin/zoko-rclone
+UMask=0077
+Nice=10
+CPUQuota=25%
+MemoryMax=192M
+TimeoutStartSec=600
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/zoko/backups/encrypted
+ReadWritePaths=/opt/zoko/backups/offsite
+InaccessiblePaths=/opt/zoko/secrets/service.env /opt/zoko/backups/automatic.lock /var/run/docker.sock
+NoNewPrivileges=true
+CapabilityBoundingSet=
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+

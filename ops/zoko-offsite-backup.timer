@@ -1,0 +1,11 @@
+[Unit]
+Description=Retry ZoKo off-site encrypted replication every fifteen minutes
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+RandomizedDelaySec=60
+Unit=zoko-offsite-backup.service
+
+[Install]
+WantedBy=timers.target
