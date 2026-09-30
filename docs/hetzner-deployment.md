@@ -48,6 +48,21 @@ The helper transfers a bounded backup over pinned SSH, verifies its checksum, en
 
 To recover, first stop the sole live signer, retain the current database and all signed/broadcast withdrawal evidence, recover the **matching original** configuration and database, and run the doctor/reconciliation before enabling payments. Follow the destructive restore runbook only for actual authorized recovery. Do not use the production restore command merely to test a backup, and never run two signers using the same seed.
 
+### Repeatable off-host verification
+
+Use `scripts/verify-encrypted-backup.mjs` to verify an already copied age ciphertext against its protected server metadata receipt. It checks both SHA256 hashes and exact byte counts, streams decryption directly into a hash, and writes no plaintext. The ciphertext, original receipt and private identity remain unchanged across repeat checks. Node 24 and a trusted `age` executable are required; keep the private identity on the recovery host.
+
+```sh
+node scripts/verify-encrypted-backup.mjs \
+  --receipt /protected/server-backup-metadata.json \
+  --file /protected/zoko-backup.dump.age \
+  --identity /secure/recovery-identity.txt \
+  --age /trusted/bin/age \
+  --out /protected/new-verification-receipt.json
+```
+
+`--out` is optional and exclusively creates a new verification receipt; an existing output is never overwritten. Input receipts and encrypted/plaintext sizes are bounded at 64 KiB and 50 MB respectively. Decryption has a 60-second deadline, excessive output fails immediately, and decryptor diagnostics are drained without logging or retaining them. A successful readback proves the ciphertext decrypts to its recorded database bytes; it does not prove a database restore, independent key custody or automatic off-site replication. The protected local `verify-server-encrypted-backup.ps1` now preserves existing ciphertext and invokes this verifier for both new and repeated copies.
+
 ## Changes and rollback
 
 Keep immutable release directories and inspect current Git/host state before another deployment. Build with capped resources, validate Compose, and record image/commit/digests before selecting a release. Review migration compatibility: reverting only an API image is not automatically a safe database rollback. Preserve financial journals, signatures and idempotency keys through every recovery.

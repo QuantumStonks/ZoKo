@@ -640,12 +640,12 @@
         "dumpSha256": "d42b18ca788021a1e1c6139f15b336cfb11f4ae10e80ae52ac84695c17636b1a"
       },
       "crossPlatformVerification": {
-        "receipt": ".local/plugin-evidence/hetzner-cross-platform-recovery.json",
-        "sha256": "0c9457c84135ac4ab0de91e01a7ce6218143a9928884e6bd059546b9dea2b3d7",
+        "receipt": ".local/plugin-evidence/maintenance-20260930-0900/hetzner-cross-platform-recovery.json",
+        "sha256": "bdc68fe056a3bd6370355e9ac3d2aaebcb6702930fe45b4403789e7005f9e9be",
         "linuxEncryptedWindowsDecrypted": true,
-        "completedAt": "2026-09-30T04:28:17.681831+02:00",
-        "encryptedSha256": "688b0fc53d42b4a35efc284fa26290ed9faf0a543019b749fcf79964abb2a603",
-        "plaintextSha256": "98bd2ad820c9640903c7f9c0d3335e34ce9d4061192cc75b8a998439f265bc7d",
+        "completedAt": "2026-09-30T09:00:25.512609+02:00",
+        "encryptedSha256": "e46667ba00e9542674409e6c7944f1fd7b05fd947202beeef25126843deeeacd",
+        "plaintextSha256": "3ebc0fe90969b1df94ae78377961011cb6b3cb2e5a00127dc77e55e95f19d842",
         "offHostCopyVerified": true,
         "postSettlement": true
       },
@@ -658,11 +658,11 @@
         "retentionDays": 30,
         "independentOffsiteScheduler": false,
         "lastObserved": {
-          "checkedAt": "2026-09-30T02:35:13.551Z",
+          "checkedAt": "2026-09-30T07:17:07.679Z",
           "timerActive": true,
           "serviceResult": "success",
           "execMainStatus": 0,
-          "latestCompletedAt": "2026-09-30T04:28:17.681831+02:00"
+          "latestCompletedAt": "2026-09-30T09:00:25.512609+02:00"
         }
       },
       "sshCompatibility": {
@@ -670,13 +670,23 @@
         "receipt": ".local/plugin-evidence/maintenance-20260930-0101.json",
         "sha256": "c87007dc1d6d2a58612d997498a3b464a309d3e8bfc524c57598025b72201230",
         "gridzHelperUnchanged": true
+      },
+      "streamingVerification": {
+        "script": "scripts/verify-encrypted-backup.mjs",
+        "scriptSha256": "30d2ca81c9d9c73ddabb5b537371ae3987c13231feee02226f0a706afd13c44b",
+        "receipt": ".local/plugin-evidence/maintenance-20260930-0900/streaming-recovery-20260930-0700-repeat.json",
+        "sha256": "e11e1ae691ce264a33fbb2bb196250657f00d15517e979aa31f57fca17936a72",
+        "repeatable": true,
+        "plaintextWrittenToDisk": false,
+        "byteLimit": 50000000,
+        "decryptionTimeoutMs": 60000
       }
     },
     "liveVerification": {
       "receipt": ".local/plugin-evidence/hetzner-live-verification.json",
       "sha256": "58eafc40f157a2eb47b45a40fd7692815ab54c8e6ca3e458f204807e8815e07c",
-      "runtimeReceipt": ".local/plugin-evidence/hetzner-runtime-receipt.json",
-      "runtimeSha256": "06be3a031a8fd118e858e9d953fc00d5a5585961f5d7c9b3f076993c9052b50b",
+      "runtimeReceipt": ".local/plugin-evidence/maintenance-20260930-0900/hetzner-runtime-receipt.json",
+      "runtimeSha256": "6a892767f92c66cdaca9ef27e69c56268b3662fe40d62f3931cee1e93351542f",
       "assets": "exact_image_bytes_and_Git_source_text_after_line_ending_normalization",
       "auth": "private_and_admin_missing_key_401",
       "securityHeaders": "passed",
@@ -687,20 +697,20 @@
       "paidDecision": true,
       "withdrawal": "settled_and_reconciled",
       "terminalReadiness": {
-        "receipt": ".local/plugin-evidence/hetzner-terminal-readiness.json",
-        "sha256": "3a5f4b7f237dfd332895548b15ac770ac3ed91fe7254c1ce1cd2375eb2a469fd",
-        "checkedAt": "2026-09-30T02:33:27.516178+00:00",
+        "receipt": ".local/plugin-evidence/maintenance-20260930-0900/hetzner-terminal-readiness.json",
+        "sha256": "4c26dd97bdf0b5af2ae03f289b7cece8f36b38c98f3d07ff13e4df793d6e977f",
+        "checkedAt": "2026-09-30T07:02:19.217706+00:00",
         "vantage": "VPS public HTTPS via delegated SSH",
         "health": true,
         "paymentsReady": true,
         "privateAuthStatus": 401,
         "adminAuthStatus": 401,
         "gridzRoutesStatus": 200,
-        "desktopTransport": "bounded public fetch timeouts; VPS public HTTPS checks passed; no service change"
+        "desktopTransport": "VPS public HTTPS observation; no desktop transport failure on this cycle"
       }
     }
   },
-  "lastOperationAt": "2026-09-30T02:35:13.551Z",
+  "lastOperationAt": "2026-09-30T07:17:07.679Z",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -750,5 +760,13 @@
     },
     "deploymentReceipt": ".local/plugin-evidence/withdrawal-fix-deployment.json",
     "deploymentReceiptSha256": "f5abe5b0f1a7e061972872e149513b3fad1fc8eb2a5d3f118516506ef5c3fd5e"
+  },
+  "maintenance": {
+    "workItem": "repeatable_bounded_streaming_offhost_backup_verification",
+    "status": "locally_verified_ready_for_remote_CI",
+    "receipt": ".local/plugin-evidence/maintenance-20260930-0900/receipt.json",
+    "sha256": "dd751cbab1e46333730c51f82d8c22fe2fae8cf7c1e36e67251f8f0456c0f2c9",
+    "scriptSha256": "30d2ca81c9d9c73ddabb5b537371ae3987c13231feee02226f0a706afd13c44b",
+    "checkedAt": "2026-09-30T07:17:07.679Z"
   }
 }
