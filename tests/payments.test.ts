@@ -115,6 +115,19 @@ function plainTransaction(): Tx {
   };
 }
 
+test('validation accepts NORMAL only with entirely absent token data; indexed reads stay strict', () => {
+  const native = plainTransaction(); native.tokenStatus = 'TOKEN_STATUS_NORMAL';
+  assert.throws(() => assertPlainXec(native), paymentCode('unsupported_token_transaction'));
+  assert.doesNotThrow(() => assertPlainXec(native, 'validation'));
+  for (const tokenStatus of ['TOKEN_STATUS_NOT_NORMAL', 'TOKEN_STATUS_UNKNOWN'] as const) {
+    assert.throws(() => assertPlainXec({ ...native, tokenStatus }, 'validation'), paymentCode('unsupported_token_transaction'));
+  }
+  const tokenEntry = { tokenId: 'ab'.repeat(32) } as Tx['tokenEntries'][number];
+  const parsing = { pushdataIdx: 0, bytes: '', error: 'invalid token prefix' };
+  assert.throws(() => assertPlainXec({ ...native, tokenEntries: [tokenEntry] }, 'validation'), paymentCode('unsupported_token_transaction'));
+  assert.throws(() => assertPlainXec({ ...native, tokenFailedParsings: [parsing] }, 'validation'), paymentCode('unsupported_token_transaction'));
+});
+
 test('native XEC policy rejects zero-quantity token mint batons on either side', () => {
   const token: Token = {
     tokenId: 'cdcdcdcdcdc9dda4c92bb1145aa84945c024346ea66fd4b699e344e45df2e145',
@@ -125,6 +138,8 @@ test('native XEC policy rejects zero-quantity token mint batons on either side',
   for (const side of ['inputs', 'outputs'] as const) {
     const value = plainTransaction(); value[side][0]!.token = token;
     assert.throws(() => assertPlainXec(value), paymentCode('unsupported_token_transaction'));
+    value.tokenStatus = 'TOKEN_STATUS_NORMAL';
+    assert.throws(() => assertPlainXec(value, 'validation'), paymentCode('unsupported_token_transaction'));
   }
   const invalid = plainTransaction(); invalid.tokenStatus = 'TOKEN_STATUS_NOT_NORMAL';
   assert.throws(() => assertPlainXec(invalid), paymentCode('unsupported_token_transaction'));
