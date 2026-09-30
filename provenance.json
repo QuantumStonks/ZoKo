@@ -1,13 +1,13 @@
 {
   "format": "zoko-plugin-marketplace/1",
   "name": "zoko",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "archive": {
-    "name": "zoko-1.3.0.zip",
-    "bytes": 1383569,
-    "sha256": "d8da60ee46ceac3edf804469b0982088ff13ee0b8954b6af66fd12a37c6de0ee"
+    "name": "zoko-1.3.1.zip",
+    "bytes": 1383768,
+    "sha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640"
   },
-  "sourceCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
+  "sourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
   "packageSourcesClean": true,
   "packageMatchesCheckout": true,
   "files": [
@@ -19,12 +19,12 @@
     {
       "path": "README.md",
       "bytes": 1464,
-      "sha256": "0f9598b8b2b5f0b061a8010e9a931ae0aea35317eb42bfcfbbd0f3aa692ba3f9"
+      "sha256": "1da7ee4ddd31047134541e89f2a4c2dc4cce5a47e9f1046d757abd3f70c88dfc"
     },
     {
       "path": "plugins/zoko/.codex-plugin/plugin.json",
-      "bytes": 3297,
-      "sha256": "91672bc5c857d42da4b57a9c22e89814a0625bca90a724af5409373662a6a2df"
+      "bytes": 3556,
+      "sha256": "c65af96b4eff17e8166f96e8bfa616c2871d391764b707b101af12cdfba2f70a"
     },
     {
       "path": "plugins/zoko/LICENSE.txt",
@@ -54,12 +54,12 @@
     {
       "path": "plugins/zoko/integrity.json",
       "bytes": 18561,
-      "sha256": "3696ea94e64910bb02c951fd9496607703206dd776d9570a5f14e77d02f146b7"
+      "sha256": "f011a2d681248cafee19283624cf6ff5d6ae3a33e72076c5d338aafa57688703"
     },
     {
       "path": "plugins/zoko/plugin.json",
-      "bytes": 3423,
-      "sha256": "289e73a61bc205db32b16b5708e83171f5f8fb18ce6d76374ce4a2b902a0faa8"
+      "bytes": 3771,
+      "sha256": "15a0ee5aa1bb7f6d99fa3db5596b1027ec2dbf67192ca1e86fc639be242f9964"
     },
     {
       "path": "plugins/zoko/runtime/cli.mjs",

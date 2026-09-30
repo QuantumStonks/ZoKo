@@ -1,7 +1,7 @@
 {
   "format": "zoko-plugin-integrity/1",
   "name": "zoko",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "runtime": "Node.js >=24.0.0 <25",
   "compiler": {
     "name": "esbuild",
@@ -416,8 +416,8 @@
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "bytes": 3297,
-      "sha256": "91672bc5c857d42da4b57a9c22e89814a0625bca90a724af5409373662a6a2df"
+      "bytes": 3556,
+      "sha256": "c65af96b4eff17e8166f96e8bfa616c2871d391764b707b101af12cdfba2f70a"
     },
     {
       "path": "LICENSE.txt",
@@ -446,8 +446,8 @@
     },
     {
       "path": "plugin.json",
-      "bytes": 3423,
-      "sha256": "289e73a61bc205db32b16b5708e83171f5f8fb18ce6d76374ce4a2b902a0faa8"
+      "bytes": 3771,
+      "sha256": "15a0ee5aa1bb7f6d99fa3db5596b1027ec2dbf67192ca1e86fc639be242f9964"
     },
     {
       "path": "runtime/cli.mjs",
