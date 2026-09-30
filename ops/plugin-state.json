@@ -5,11 +5,11 @@
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/zoko-plugin",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "1.3.0_validated_published_independent_catalog_private_account_updated",
+  "implementation": "1.3.1_validated_live_download_and_private_account_updated_catalog_publication_pending",
   "distribution": {
-    "package": "built_1.3.0_isolated_archive_tests_passed",
+    "package": "built_1.3.1_isolated_archive_tests_passed",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
-    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.3.0",
+    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.3.1",
     "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
     "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
     "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.3.0"
@@ -24,15 +24,15 @@
     "licensePermission": "Official unmodified plugin releases may be downloaded, installed and executed for authorized work; proprietary ownership and other rights remain reserved."
   },
   "package": {
-    "version": "1.3.0",
-    "archive": "dist/plugins/zoko-1.3.0.zip",
-    "sha256": "d8da60ee46ceac3edf804469b0982088ff13ee0b8954b6af66fd12a37c6de0ee",
+    "version": "1.3.1",
+    "archive": "dist/plugins/zoko-1.3.1.zip",
+    "sha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640",
     "files": 22,
-    "bytes": 1383569
+    "bytes": 1383768
   },
   "accountPlugin": {
     "pluginId": "plugins_6abc19b188e8819185ecd292ad424e42",
-    "releaseId": "pluginrel_6abc354b0d2881919364224a039a88e0",
+    "releaseId": "pluginrel_6abc512b4ed48191b2417f9e881e4150",
     "url": "https://chatgpt.com/plugins/plugins_6abc19b188e8819185ecd292ad424e42",
     "scope": "USER",
     "discoverability": "PRIVATE"
@@ -42,13 +42,14 @@
     "pluginRoot": "C:/Users/admin/plugins/zoko",
     "inventoryVerifiedFiles": 20,
     "version": "1.2.2",
-    "note": "Historical personal scaffold; current 1.3.0 release is available through the published Git catalog and private account plugin. Active desktop installation remains unverified."
+    "note": "Historical personal scaffold; current 1.3.1 account plugin and hosted download verified. Desktop activation and new Git catalog release require separate readback."
   },
   "automation": {
     "id": "maintain-zoko-plugin",
     "status": "ACTIVE",
-    "schedule": "daily 09:00 Europe/Paris",
-    "notificationIntent": "meaningful changes or required action only"
+    "schedule": "temporary every 10 minutes until funded acceptance terminal; then daily 09:00 Europe/Paris",
+    "notificationIntent": "meaningful changes or required action only",
+    "receipt": "official automation update and local TOML readback on 2026-09-30"
   },
   "evidence": [
     {
@@ -172,18 +173,52 @@
       "result": "Exact source Linux verification including PostgreSQL and production container smoke; Windows and macOS plugin portability all succeeded",
       "receipt": ".local/plugin-evidence/remote-ci-5b6a403.json",
       "sha256": "6513c479c48f408fa31d94c43d609e4774831fffd98fbc85e6e07ce19e2f1f9a"
+    },
+    {
+      "check": "Hetzner deployed image and live HTTPS",
+      "result": "Exact tested source, immutable production image, live asset parity, security headers, 401 auth boundaries and actual emitted plugin connection passed; Gridz HTTPS readbacks passed.",
+      "receipt": ".local/plugin-evidence/hetzner-live-verification.json",
+      "sha256": "c17efd8e5b6a5e98119d357f5009549450eb1454cc474693c408eec7644b3f89"
+    },
+    {
+      "check": "Hetzner isolated database recovery",
+      "result": "Critical table fingerprints, schema4 and ledger restored without a wallet signer; encrypted off-host config/account/database readback passed. DPAPI portability limitation remains.",
+      "receipt": ".local/plugin-evidence/hetzner-recovery-receipt.json",
+      "sha256": "aa1a4b5d7812888fdf36db663230bb5cb569dbd8ab42be03cc9e3c5278786823"
+    },
+    {
+      "check": "Real acceptance funding",
+      "result": "116 XEC correct deposit plus 2.19 XEC external wallet fee verified from real mainnet transaction; pending service-required confirmations; no purchase or withdrawal yet.",
+      "receipt": ".local/plugin-evidence/hetzner-deposit-receipt.json",
+      "sha256": "ede50fdc095fe167ca570a77459e2746723dc52d22348270739f161f3db2c710"
+    },
+    {
+      "check": "1.3.1 release validation",
+      "result": "npm run check, npm test (126 passed, zero failed/skipped), npm run build, npm run build:plugin passed; emitted archive isolation passed",
+      "receipt": ".local/plugin-evidence/test-1.3.1.log"
+    },
+    {
+      "check": "1.3.1 private account release",
+      "result": "guarded update and 22-file inventory plus both manifest readback passed; PRIVATE USER",
+      "releaseId": "pluginrel_6abc512b4ed48191b2417f9e881e4150"
     }
   ],
   "blockers": [
     "Universal directory only: paid digital AI-decision commerce appears to conflict with its published rule. This is an interpretation, not a provider rejection. Independent Git catalog distribution remains separate.",
     "Universal directory only: XECKZ Inc. is user-designated; provider verification, submission attestations and final public policy URLs remain incomplete.",
-    "Live service: Render sign-in and connector installation are verified; the owner approved its all-workspaces/account-equivalent OAuth grant. Blueprint setup requires human card and billing-address verification with a stated temporary $1 authorization. Protected service secrets, verified recovery backup and actual funding remain pending. No service, paid decision or withdrawal is live.",
-    "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.3.0 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands."
+    "Active desktop profile only: installation and a real agent task remain unverified. Anonymous remote discovery, installation and skill loading are verified on isolated Codex 0.159.0 for the public 1.3.0 release. The app-bundled CLI 0.130.0-alpha.5 lacks current add/list commands.",
+    "Live paid acceptance: the real 116 XEC deposit is verified on-chain but awaits six confirmations plus Avalanche finality. A purchase or withdrawal has not occurred; keep seller offline until credited and this session can deliver. Resume the preserved private acceptance handoff without new funding or repeated approval.",
+    "Broader production recovery: verified encrypted off-VPS copies currently depend on the original Windows account DPAPI keys. Independent portable encrypted recovery custody and an externally hosted backup scheduler are not configured.",
+    "Live paid acceptance: the real 116 XEC deposit is verified on-chain but awaits six confirmations plus Avalanche finality. A purchase or withdrawal has not occurred; keep seller offline until credited and this session can deliver. Resume the preserved private acceptance handoff without new funding or repeated approval.",
+    "Broader production recovery: verified encrypted off-VPS copies currently depend on the original Windows account DPAPI keys. Independent portable encrypted recovery custody and an externally hosted backup scheduler are not configured."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
     "Make the reviewed source changes available from the default branch after final PR review. PR4 remains draft; catalog publication is independently complete.",
-    "Resume after human Render card verification; deploy the exact CI-tested 1.3.0 source within the $50 total monthly cap, verify secret/database recovery, then one native-agent paid acceptance within the cumulative 200 XEC cap and <=10 XEC decision limit. Render OAuth access was approved and installation verified; do not request that grant again.",
+    "Resume the already funded Hetzner acceptance from .local/plugin-evidence/hetzner-acceptance-handoff.md after credit: exactly one native decision at the prepared 1 XEC price, reconcile buyer/seller/platform, then the one 10 XEC withdrawal to the authorized destination using its original idempotency key. Preserve all journals and remaining funds; return maintenance to daily after the test is terminal.",
+    "Maintain public HTTPS, exact release provenance, shared resource pressure and encrypted off-host backup freshness. Arrange independently portable recovery before wider funded customer use; isolate future public untrusted execution away from the custody host.",
+    "Resume the already funded Hetzner acceptance from .local/plugin-evidence/hetzner-acceptance-handoff.md after credit: exactly one native decision at the prepared 1 XEC price, reconcile buyer/seller/platform, then the one 10 XEC withdrawal to the authorized destination using its original idempotency key. Preserve all journals and remaining funds; return maintenance to daily after the test is terminal.",
+    "Maintain public HTTPS, exact release provenance, shared resource pressure and encrypted off-host backup freshness. Arrange independently portable recovery before wider funded customer use; isolate future public untrusted execution away from the custody host.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
     "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies."
   ],
@@ -260,9 +295,35 @@
   },
   "hostedMarketplace": {
     "requestedAt": "2026-09-29",
-    "status": "prepared_CI_verified_native_agent_release_not_provisioned",
-    "providerCandidate": "Render",
-    "providerConnection": "sign_in_verified_oauth_approved_plugin_installation_verified",
+    "status": "live_healthy_paid_acceptance_deposit_verified_pending_confirmations",
+    "hostingReview": {
+      "observedAt": "2026-09-30",
+      "trigger": "Owner asked to wait and compare a 20-30 EUR Hetzner VPS before usage",
+      "render": "Prepared 45.75 USD/month plan; no ZoKo resources created or funds moved",
+      "gridz": "Existing shared VPS verified through pinned SSH; current observed capacity and untouched running Gridz containers recorded in runtime receipt.",
+      "recommendation": "Initial marketplace services fit on existing measured headroom; no resize needed. Prepare resource budgets and ingress integration. Place public untrusted Gridz execution workers on a separate host before enabling them alongside ZoKo custody.",
+      "capacityAssessment": {
+        "checkedAt": "2026-09-29T23:00:27Z",
+        "method": "read_only_pinned_SSH_no_host_changes",
+        "cpuThreads": 8,
+        "memoryAvailableMiB": 12056,
+        "rootDiskAvailableBytes": 131286642688,
+        "loadAverage": [
+          1.13,
+          1.07,
+          1.03
+        ],
+        "zokoConfiguredMemoryLimitMiB": 3072,
+        "existingServiceLimits": "all_six_containers_have_no_CPU_or_memory_limits",
+        "qualification": "snapshot_only_ZoKo_not_deployed_or_load_tested",
+        "receipt": ".local/plugin-evidence/hetzner-capacity-20260930.json"
+      },
+      "deploymentDecision": "owner_authorized_2026-09-30_deployed_on_existing_VPS",
+      "scope": "API, PostgreSQL and public site can run on a VPS. Native seller inference still requires an active authorized Codex session. Independent backups and recovery remain required.",
+      "status": "superseded_by_owner_authorized_Hetzner_deployment"
+    },
+    "providerCandidate": "Hetzner",
+    "providerConnection": "existing_pinned_SSH_authorized_by_owner",
     "providerObservation": {
       "checkedAt": "2026-09-30",
       "workspace": "Quantum Stonks's workspace",
@@ -273,14 +334,19 @@
       "pluginReadback": "Render_ENABLED_installed_true",
       "billingGate": "completed_by_owner_planner_loaded",
       "cardVerification": "owner_completed_in_provider_UI_no_billing_data_recorded",
-      "receipt": ".local/plugin-evidence/render-plan-fix-20260930.json",
-      "receiptSha256": "d65147ef58dffc6c1f5e2f6c76c5e3c7bfbc612e105a5f18cab1093629346f59",
-      "planner": "rejected_custom_shutdown_delay_with_disk_corrected_source_live_recheck_pending"
+      "receipt": ".local/plugin-evidence/render-ready-handoff-20260930.json",
+      "receiptSha256": "2298e0dc00fcdf100744da0779694934bfa32d4a183dd0cec5aec3a89c8fc58d",
+      "planner": "accepted_corrected_Blueprint_estimate_45.75_USD_monthly",
+      "connectorTools": "callable_verified_workspace_and_empty_service_list"
     },
     "monthlyCap": 50,
-    "url": null,
-    "resourceIds": [],
-    "deployedCommit": null,
+    "url": "https://zoko.46.225.106.23.sslip.io",
+    "resourceIds": [
+      "zoko-api-1",
+      "zoko-database-1",
+      "zoko_postgres_data"
+    ],
+    "deployedCommit": "6088dd543a66137056c97b74a42efb4e01f92fd5",
     "node": {
       "active": "24.14.0",
       "installedWindowsRuntime": "24.14.1",
@@ -291,8 +357,8 @@
       "sha256": "5aada62351cb1464ec922fcf5da796e534f65e9e9d46ea0bf5ff8ad50a2b5600"
     },
     "runbook": {
-      "path": "docs/render-deployment.md",
-      "sha256": "40fb70c24bdd41c2148b5e96063ddd920c65ca1657df4a20db711d505755b752"
+      "path": "docs/hetzner-deployment.md",
+      "sha256": "0dabd5f7904d1ec4aafa22fbac0925f5bea2121a54afe4d8d2b01341d329bca3"
     },
     "validation": {
       "receipt": ".local/plugin-evidence/render-blueprint-validation.json",
@@ -304,11 +370,20 @@
       "sha256": "282753ec27a5f9e9a2c5b57fc52fed51ad3b30958fe7d8b0ed55b8fd61b6f786"
     },
     "paidAcceptance": {
-      "status": "pending_host_secrets_recovery_backup_funding_and_actual_active_agent_delivery",
+      "status": "real_deposit_verified_pending_required_confirmations",
       "network": "mainnet",
-      "seller": null,
+      "seller": {
+        "offerId": "xeckz-native-acceptance-20260930",
+        "model": "gpt-6.1-sol",
+        "actualModelVerifiedFrom": "active_host_turn_context",
+        "priceXec": "1",
+        "ownerBound": true,
+        "approved": true,
+        "paused": true,
+        "online": false
+      },
       "maximumXec": "200",
-      "fundingWallet": null,
+      "fundingWallet": "Cashtab",
       "minimumWithdrawalXec": "5.46",
       "maximumWithdrawalFeeReserveXec": "100",
       "minimumDepositFormula": "decision ceiling + withdrawal amount + maximum withdrawal fee reserve; external funding-wallet fee additional",
@@ -320,14 +395,218 @@
       "sellerDelivery": "active_owner_codex_session",
       "inferenceCredential": "not_required_for_native_delivery",
       "tokenUsage": "unavailable_per_job",
-      "destinationValidation": "supplied_address_valid_mainnet_p2pkh_private_receipt"
+      "destinationValidation": "supplied_address_valid_mainnet_p2pkh_private_receipt",
+      "funding": {
+        "status": "on_chain_verified_pending_service_credit",
+        "depositXec": "116",
+        "externalWalletFeeXec": "2.19",
+        "totalExternalWalletDebitXec": "118.19",
+        "confirmations": 2,
+        "requiredConfirmations": 6,
+        "avalancheFinalized": true,
+        "balanceNanos": "0",
+        "privateReceipt": ".local/plugin-evidence/hetzner-deposit-receipt.json"
+      },
+      "controlledMaintainerTest": true,
+      "customerAdoption": false,
+      "preparedDecisionXec": "1",
+      "preparedBuyerWithdrawalXec": "10",
+      "depositTxidLocation": ".local/plugin-evidence/hetzner-deposit-receipt.json",
+      "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md"
     },
     "pendingUserInputs": [
-      "Protected service secret provisioning and verified encrypted recovery backup before funding",
-      "Funding wallet name and its required signing interaction; supplied address is receiving destination, not signing control"
+      "No new funding or spending approval requested: owner already sent the verified deposit. Chain confirmations are an external wait.",
+      "Arrange portable independent encrypted recovery custody before broader funded customer use."
     ],
     "preferredMonthlyCap": 30,
-    "baseMonthlyEstimateUsd": 45.75,
-    "costScope": "Before taxes, usage overages and paid workspace upgrades; enforce authorized total cap against provider estimate before creation"
+    "costScope": "Existing VPS; owner-reported EUR price. No new server, resize or paid infrastructure upgrade created. Prior Render USD estimate is historical only.",
+    "deploymentCandidateCommit": "6088dd543a66137056c97b74a42efb4e01f92fd5",
+    "deploymentCandidateCi": {
+      "runs": [
+        {
+          "id": 36641015290,
+          "url": "https://github.com/QuantumStonks/ZoKo/actions/runs/36641015290",
+          "result": "success"
+        },
+        {
+          "id": 36641020302,
+          "url": "https://github.com/QuantumStonks/ZoKo/actions/runs/36641020302",
+          "result": "success"
+        }
+      ],
+      "receipt": ".local/plugin-evidence/render-ready-handoff-20260930.json"
+    },
+    "secretProvisioning": {
+      "status": "original_fresh_credentials_preserved_and_installed_root_0600_over_pinned_SSH",
+      "localOriginal": ".local/render-secrets/hetzner.env",
+      "serverPath": "/opt/zoko/secrets/service.env",
+      "acl": "local_operator_and_SYSTEM_only_remote_root_only",
+      "encryptedOffHostCopy": "verified_decrypted_hash_readback",
+      "matchingInstalledHash": true,
+      "uploadedRedundantSecretRemoved": true,
+      "recoveryLimitation": "portable_age_recovery_passed_owner_independent_offline_identity_custody_pending",
+      "noCodexAuthenticationTransferred": true
+    },
+    "renderPreparation": {
+      "providerObservation": {
+        "checkedAt": "2026-09-30",
+        "workspace": "Quantum Stonks's workspace",
+        "accountSignIn": "verified_in_Brave_dashboard",
+        "services": "dashboard_reports_no_services_created",
+        "oauthScope": "all_workspaces_accessible_to_account_with_account_equivalent_permissions",
+        "oauthFinalAction": "Allow_clicked_after_explicit_owner_action_time_confirmation",
+        "pluginReadback": "Render_ENABLED_installed_true",
+        "billingGate": "completed_by_owner_planner_loaded",
+        "cardVerification": "owner_completed_in_provider_UI_no_billing_data_recorded",
+        "receipt": ".local/plugin-evidence/render-ready-handoff-20260930.json",
+        "receiptSha256": "2298e0dc00fcdf100744da0779694934bfa32d4a183dd0cec5aec3a89c8fc58d",
+        "planner": "accepted_corrected_Blueprint_estimate_45.75_USD_monthly",
+        "connectorTools": "callable_verified_workspace_and_empty_service_list"
+      },
+      "blueprint": {
+        "path": "render.yaml",
+        "sha256": "5aada62351cb1464ec922fcf5da796e534f65e9e9d46ea0bf5ff8ad50a2b5600"
+      },
+      "validation": {
+        "receipt": ".local/plugin-evidence/render-blueprint-validation.json",
+        "sha256": "53c062b19a01a4e01695a03a7c6c482b1480fceeaeb6272bfd8533b9dcba95fb",
+        "schemaSha256": "57aa0a1ff9c3b2d0fcb91b790b7b285aef6397adb0c92930e6e601054444cfe5"
+      },
+      "runbook": {
+        "path": "docs/hetzner-deployment.md",
+        "sha256": "0dabd5f7904d1ec4aafa22fbac0925f5bea2121a54afe4d8d2b01341d329bca3"
+      },
+      "status": "historical_preparation_only_no_ZoKo_resources_created"
+    },
+    "provider": "Hetzner",
+    "apiImageId": "sha256:842e18e59f5034dbd1cc54e90134b3f372c111bc6d405446006dc03df17bc457",
+    "databaseImageId": "sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
+    "baseImages": {
+      "node:24-bookworm-slim": "node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6",
+      "postgres:17-bookworm": "postgres@sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
+      "zokoImageId": "sha256:842e18e59f5034dbd1cc54e90134b3f372c111bc6d405446006dc03df17bc457"
+    },
+    "runtime": {
+      "host": "46.225.106.23",
+      "apiPort": "127.0.0.1:3301",
+      "databasePublished": false,
+      "apiMemoryMiB": 768,
+      "databaseMemoryMiB": 2048,
+      "apiCpuLimit": 1,
+      "databaseCpuLimit": 1,
+      "sharedIngress": "existing_host_Caddy_new_ZoKo_route_only",
+      "gridzContainersRestarted": false,
+      "gridzChecks": [
+        {
+          "url": "https://gridz.46.225.106.23.sslip.io/",
+          "status": 200
+        },
+        {
+          "url": "https://api.46.225.106.23.sslip.io/api/workloads",
+          "status": 200
+        },
+        {
+          "url": "https://mcp.46.225.106.23.sslip.io/healthz",
+          "status": 200
+        }
+      ],
+      "memoryAvailableMiB": 11827,
+      "rootDiskAvailableBytes": 129369354240,
+      "loadAverage": [
+        "1.23",
+        "1.25",
+        "1.18"
+      ],
+      "qualification": "snapshot_only_not_production_load_qualification",
+      "nativeDeliveryTimeoutMs": 60000,
+      "configurationReceipt": {
+        "receipt": ".local/plugin-evidence/hetzner-timeout-receipt.json",
+        "sha256": "b2f81c38bbe0bc8072da85793c992fadd18a24d3687e1e23007c480bf74ae83a"
+      }
+    },
+    "cost": {
+      "existingVpsOwnerReportedEurMonthly": "19.95",
+      "providerBillingReadback": false,
+      "newVps": false,
+      "resized": false,
+      "additionalRenderResources": false,
+      "newPaidInfrastructure": false,
+      "inference": "each participating active Codex instance consumes its own allowance"
+    },
+    "recovery": {
+      "status": "isolated_network_none_database_restore_passed_without_wallet_signer",
+      "receipt": ".local/plugin-evidence/hetzner-recovery-receipt.json",
+      "sha256": "aa1a4b5d7812888fdf36db663230bb5cb569dbd8ab42be03cc9e3c5278786823",
+      "databaseDumpSha256": "4e47b4d627bd3f8c96e2c2745984bed85bd8bae3ca305da7b19904e4b6e3c821",
+      "encryptedOffHostReadbackVerified": true,
+      "schemaVersion": "4",
+      "ledgerReconciliation": "passed",
+      "originalDatabaseRestoredOver": false,
+      "noSecondSigner": true,
+      "latestBackup": {
+        "receipt": ".local/plugin-evidence/hetzner-backup-latest.json",
+        "sha256": "12f243e875729f2ce69ab929c8ba08c896066a4a99df10bc65905af98fca51cf",
+        "dumpSha256": "33b3a50d942ed91edc8cdfb4a6fb54c71ba6cef56b97163b44a3e22c5aa64799",
+        "encryptedReadbackVerified": true
+      },
+      "automation": "hourly_VPS_encrypted_database_backup_30_day_retention_and_local_offhost_snapshot_after_financial_changes",
+      "independentPortableRecovery": true,
+      "externalAlwaysOnBackupScheduler": false,
+      "portableRecovery": {
+        "receipt": ".local/plugin-evidence/hetzner-portable-recovery.json",
+        "sha256": "106de26ba345dbcf7d2aec7ed8f745011ce532b41fb4174b24aa4b5b673354c9",
+        "format": "age-encryption.org/v1",
+        "recipientType": "X25519 + ML-KEM-768",
+        "requiresWindowsDPAPI": false,
+        "privateIdentityOnServer": false,
+        "offlineIdentityCustody": "owner_export_pending"
+      },
+      "crossPlatformVerification": {
+        "receipt": ".local/plugin-evidence/hetzner-cross-platform-recovery.json",
+        "sha256": "bb0bb90df4cc7807588b64fbb8fdf86d666c43604d2422fed4773bafcd54d7ce",
+        "linuxEncryptedWindowsDecrypted": true
+      },
+      "serverAlwaysOnBackupScheduler": true,
+      "serverBackups": {
+        "receipt": ".local/plugin-evidence/hetzner-automatic-backup.json",
+        "sha256": "472fd28f86d786983ee72423c20a0dded4e20766902ec4f2a6080da2be11c483",
+        "timer": "zoko-encrypted-backup.timer",
+        "cadence": "hourly",
+        "retentionDays": 30,
+        "independentOffsiteScheduler": false
+      }
+    },
+    "liveVerification": {
+      "receipt": ".local/plugin-evidence/hetzner-live-verification.json",
+      "sha256": "c17efd8e5b6a5e98119d357f5009549450eb1454cc474693c408eec7644b3f89",
+      "runtimeReceipt": ".local/plugin-evidence/hetzner-runtime-receipt.json",
+      "runtimeSha256": "c82befadfa036af4a25b34574618cbf122cfa933de9b9c13ed891a1011af8137",
+      "assets": "exact_image_bytes_and_Git_source_text_after_line_ending_normalization",
+      "auth": "private_and_admin_missing_key_401",
+      "securityHeaders": "passed",
+      "pluginPublicDiscoveryAndAuthenticatedBuyer": "passed",
+      "health": true,
+      "tradingReady": false,
+      "activeEligibleSellers": 0,
+      "paidDecision": false,
+      "withdrawal": false
+    }
+  },
+  "lastOperationAt": "2026-09-30T00:02:52.597Z",
+  "deployedSourceCommit": "6088dd543a66137056c97b74a42efb4e01f92fd5",
+  "publicWebsite": {
+    "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
+    "siteRoot": "/var/www/zoko-plugin/releases/9a9142ec416459467cb5f76059f0b351cc07eee04d9a4f7278ab07590e89c501",
+    "archiveSha256": "9a9142ec416459467cb5f76059f0b351cc07eee04d9a4f7278ab07590e89c501",
+    "previousIngressSha256": "faae23474eee38f78c902a2cd5dc0e56d2bd93e9255c8430fbe285500666fe1f",
+    "ingressSha256": "17ca40f7091adb186e32e6ef52c1e9200a37261295dc7e73a67ffaf7744b6162",
+    "pluginArchiveSha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640",
+    "verification": {
+      "receipt": ".local/plugin-evidence/hetzner-public-site-verification.json",
+      "sha256": "9518ea8dcc1e0963ebe09f3db25ea417312db4e2acb043b9568484fac6282ddd"
+    },
+    "verifiedSignedOutFiles": 8,
+    "version": "1.3.1",
+    "downloadUrl": "https://zoko.46.225.106.23.sslip.io/plugin/downloads/zoko-1.3.1.zip"
   }
 }
