@@ -50,7 +50,7 @@
     "status": "ACTIVE",
     "schedule": "temporary every 10 minutes until funded acceptance terminal; then daily 09:00 Europe/Paris",
     "notificationIntent": "meaningful changes or required action only",
-    "receipt": "official automation update and local TOML readback on 2026-09-30"
+    "receipt": "official update and readback 2026-09-30; public 1.3.1 and portable encrypted recovery prompt current"
   },
   "evidence": [
     {
@@ -219,7 +219,6 @@
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
-    "Make the reviewed source changes available from the default branch after final PR review. PR4 remains draft; catalog publication is independently complete.",
     "Resume the already funded Hetzner acceptance from .local/plugin-evidence/hetzner-acceptance-handoff.md after credit: exactly one native decision at the prepared 1 XEC price, reconcile buyer/seller/platform, then the one 10 XEC withdrawal to the authorized destination using its original idempotency key. Preserve all journals and remaining funds; return maintenance to daily after the test is terminal.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
     "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies.",
@@ -234,42 +233,31 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
+  "testedImplementationCommit": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
   "pullRequest": {
-    "state": "OPEN",
+    "headRefOid": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
+    "mergeCommit": {
+      "oid": "3f45d9d6c2592a05c868137ca62153dc0f8c76f9"
+    },
+    "mergedAt": "2026-09-30T00:20:21Z",
+    "state": "MERGED",
     "url": "https://github.com/QuantumStonks/ZoKo/pull/4",
-    "draft": true
+    "draft": false,
+    "receipt": ".local/plugin-evidence/source-merge-1.3.1.json",
+    "sha256": "20fdec1ada5e998292a4013575c19eb41e6d639bf8bb87b987afe74c72ba0776"
   },
   "remoteCI": {
     "status": "completed_success",
-    "implementationCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36648395826",
+    "implementationCommit": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36649697932",
     "jobs": [
+      "verify: success",
       "plugin-portability (macos-latest): success",
-      "plugin-portability (windows-latest): success",
-      "verify: success"
+      "plugin-portability (windows-latest): success"
     ],
-    "receipt": ".local/plugin-evidence/remote-ci-1.3.1.json",
-    "receiptSha256": "b421e711f32b61a97905c6901114d0264097d660fecacaf322286ea67a4404e9",
-    "previousRelease": {
-      "status": "completed_success",
-      "implementationCommit": "5b6a40329be11374af064eeb758aba6d054dcdc1",
-      "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36637662033",
-      "jobs": [
-        "plugin-portability (macos-latest): success",
-        "verify: success",
-        "plugin-portability (windows-latest): success"
-      ],
-      "receipt": ".local/plugin-evidence/remote-ci-5b6a403.json",
-      "receiptSha256": "6513c479c48f408fa31d94c43d609e4774831fffd98fbc85e6e07ce19e2f1f9a",
-      "previousRelease": {
-        "status": "completed_success",
-        "implementationCommit": "fbe6f5f5c6d6bdf3540cc1a3ba524dad8f2b7fd5",
-        "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36631223489",
-        "receipt": ".local/plugin-evidence/remote-ci-fbe6f5f.json",
-        "receiptSha256": "2221c645283e8897b002bc4967e537983bcf67a10272bbb9f1f97b932ef0e97e"
-      }
-    }
+    "receipt": ".local/plugin-evidence/source-merge-1.3.1.json",
+    "receiptSha256": "20fdec1ada5e998292a4013575c19eb41e6d639bf8bb87b987afe74c72ba0776",
+    "releasePackageSourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd"
   },
   "discoveryEvidence": {
     "checkedAt": "2026-09-29",
@@ -616,7 +604,7 @@
       "withdrawal": false
     }
   },
-  "lastOperationAt": "2026-09-30T00:15:58.616Z",
+  "lastOperationAt": "2026-09-30T00:21:10.123Z",
   "deployedSourceCommit": "6088dd543a66137056c97b74a42efb4e01f92fd5",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -639,5 +627,12 @@
     "sourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
     "receipt": ".local/plugin-evidence/github-release-1.3.1.json",
     "sha256": "09ff93ddc89152c434965a9c3a1d743d33092bf0b556118124b010d5efa39277"
+  },
+  "metrics": {
+    "observedAt": "2026-09-30T00:16:00.562Z",
+    "receipt": ".local/plugin-metrics/20260930T0017-release.json",
+    "coverage": "complete",
+    "adoption": "unavailable",
+    "maintainerChecksExcluded": true
   }
 }
