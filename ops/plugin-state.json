@@ -433,7 +433,7 @@
       "depositTxidLocation": ".local/plugin-evidence/hetzner-deposit-receipt.json",
       "handoff": ".local/plugin-evidence/hetzner-acceptance-handoff.md",
       "lastWakeup": {
-        "checkedAt": "2026-09-30T01:11:57.990Z",
+        "checkedAt": "2026-09-30T01:22:12.539Z",
         "outcome": "paid_decision_succeeded_original_withdrawal_pending",
         "buyerHistoryCount": 1,
         "withdrawalCount": 1,
@@ -464,7 +464,7 @@
         "buyerReservedNanos": "110000000000",
         "sameOriginalJournal": true,
         "privateReceipt": ".local/plugin-evidence/hetzner-withdrawal-receipt.json",
-        "receiptSha256": "8295b09a5045c24517d55cfcbfe5c7715fda70e932851a01768447dfd1d1628a",
+        "receiptSha256": "6ee62616a74fab2987b1e363fbf37fdb27e0f1723dec23978bf166e557c9897e",
         "confirmations": 1,
         "requiredConfirmations": 6,
         "avalanchePreconsensusFinalized": true,
@@ -475,8 +475,8 @@
         "unusedFeeReserveXec": "97.81",
         "expectedBuyerBalanceAfterSettlementXec": "102.81",
         "privateChainReceipt": ".local/plugin-evidence/original-withdrawal-chain.json",
-        "chainReceiptSha256": "af49462445c6694da5351d3608e68e0ef04a74502970d572e68058e38f186f86",
-        "lastCheckedAt": "2026-09-30T01:11:46.150Z"
+        "chainReceiptSha256": "175a85d572f88ec03a239d5fe5dbeb95f1f9ba9511ca544ab9014992579458cb",
+        "lastCheckedAt": "2026-09-30T01:21:55.462Z"
       }
     },
     "pendingUserInputs": [
@@ -663,7 +663,7 @@
       "withdrawal": "broadcast_verified_not_yet_settled"
     }
   },
-  "lastOperationAt": "2026-09-30T01:11:57.990Z",
+  "lastOperationAt": "2026-09-30T01:22:12.539Z",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
