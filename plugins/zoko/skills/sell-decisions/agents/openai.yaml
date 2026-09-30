@@ -1,0 +1,6 @@
+interface:
+  display_name: "Sell decisions on ZoKo"
+  short_description: "Publish and manage an agent's decision offers"
+  default_prompt: "Use $sell-decisions to publish my ZoKo offer and deliver through my active session or existing HTTPS endpoint."
+policy:
+  allow_implicit_invocation: true

@@ -53,20 +53,28 @@ async function main(): Promise<void> {
       add('accounts', account.active > 0 ? 'pass' : 'warning', account.active > 0
         ? `${account.active} active agent account(s) out of ${account.total} total. Buyer and seller agents authenticate with their own account keys.`
         : 'No active agent accounts exist. Use the operator console or account API to issue buyer and seller keys.');
-      const sellers = await db.query(`SELECT s.endpoint,s.api_key_encrypted,s.paused,s.payout_account_id,a.id AS owner_id,a.disabled AS owner_disabled
+      const sellers = await db.query(`SELECT s.endpoint,s.api_key_encrypted,s.paused,s.payout_account_id,s.delivery_mode,
+        (s.circuit_until IS NULL OR s.circuit_until<=clock_timestamp()) AND
+        (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
+          (SELECT 1 FROM decisions d WHERE d.seller_id=s.id AND d.status='running'))) AS accepting,
+        a.id AS owner_id,a.disabled AS owner_disabled
         FROM sellers s LEFT JOIN accounts a ON a.id=s.payout_account_id WHERE s.enabled`);
       let active = 0;
       for (const seller of sellers.rows) {
         if (!seller.payout_account_id || !seller.owner_id) throw new Error('Approved seller has no owning account');
-        validateEndpoint(seller.endpoint, config.providerHosts);
-        const key = decrypt(seller.api_key_encrypted, config.encryptionKey);
-        if (!key || key.length > 4096 || /[^\x21-\x7e]/.test(key)) throw new Error('Invalid seller credential');
-        if (!seller.paused && !seller.owner_disabled) active++;
+        if (seller.delivery_mode==='https') {
+          validateEndpoint(seller.endpoint, config.providerHosts);
+          const key = decrypt(seller.api_key_encrypted, config.encryptionKey);
+          if (!key || key.length > 4096 || /[^\x21-\x7e]/.test(key)) throw new Error('Invalid seller credential');
+        } else if (seller.delivery_mode!=='agent' || seller.endpoint!=='' || seller.api_key_encrypted!=='') {
+          throw new Error('Invalid active-agent delivery configuration');
+        }
+        if (!seller.paused && !seller.owner_disabled && seller.accepting) active++;
       }
-      if (sellers.rowCount) add('seller_configuration', 'pass', `${sellers.rowCount} approved offer(s) have owning accounts, decryptable credentials and endpoints permitted by the exact hostname allowlist.`);
+      if (sellers.rowCount) add('seller_configuration', 'pass', `${sellers.rowCount} approved offer(s) have owning accounts and valid active-agent or allowlisted HTTPS delivery configuration.`);
       add('trading', active > 0 ? 'pass' : 'warning', active > 0
-        ? `${active} approved, unpaused offer(s) have active seller owners. Actual endpoint availability and paid execution require a separate acceptance purchase.`
-        : 'Trading is unavailable: no approved, unpaused offer has an active seller owner. The empty marketplace can remain healthy; allow a reviewed endpoint host, let its seller account publish an offer, then approve it.');
+        ? `${active} approved, unpaused offer(s) have active seller owners and are accepting work. Actual delivery and paid execution require a separate acceptance purchase.`
+        : 'Trading is unavailable: no approved offer is accepting work. Approve an owned offer and verify active-agent presence or the permitted HTTPS endpoint.');
     } catch {
       add('seller_configuration', 'fail', 'Account ownership, stored seller credentials or endpoint policy failed verification. Check approval records, the exact hostname allowlist and the original encryption key.');
     }

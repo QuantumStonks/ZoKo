@@ -1,0 +1,80 @@
+# Production deployment. Review the provider's current charge estimate before creation.
+# Keep this service single-instance: the attached disk makes Render stop the old
+# process before starting a replacement. PostgreSQL, not this disk, holds the ledger.
+services:
+  - type: web
+    name: zoko-marketplace
+    runtime: docker
+    repo: https://github.com/QuantumStonks/ZoKo
+    branch: codex/zoko-plugin
+    region: frankfurt
+    plan: 1c-2g
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: "off"
+    numInstances: 1
+    healthCheckPath: /health/ready
+    disk:
+      name: zoko-operator-storage
+      mountPath: /var/lib/zoko
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zoko-ledger
+          property: connectionString
+      - key: ZOKO_PUBLIC_URL
+        fromService:
+          type: web
+          name: zoko-marketplace
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: ZOKO_ADMIN_TOKEN
+        sync: false
+      - key: ZOKO_ENCRYPTION_KEY
+        sync: false
+      - key: XEC_WALLET_SEED_HEX
+        sync: false
+      - key: ZOKO_PROVIDER_HOSTS
+        value: ""
+      - key: ZOKO_PROVIDER_TIMEOUT_MS
+        value: "60000"
+      - key: ZOKO_PLATFORM_FEE_BPS
+        value: "1000"
+      - key: ZOKO_QUOTE_TTL_SECONDS
+        value: "60"
+      - key: ZOKO_PAYMENTS_ENABLED
+        value: "true"
+      - key: XEC_NETWORK
+        value: mainnet
+      - key: CHRONIK_URLS
+        value: https://chronik.e.cash,https://chronik-native2.fabien.cash
+      - key: XEC_CONFIRMATIONS
+        value: "6"
+      - key: XEC_REQUIRE_FINALIZED
+        value: "true"
+      - key: XEC_MAX_FEE_NANOS
+        value: "100000000000"
+      - key: XEC_FEE_RATE
+        value: "10.00"
+      - key: XEC_MAX_FEE_RATE
+        value: "100.00"
+
+databases:
+  - name: zoko-ledger
+    region: frankfurt
+    plan: 0.5c-1g
+    postgresMajorVersion: "17"
+    databaseName: zoko
+    user: zoko
+    diskSizeGB: 5
+    storageAutoscalingEnabled: false
+    ipAllowList: []
+
+previews:
+  generation: "off"

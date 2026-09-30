@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { DecisionInput } from './protocol.js';
-import type { ProviderResult } from './provider.js';
+import type { ProviderResult, AgentResult } from './provider.js';
 
 /** Integer nanoXEC at every wire boundary. One XEC is 1,000,000,000 nanoXEC. */
 export type NanoXec = string;
@@ -8,7 +8,9 @@ export type NanoXec = string;
 export interface SellerOffer {
   id: string;
   name: string;
-  endpoint: string;
+  endpoint: string | null;
+  deliveryMode?: 'https' | 'agent';
+  readyUntil?: string | null;
   model: string;
   priceNanos: NanoXec;
   payoutAccountId: string;
@@ -67,7 +69,7 @@ export interface DecisionReceipt {
   priceNanos?: NanoXec;
   schemaHash?: string;
   requestHash?: string;
-  result?: ProviderResult | null;
+  result?: ProviderResult | AgentResult | null;
   confidence?: number | null;
   accepted?: boolean | null;
   latencyMs?: number | null;
@@ -77,7 +79,8 @@ export interface DecisionReceipt {
 }
 export interface ClientOptions {
   baseUrl: string;
-  apiKey: string;
+  /** Omit for public discovery and catalog access. Private endpoints require it. */
+  apiKey?: string;
   /** Per HTTP attempt; does not cause a fresh inference or fresh quote on retry. */
   requestTimeoutMs?: number;
   /** Deadline for execute(), including polling and same-key transport retries. */
@@ -133,7 +136,7 @@ function duration(value: number | undefined, fallback: number, name: string): nu
   if (!Number.isSafeInteger(actual) || actual < 1 || actual > 3_600_000) throw new RangeError(`${name} must be between 1 and 3,600,000 milliseconds.`);
   return actual;
 }
-function validateKey(key: string): void {
+export function validateIdempotencyKey(key: string): void {
   if (!/^[A-Za-z0-9._:-]{8,128}$/.test(key)) throw new TypeError('Idempotency key must be 8–128 ASCII letters, numbers, periods, underscores, colons or hyphens.');
 }
 function validateOfferId(id: string): void {
@@ -185,7 +188,7 @@ async function readJson(response: Response): Promise<unknown> {
 
 export class ZokoClient {
   readonly baseUrl: string;
-  private readonly apiKey: string;
+  private readonly apiKey: string | undefined;
   private readonly requestTimeoutMs: number;
   private readonly maxWaitMs: number;
   private readonly pollIntervalMs: number;
@@ -196,7 +199,7 @@ export class ZokoClient {
     if (url.username || url.password || url.search || url.hash) throw new TypeError('Zoko URL cannot contain credentials, query parameters or a fragment.');
     const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
     if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) throw new TypeError('Use HTTPS for Zoko, or HTTP on localhost for local development.');
-    if (!options.apiKey.trim()) throw new TypeError('A Zoko API key is required.');
+    if (options.apiKey !== undefined && !/^[\x21-\x7e]{1,512}$/.test(options.apiKey)) throw new TypeError('A Zoko API key must contain 1–512 visible ASCII characters without whitespace.');
     this.baseUrl = url.toString().replace(/\/$/, '');
     this.apiKey = options.apiKey;
     this.requestTimeoutMs = duration(options.requestTimeoutMs, 30_000, 'requestTimeoutMs');
@@ -211,16 +214,20 @@ export class ZokoClient {
     return response.body;
   }
 
-  private async requestWithStatus<T>(method: string, path: string, body?: unknown, options: { idempotencyKey?: string; signal?: AbortSignal; timeoutMs?: number } = {}): Promise<{ body: T; status: number; retryAfterMs?: number }> {
-    if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) throw new TypeError('API path must be relative to the configured Zoko origin.');
-    if (options.idempotencyKey) validateKey(options.idempotencyKey);
+  private async requestWithStatus<T>(method: string, path: string, body?: unknown, options: { idempotencyKey?: string; signal?: AbortSignal; timeoutMs?: number; public?: boolean } = {}): Promise<{ body: T; status: number; retryAfterMs?: number }> {
+    if (!path.startsWith('/') || path.startsWith('//') || /[\\#\s\x00-\x1f\x7f]/.test(path)) throw new TypeError('API path must be relative to the configured Zoko origin.');
+    const target = new URL(`${this.baseUrl}${path}`);
+    const base = new URL(this.baseUrl);
+    if (target.origin !== base.origin || !target.pathname.startsWith(`${base.pathname.replace(/\/$/, '')}/`)) throw new TypeError('API path cannot escape the configured Zoko base URL.');
+    if (!options.public && !this.apiKey) throw new TypeError('Set ZOKO_API_KEY for authenticated Zoko endpoints.');
+    if (options.idempotencyKey !== undefined) validateIdempotencyKey(options.idempotencyKey);
     throwIfAborted(options.signal);
     const timeout = AbortSignal.timeout(Math.max(1, Math.min(options.timeoutMs ?? this.requestTimeoutMs, this.requestTimeoutMs)));
-    const response = await this.fetcher(`${this.baseUrl}${path}`, {
+    const response = await this.fetcher(target.toString(), {
       method,
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
+        ...(options.public ? {} : { Authorization: `Bearer ${this.apiKey}` }),
         ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
         ...(options.idempotencyKey ? { 'Idempotency-Key': options.idempotencyKey } : {}),
       },
@@ -237,7 +244,13 @@ export class ZokoClient {
   }
 
   me<T = unknown>(signal?: AbortSignal): Promise<T> { return this.request<T>('GET', '/v1/me', undefined, { signal }); }
-  catalog<T = unknown>(signal?: AbortSignal): Promise<T> { return this.request<T>('GET', '/v1/catalog', undefined, { signal }); }
+  async catalog<T = unknown>(signal?: AbortSignal): Promise<T> { return (await this.requestWithStatus<T>('GET', '/v1/catalog', undefined, { signal, public: true })).body; }
+  /** Public machine-readable protocol, billing rules and marketplace capabilities. */
+  async discover<T = unknown>(signal?: AbortSignal): Promise<T> { return (await this.requestWithStatus<T>('GET', '/.well-known/zoko.json', undefined, { signal, public: true })).body; }
+  async health<T = unknown>(probe: 'live' | 'ready', signal?: AbortSignal): Promise<T> {
+    if (!['live', 'ready'].includes(probe)) throw new TypeError('Health probe must be live or ready.');
+    return (await this.requestWithStatus<T>('GET', `/health/${probe}`, undefined, { signal, public: true })).body;
+  }
   /** List only the offers owned by this ordinary agent account. */
   listOffers(options: { limit?: number; after?: string; signal?: AbortSignal } = {}): Promise<SellerOffersPage> {
     const limit = options.limit ?? 100;
@@ -288,32 +301,46 @@ export class ZokoClient {
   }
   async quote(input: DecisionInput, policy: PurchasePolicy, signal?: AbortSignal): Promise<Quote> {
     if (!/^(0|[1-9]\d{0,39})$/.test(policy.maxPriceNanos)) throw new TypeError('maxPriceNanos must be an integer string with at most 40 digits.');
-    return this.request<Quote>('POST', '/v1/quotes', { ...input, policy }, { signal });
+    if (policy.maxLatencyMs !== undefined && (!Number.isInteger(policy.maxLatencyMs) || policy.maxLatencyMs < 100 || policy.maxLatencyMs > 60_000)) throw new TypeError('maxLatencyMs must be an integer between 100 and 60,000.');
+    if (policy.minConfidence !== undefined && (!Number.isFinite(policy.minConfidence) || policy.minConfidence < 0 || policy.minConfidence > 1)) throw new TypeError('minConfidence must be between 0 and 1.');
+    if (policy.allowedSellers !== undefined && (!Array.isArray(policy.allowedSellers) || !policy.allowedSellers.length || policy.allowedSellers.length > 100 || policy.allowedSellers.some((id) => typeof id !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(id)))) throw new TypeError('allowedSellers must contain 1–100 valid offer IDs.');
+    const quote = await this.request<Quote>('POST', '/v1/quotes', { ...input, policy }, { signal });
+    if (!quote || typeof quote.id !== 'string' || !quote.id || typeof quote.sellerId !== 'string' || typeof quote.priceNanos !== 'string' || !/^[1-9]\d{0,39}$/.test(quote.priceNanos) || BigInt(quote.priceNanos) > BigInt(policy.maxPriceNanos)
+      || typeof quote.schemaHash !== 'string' || typeof quote.requestHash !== 'string' || typeof quote.expiresAt !== 'string' || !Number.isFinite(Date.parse(quote.expiresAt))
+      || !Number.isInteger(quote.timeoutMs) || quote.timeoutMs < 100 || quote.timeoutMs > (policy.maxLatencyMs ?? 60_000)
+      || !Number.isFinite(quote.minConfidence) || quote.minConfidence < 0 || quote.minConfidence > 1 || (policy.minConfidence !== undefined && quote.minConfidence !== policy.minConfidence)
+      || (policy.allowedSellers !== undefined && !policy.allowedSellers.includes(quote.sellerId))) throw new Error('Zoko returned an invalid quote or a quote outside the requested purchase policy.');
+    return quote;
   }
 
   /** Obtain one quote, then execute it. Transport ambiguity never creates another quote. */
   async decide(input: DecisionInput, policy: PurchasePolicy, options: { idempotencyKey?: string; signal?: AbortSignal } = {}): Promise<DecisionReceipt> {
     const idempotencyKey = options.idempotencyKey ?? randomUUID();
-    validateKey(idempotencyKey);
-    const quote = await this.quote(input, policy, options.signal);
-    return this.execute(quote.id, input, idempotencyKey, options.signal);
+    validateIdempotencyKey(idempotencyKey);
+    const snapshot = JSON.parse(JSON.stringify(input)) as DecisionInput;
+    const quote = await this.quote(snapshot, policy, options.signal);
+    return this.execute(quote.id, snapshot, idempotencyKey, options.signal);
   }
 
   /** Safe recovery API: pass the ORIGINAL quote, unchanged input and ORIGINAL key. */
   async execute(quoteId: string, input: DecisionInput, idempotencyKey: string, signal?: AbortSignal): Promise<DecisionReceipt> {
-    validateKey(idempotencyKey);
+    validateIdempotencyKey(idempotencyKey);
+    if (!this.apiKey) throw new TypeError('Set ZOKO_API_KEY for authenticated Zoko endpoints.');
     throwIfAborted(signal);
-    const payload = { quoteId, ...input };
+    // Hold a private JSON snapshot: caller mutations cannot alter same-key retries.
+    const payload: unknown = JSON.parse(JSON.stringify({ quoteId, state: input.state, questions: input.questions }));
     const deadline = Date.now() + this.maxWaitMs;
     let decisionId: string | undefined;
     let failures = 0;
+    let uncertainDispatch = false;
     let lastError: unknown = new Error('Decision polling deadline reached.');
     while (Date.now() < deadline) {
       try {
         const response = decisionId
           ? await this.requestWithStatus<DecisionReceipt>('GET', `/v1/decisions/${encodeURIComponent(decisionId)}`, undefined, { signal, timeoutMs: deadline - Date.now() })
           : await this.requestWithStatus<DecisionReceipt>('POST', '/v1/decisions', payload, { idempotencyKey, signal, timeoutMs: deadline - Date.now() });
-        if (!response.body || typeof response.body.id !== 'string' || typeof response.body.status !== 'string') throw new Error('Zoko returned an invalid decision receipt.');
+        if (!response.body || typeof response.body.id !== 'string' || !response.body.id || !['pending', 'queued', 'calling', 'running', 'succeeded', 'failed', 'indeterminate'].includes(response.body.status)) throw new Error('Zoko returned an invalid decision receipt.');
+        if (decisionId !== undefined && response.body.id !== decisionId) throw new Error('Zoko returned a different decision identity during recovery.');
         decisionId = response.body.id;
         failures = 0;
         if (response.status !== 202 && !['pending', 'queued', 'calling', 'running'].includes(response.body.status)) return response.body;
@@ -321,7 +348,11 @@ export class ZokoClient {
       } catch (error) {
         lastError = error;
         // A definitive application rejection is terminal. Never re-quote or mutate the body.
-        if (error instanceof ZokoApiError && error.status < 500 && ![408, 425, 429].includes(error.status)) throw error;
+        if (error instanceof ZokoApiError && error.status < 500 && ![408, 425, 429].includes(error.status)) {
+          if (!decisionId && !uncertainDispatch) throw error;
+          break;
+        }
+        uncertainDispatch = true;
         failures++;
         if (signal?.aborted || failures >= 4 || Date.now() >= deadline) break;
         try { await sleep(Math.min(250 * 2 ** (failures - 1), Math.max(1, deadline - Date.now())), signal); }

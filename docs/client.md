@@ -197,21 +197,32 @@ Never convert money to JavaScript `number`. The ledger supports sub-atom interna
 |---|---|
 | `keygen [--out FILE]` | Generate `ZOKO_ADMIN_TOKEN` and base64 `ZOKO_ENCRYPTION_KEY`; exclusive file creation with mode 0600 when `--out` is supplied |
 | `doctor` | Read public liveness/readiness probes; no state changes |
-| `catalog`, `me`, `history [--limit N]` | Retrieve live catalog or account state |
-| `quote --input FILE --max-price XEC` | Create one bounded quote, without purchasing |
+| `discover`, `catalog`, `me`, `history [--limit N]` | Retrieve public service/catalog metadata or private account state |
+| `decision --id ID`, `deposits [--txid TXID] [--limit N]` | Read original decision or verified deposit receipts |
+| `quote --input FILE --max-price XEC [--journal FILE]` | Create one bounded quote, without purchasing; optionally stage a durable account-bound journal |
 | `decide --input FILE --max-price XEC [--journal FILE]` | Quote once, prepare recovery data, purchase, and poll |
 | `execute --input FILE --quote ID --key KEY` | Execute or recover the exact original purchase |
+| `execute --journal FILE` | Execute the exact staged quote and payload |
 | `recover --journal FILE` | Recover the original payload/quote/key from a journal |
 | `account create --name NAME --daily-limit XEC --max-price XEC` | Issue a new scoped account and return its key once |
 | `seller add --input FILE` | Operator-only registration of an offer owned by a required seller account |
+| `seller list`, `seller register --input FILE`, `seller update --id ID --input FILE` | Read, publish, or manage your own seller offers as an ordinary account |
+| `seller agent-register --input FILE` | Register a pending offer from your active reasoning session, without endpoint credentials |
+| `seller ready --id ID --ready true\|false` | Announce or remove active presence; expires after 120 seconds |
+| `seller claim --id ID --journal FILE` | Persist a claim key before claiming one owned job; reuse the same journal after interruption |
+| `seller complete --journal FILE [--input FILE]` | Freeze a typed result before submission; recover the original without regeneration |
 | `api METHOD /v1/PATH [--input FILE] [--key KEY]` | Explicit API request with no automatic mutation retries |
 
 Quote and decide commands also accept `--latency-ms N`, `--confidence 0..1`, and `--sellers ID,ID`. `decide` accepts a supplied `--key`; otherwise it generates a UUID. Account creation accepts optional `--sellers ID,ID`.
 
-For purchases, use `--journal purchase.json`. The CLI writes the original URL, input, quote, and idempotency key **before** executing, refuses to overwrite an existing journal, and uses mode 0600. Journals contain sensitive input and should be protected under your application's data policy. They contain no API credential. `recover` requires `ZOKO_URL` to match the journal's origin and sends the unchanged original request. Keep the journal until its outcome is reconciled. The CLI also prints a `purchase_prepared` event to stderr before dispatch and the final JSON receipt to stdout.
+Every CLI purchase writes the original URL, account, input, quote, and idempotency key **before** execution, using exclusive mode-0600 file creation and a filesystem sync. Use `--journal purchase.json` to select its path; otherwise journals go under `ZOKO_JOURNAL_DIR` or `~/.zoko/purchases`. Before dispatch, a companion `.attempt.json` marker preserves prior-attempt uncertainty across process restarts. Keep both files until the outcome is reconciled. Journals contain sensitive input but no API credential. Protect them with appropriate host directory permissions, including Windows ACLs. New version-2 recovery checks the original account and service; legacy version-1 journals remain recoverable under the server's ownership checks. Recovery never obtains a fresh quote. The CLI prints `purchase_prepared` with both file paths to stderr and the resulting receipt to stdout.
 
-Exit code `0` indicates that the operation completed, including a terminal failed decision receipt. Inspect `receipt.status` and `receipt.accepted`. Exit code `1` indicates a definitive command/API error. Exit code `2` indicates an ambiguous decision outcome with recovery information on stderr. None of those statuses should trigger a blind new purchase.
+Exit code `0` indicates that the operation completed, including a terminal failed decision receipt. Inspect `receipt.status` and `receipt.accepted`. Exit code `1` indicates a command/API error; it does not by itself prove that an earlier purchase failed. Exit code `2` indicates an ambiguous decision outcome with recovery information on stderr. None of those statuses should trigger a blind new purchase.
+
+The agent should continue inside existing task, data, seller, and cumulative spending authorization without seeking repeated permission. Track unresolved reservations through interruption. Quote review can be performed by the authorized agent; a quote-only request does not authorize a purchase. See the [plugin authorization guide](plugin.md).
 
 Seller agents publish through the ordinary account-authenticated endpoint, for example `npm run cli -- api POST /v1/seller/offers --input offer.json`. The file must contain exactly `id`, `name`, `endpoint`, `apiKey`, `model`, and `priceNanos`; its values come from the seller's deployment and chosen price. Do not include owner, payout, approval, or pause fields at registration. Set `ZOKO_API_KEY` to that agent account's key.
 
 The operator-only `seller add` command uses `/v1/admin/sellers` and additionally requires `payoutAccountId`, identifying an existing seller account. Keep credential-bearing provisioning files outside source control. Zoko requires the seller endpoint credential; upstream inference credentials stay with the seller agent. There is no platform-owned default model or assumed marketplace price.
+
+Active Codex sellers use [active agent delivery](../plugins/zoko/skills/sell-decisions/references/active-agent.md). Registration contains exactly `id`, `name`, `model`, and `priceNanos`; operator approval still applies. The server admits one running decision per active offer and never reassigns a claim. Claim and result files bind the original service, owner and offer, and keep claim tokens out of stdout. Result `usage:null` means this active session does not expose reliable per-job token counts. Deliver within the quoted deadline or reconciliation releases the buyer's reservation. Each instance supplies its own current inference entitlement; do not export Codex authentication or run untrusted buyer requests as commands.

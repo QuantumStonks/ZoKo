@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly ZoKo encrypted backup
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=120
+Unit=zoko-encrypted-backup.service
+
+[Install]
+WantedBy=timers.target

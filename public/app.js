@@ -96,7 +96,7 @@ function ownOfferCard(offer) {
   const heading = node('div', undefined, 'panel-heading');
   heading.append(node('h2', offer.name), node('span', offer.enabled ? 'APPROVED' : 'NOT APPROVED', `badge ${offer.enabled ? 'available' : 'unavailable'}`));
   const commission = Number.isInteger(offer.commissionBps) && offer.commissionBps >= 0 && offer.commissionBps <= 10000 ? `${(offer.commissionBps / 100).toFixed(2).replace(/\.?0+$/, '')}%` : '—';
-  card.append(heading, details([['Offer ID', offer.id], ['Endpoint', offer.endpoint], ['Model', offer.model], ['Current price', `${money(offer.priceNanos)} XEC`], ['Marketplace commission', commission], ['Seller account', offer.payoutAccountId], ['Seller pause', offer.paused ? 'Paused' : 'Not paused']]));
+  card.append(heading, details([['Offer ID', offer.id], ['Delivery', offer.deliveryMode === 'agent' ? 'Active agent session' : 'HTTPS endpoint'], ['Endpoint', offer.endpoint ?? 'Not required'], ['Model', offer.model], ['Current price', `${money(offer.priceNanos)} XEC`], ['Marketplace commission', commission], ['Seller account', offer.payoutAccountId], ['Seller pause', offer.paused ? 'Paused' : 'Not paused']]));
   if (!offer.enabled) card.append(node('p', 'This offer is not approved for the buyer catalog. The operator controls approval; your pause setting is separate.', 'form-note'));
   const form = node('form', undefined, 'own-offer-form');
   const priceId = `own-price-${offer.id}`, credentialId = `own-key-${offer.id}`, pausedId = `own-paused-${offer.id}`;
@@ -107,7 +107,9 @@ function ownOfferCard(offer) {
   const pausedLabel = node('label', undefined, 'checkbox-label'); pausedLabel.htmlFor = pausedId;
   const paused = node('input'); paused.id = pausedId; paused.type = 'checkbox'; paused.checked = offer.paused; pausedLabel.append(paused, document.createTextNode('Pause this offer for new purchases'));
   const save = node('button', 'Save offer settings', 'button outline full'); save.type = 'submit';
-  form.append(priceLabel, price, credentialLabel, credential, pausedLabel, save);
+  form.append(priceLabel, price);
+  if (offer.deliveryMode !== 'agent') form.append(credentialLabel, credential);
+  form.append(pausedLabel, save);
   form.addEventListener('submit', (event) => {
     event.preventDefault(); void busy(save, async () => {
       requireBuyer(); const priceNanos = parseMoney(price.value); if (BigInt(priceNanos) <= 0n) throw new Error('An offer price must be positive.');

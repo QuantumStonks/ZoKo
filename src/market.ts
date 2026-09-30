@@ -3,9 +3,9 @@ import { z } from 'zod';
 import type { Db, Tx } from './db.js';
 import { transaction, transfer, lockWallets } from './db.js';
 import { MoneySchema, type Config } from './config.js';
-import { AppError, decrypt, digest, validateEndpoint } from './security.js';
+import { AppError, decrypt, digest, safeEqual, validateEndpoint } from './security.js';
 import { DecisionInputSchema, type DecisionInput } from './protocol.js';
-import { evaluateProvider, resultConfidence } from './provider.js';
+import { evaluateProvider, resultConfidence, validateAgentResult, ProviderError, type AgentResult } from './provider.js';
 import { evaluateRestrictedProvider } from './provider-network.js';
 
 export const PolicySchema = z.object({
@@ -22,12 +22,14 @@ export class Market {
   constructor(private db: Db, private config: Config, private provider: Provider = evaluateRestrictedProvider) {}
 
   async catalog(): Promise<unknown[]> {
-    const sellers = await this.db.query(`SELECT s.id,s.name,s.model,s.price_nanos,s.enabled,s.circuit_until,
+    const sellers = await this.db.query(`SELECT s.id,s.name,s.model,s.price_nanos,s.enabled,s.circuit_until,s.delivery_mode,
+      (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
+        (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running'))) AS delivery_ready,
       (SELECT count(*)::integer FROM decisions d WHERE d.seller_id=s.id AND d.status='succeeded') AS completed,
       (SELECT percentile_cont(0.95) WITHIN GROUP(ORDER BY latency_ms) FROM decisions d WHERE d.seller_id=s.id AND d.status='succeeded' AND d.created_at>now()-interval '24 hours') AS p95_ms
       FROM sellers s JOIN accounts owner ON owner.id=s.payout_account_id
       WHERE s.enabled AND NOT s.paused AND NOT owner.disabled ORDER BY s.price_nanos,s.id`);
-    return sellers.rows.map(s => ({id:s.id,name:s.name,model:s.model,priceNanos:s.price_nanos,questionTypes:['choice','score','noul'],available:!s.circuit_until || new Date(s.circuit_until).getTime()<=Date.now(),completed:s.completed,p95LatencyMs:s.p95_ms===null?null:Math.round(s.p95_ms),confidenceProvenance:'provider_reported',protocol:'typesafe-systemone-v1'}));
+    return sellers.rows.map(s => ({id:s.id,name:s.name,model:s.model,deliveryMode:s.delivery_mode,priceNanos:s.price_nanos,questionTypes:['choice','score','noul'],available:s.delivery_ready===true&&(!s.circuit_until || new Date(s.circuit_until).getTime()<=Date.now()),completed:s.completed,p95LatencyMs:s.p95_ms===null?null:Math.round(s.p95_ms),confidenceProvenance:'provider_reported',protocol:'typesafe-systemone-v1'}));
   }
 
   async quote(accountId: string, raw: DecisionInput, rawPolicy: Policy = {}): Promise<Row> {
@@ -39,6 +41,8 @@ export class Market {
       const selected = await tx.query(`SELECT s.id,s.payout_account_id FROM sellers s JOIN accounts owner ON owner.id=s.payout_account_id
         WHERE s.enabled AND NOT s.paused AND NOT owner.disabled AND s.price_nanos<=$1
         AND (s.circuit_until IS NULL OR s.circuit_until<=clock_timestamp())
+        AND (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
+          (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running')))
         AND ($2::text[] IS NULL OR s.id=ANY($2)) AND ($3::text[] IS NULL OR s.id=ANY($3))
         ORDER BY s.price_nanos,s.id LIMIT 1`, [maximumPrice(initialAccount).toString(), initialAccount.allowed_sellers, policy.allowedSellers ?? null]);
       if (!selected.rowCount) throw new AppError(503,'no_seller','No active seller offer meets the account and request policy');
@@ -46,7 +50,9 @@ export class Market {
       // account in UUID order before locking the offer or any financial rows.
       const accounts = await this.lockAccounts(tx,[accountId,selected.rows[0].payout_account_id]);
       const account = this.activeBuyer(accounts,accountId);
-      const current = await tx.query(`SELECT *,circuit_until IS NULL OR circuit_until<=clock_timestamp() AS accepting
+      const current = await tx.query(`SELECT *, (circuit_until IS NULL OR circuit_until<=clock_timestamp())
+        AND (delivery_mode='https' OR (agent_ready_until>clock_timestamp() AND NOT EXISTS
+          (SELECT 1 FROM decisions busy WHERE busy.seller_id=sellers.id AND busy.status='running'))) AS accepting
         FROM sellers WHERE id=$1 FOR SHARE`,[selected.rows[0].id]);
       const s=current.rows[0];
       if (!this.availableSeller(s,accounts) || BigInt(s.price_nanos)>maximumPrice(account)
@@ -54,12 +60,12 @@ export class Market {
         throw new AppError(503,'no_seller','No active seller offer meets the account and request policy');
       }
       const id = randomUUID(), requestHash = digest(input), schemaHash = digest(input.questions);
-      validateEndpoint(s.endpoint, this.config.providerHosts);
+      if(s.delivery_mode==='https')validateEndpoint(s.endpoint, this.config.providerHosts);
       const timeoutMs = Math.min(policy.maxLatencyMs ?? this.config.providerMaxTimeoutMs, this.config.providerMaxTimeoutMs);
-      const row = await tx.query(`INSERT INTO quotes(id,account_id,seller_id,request_hash,schema_hash,price_nanos,endpoint,api_key_encrypted,model,payout_account_id,fee_bps,timeout_ms,min_confidence,expires_at)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,clock_timestamp()+$14*interval '1 second') RETURNING expires_at`,
-      [id,accountId,s.id,requestHash,schemaHash,s.price_nanos,s.endpoint,s.api_key_encrypted,s.model,s.payout_account_id,this.config.platformFeeBps,timeoutMs,policy.minConfidence ?? 0,this.config.quoteTtlSeconds]);
-      return {id,sellerId:s.id,model:s.model,priceNanos:s.price_nanos,schemaHash,requestHash,expiresAt:row.rows[0].expires_at.toISOString(),timeoutMs,minConfidence:policy.minConfidence ?? 0,chargePolicy:'schema_valid_response_including_low_confidence',currency:'nanoXEC'};
+      const row = await tx.query(`INSERT INTO quotes(id,account_id,seller_id,request_hash,schema_hash,price_nanos,endpoint,api_key_encrypted,model,payout_account_id,fee_bps,timeout_ms,min_confidence,expires_at,delivery_mode)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,clock_timestamp()+$14*interval '1 second',$15) RETURNING expires_at`,
+      [id,accountId,s.id,requestHash,schemaHash,s.price_nanos,s.endpoint,s.api_key_encrypted,s.model,s.payout_account_id,this.config.platformFeeBps,timeoutMs,policy.minConfidence ?? 0,this.config.quoteTtlSeconds,s.delivery_mode]);
+      return {id,sellerId:s.id,model:s.model,deliveryMode:s.delivery_mode,priceNanos:s.price_nanos,schemaHash,requestHash,expiresAt:row.rows[0].expires_at.toISOString(),timeoutMs,minConfidence:policy.minConfidence ?? 0,chargePolicy:'schema_valid_response_including_low_confidence',currency:'nanoXEC'};
     });
   }
 
@@ -78,7 +84,9 @@ export class Market {
         if (previous.rows[0].request_hash !== fingerprint) throw new AppError(409,'idempotency_conflict','This idempotency key was used with a different request');
         return {previous:previous.rows[0]};
       }
-      const sellers = routing ? await tx.query(`SELECT *,circuit_until IS NULL OR circuit_until<=clock_timestamp() AS accepting
+      const sellers = routing ? await tx.query(`SELECT *, (circuit_until IS NULL OR circuit_until<=clock_timestamp())
+        AND (delivery_mode='https' OR (agent_ready_until>clock_timestamp() AND NOT EXISTS
+          (SELECT 1 FROM decisions busy WHERE busy.seller_id=sellers.id AND busy.status='running'))) AS accepting
         FROM sellers WHERE id=$1 FOR SHARE`,[routing.seller_id]) : undefined;
       const quotes = await tx.query('SELECT *,expires_at>clock_timestamp() AS valid FROM quotes WHERE id=$1 AND account_id=$2 FOR UPDATE', [body.quoteId,accountId]);
       if (!quotes.rowCount) throw new AppError(404,'quote_not_found','Quote not found');
@@ -93,7 +101,8 @@ export class Market {
         throw new AppError(503,'seller_unavailable','Quoted seller or its settlement account is unavailable');
       }
       if (BigInt(q.price_nanos)>BigInt(account.max_price_nanos) || (account.allowed_sellers && !account.allowed_sellers.includes(q.seller_id))) throw new AppError(403,'spending_policy','The quote no longer meets the account policy');
-      validateEndpoint(q.endpoint,this.config.providerHosts);
+      if(q.delivery_mode!==sellers?.rows[0].delivery_mode)throw new AppError(409,'seller_delivery_changed','Seller delivery mode changed');
+      if(q.delivery_mode==='https')validateEndpoint(q.endpoint,this.config.providerHosts);
       const day = (await tx.query("SELECT (clock_timestamp() AT TIME ZONE 'UTC')::date::text AS day")).rows[0].day;
       await tx.query('INSERT INTO budgets(account_id,day) VALUES($1,$2) ON CONFLICT DO NOTHING',[accountId,day]);
       const budget = (await tx.query('SELECT spent,reserved FROM budgets WHERE account_id=$1 AND day=$2 FOR UPDATE',[accountId,day])).rows[0];
@@ -107,11 +116,13 @@ export class Market {
       }
       await tx.query('UPDATE budgets SET reserved=reserved+$1 WHERE account_id=$2 AND day=$3',[q.price_nanos,accountId,day]);
       const decision = (await tx.query(`INSERT INTO decisions(id,account_id,quote_id,idempotency_key,request_hash,seller_id,price_nanos,budget_day,status,expires_at)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,'running',clock_timestamp()+$9*interval '1 millisecond') RETURNING *`,[id,accountId,q.id,idempotencyKey,fingerprint,q.seller_id,q.price_nanos,day,q.timeout_ms+5000])).rows[0];
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,'running',clock_timestamp()+$9*interval '1 millisecond') RETURNING *`,[id,accountId,q.id,idempotencyKey,fingerprint,q.seller_id,q.price_nanos,day,q.timeout_ms+(q.delivery_mode==='https'?5000:0)])).rows[0];
+      if(q.delivery_mode==='agent')await tx.query('INSERT INTO agent_jobs(decision_id,owner_id,input) VALUES($1,$2,$3)',[id,q.payout_account_id,JSON.stringify(input)]);
       return {decision,quote:q};
     });
     if (admitted.previous) return this.receipt(admitted.previous);
     const d = admitted.decision!, q = admitted.quote!;
+    if(q.delivery_mode==='agent')return this.receipt(d);
     const started = performance.now();
     let result: Awaited<ReturnType<Provider>>;
     try {
@@ -121,7 +132,11 @@ export class Market {
       throw new AppError(502,'provider_failure','The provider did not return a valid result; reserved funds were released');
     }
     const latencyMs = Math.round(performance.now()-started);
-    return transaction(this.db, async tx => {
+    return transaction(this.db,tx=>this.settle(tx,d,q,result,latencyMs));
+  }
+
+  private async settle(tx:Tx,d:Row,q:Row,result:Awaited<ReturnType<Provider>>|AgentResult,latencyMs:number):Promise<Row> {
+      const accountId=d.account_id;
       await this.lockAccounts(tx,[accountId,q.payout_account_id]);
       await tx.query('SELECT id FROM sellers WHERE id=$1 FOR UPDATE',[q.seller_id]);
       const frozenQuote = (await tx.query('SELECT payout_account_id FROM quotes WHERE id=$1 FOR SHARE',[q.id])).rows[0];
@@ -129,16 +144,16 @@ export class Market {
       if (current.status !== 'running') return this.receipt(current);
       if (!q.payout_account_id || !frozenQuote?.payout_account_id) {
         await this.refund(tx,current,'indeterminate','seller_owner_missing');
-        return {id:d.id,status:'indeterminate',error:{code:'seller_owner_missing',message:'Legacy quote has no seller settlement account; funds released'}};
+        return this.receipt({...current,status:'indeterminate',error_code:'seller_owner_missing'});
       }
       if (frozenQuote.payout_account_id!==q.payout_account_id) {
         await this.refund(tx,current,'indeterminate','quote_recipient_changed');
-        return {id:d.id,status:'indeterminate',error:{code:'quote_recipient_changed',message:'Quote settlement account changed; funds released'}};
+        return this.receipt({...current,status:'indeterminate',error_code:'quote_recipient_changed'});
       }
       if (!current.live) {
         await this.refund(tx,current,'indeterminate','execution_expired');
         // Return a terminal object so the refund transaction commits.
-        return {id:d.id,status:'indeterminate',error:{code:'execution_expired',message:'Execution deadline expired; funds released'}};
+        return this.receipt({...current,status:'indeterminate',error_code:'execution_expired'});
       }
       // Pausing an offer or disabling either agent stops new work. Already
       // admitted work retains its frozen recipient and contractual commission.
@@ -148,10 +163,69 @@ export class Market {
       if (amount-fee>0n) await transfer(tx,`decision:${d.id}:seller`,`reserved:${accountId}`,`available:${q.payout_account_id}`,amount-fee,{decisionId:d.id,sellerId:q.seller_id});
       await tx.query('UPDATE budgets SET reserved=reserved-$1,spent=spent+$1 WHERE account_id=$2 AND day=(SELECT budget_day FROM decisions WHERE id=$3)',[q.price_nanos,accountId,d.id]);
       const confidence = resultConfidence(result);
-      const response = {id:d.id,status:'succeeded',sellerId:q.seller_id,priceNanos:q.price_nanos,schemaHash:q.schema_hash,requestHash:q.request_hash,result,confidence,accepted:confidence>=q.min_confidence,confidenceProvenance:'provider_reported_or_noul_probability',latencyMs,createdAt:d.created_at.toISOString()};
+      const response = {id:d.id,status:'succeeded',sellerId:q.seller_id,priceNanos:q.price_nanos,schemaHash:q.schema_hash,requestHash:q.request_hash,result,confidence,accepted:confidence>=q.min_confidence,confidenceProvenance:'provider_reported_or_noul_probability',usageProvenance:q.delivery_mode==='agent'?'unavailable_in_active_agent_session':'provider_reported',latencyMs,createdAt:d.created_at.toISOString()};
       await tx.query("UPDATE decisions SET status='succeeded',response=$1,latency_ms=$2,completed_at=now() WHERE id=$3",[JSON.stringify(response),latencyMs,d.id]);
       await tx.query('UPDATE sellers SET failures=0,circuit_until=NULL WHERE id=$1',[q.seller_id]);
       return response;
+  }
+
+  async agentReady(ownerId:string,sellerId:string,ready:boolean):Promise<Row> {
+    return transaction(this.db,async tx=>{
+      await this.lockAccounts(tx,[ownerId]);
+      const result=await tx.query(`UPDATE sellers SET agent_ready_until=CASE WHEN $3 THEN clock_timestamp()+interval '120 seconds' ELSE NULL END
+        WHERE id=$1 AND payout_account_id=$2 AND delivery_mode='agent' RETURNING agent_ready_until`,[sellerId,ownerId,ready]);
+      if(!result.rowCount)throw new AppError(404,'seller_not_found','Agent offer not found');
+      return {id:sellerId,readyUntil:result.rows[0].agent_ready_until};
+    });
+  }
+
+  async claimAgentJob(ownerId:string,sellerId:string,key:string):Promise<Row> {
+    return transaction(this.db,async tx=>{
+      this.activeBuyer(await this.lockAccounts(tx,[ownerId]),ownerId);
+      const previous=await tx.query(`SELECT j.*,d.status,d.expires_at,q.model,d.seller_id FROM agent_jobs j
+        JOIN decisions d ON d.id=j.decision_id JOIN quotes q ON q.id=d.quote_id WHERE j.owner_id=$1 AND j.claim_key=$2`,[ownerId,key]);
+      const view=(j:Row)=>({job:{id:j.decision_id,sellerId:j.seller_id,model:j.model,input:j.input,claimToken:j.claim_token,status:j.status,deadline:j.expires_at}});
+      if(previous.rowCount){
+        if(previous.rows[0].seller_id!==sellerId)throw new AppError(409,'idempotency_conflict','Claim key belongs to another offer');
+        return view(previous.rows[0]);
+      }
+      const offer=await tx.query(`SELECT s.id FROM sellers s WHERE s.id=$1 AND s.payout_account_id=$2
+        AND s.delivery_mode='agent' AND s.enabled AND NOT s.paused AND s.agent_ready_until>clock_timestamp() FOR UPDATE`,[sellerId,ownerId]);
+      if(!offer.rowCount)throw new AppError(409,'seller_unavailable','Approved agent offer must be ready before claiming new work');
+      const found=await tx.query(`SELECT j.*,d.status,d.expires_at,q.model,d.seller_id FROM agent_jobs j
+        JOIN decisions d ON d.id=j.decision_id JOIN quotes q ON q.id=d.quote_id WHERE j.owner_id=$1 AND d.seller_id=$2
+        AND j.claim_key IS NULL AND d.status='running' AND d.expires_at>clock_timestamp()
+        ORDER BY d.created_at,d.id LIMIT 1 FOR UPDATE OF j SKIP LOCKED`,[ownerId,sellerId]);
+      if(!found.rowCount)return {job:null};
+      const j=found.rows[0],token=randomUUID();
+      await tx.query('UPDATE agent_jobs SET claim_key=$1,claim_token=$2,claimed_at=clock_timestamp() WHERE decision_id=$3',[key,token,j.decision_id]);
+      return view({...j,claim_token:token});
+    });
+  }
+
+  async completeAgentJob(ownerId:string,id:string,token:string,raw:unknown):Promise<Row> {
+    // Load only the authenticated owner's job, then reuse the exact settlement
+    // path and lock order of HTTPS decisions. No lease can be reassigned.
+    const found=await this.db.query(`SELECT j.*,d.account_id,d.quote_id,d.created_at FROM agent_jobs j
+      JOIN decisions d ON d.id=j.decision_id WHERE j.decision_id=$1 AND j.owner_id=$2`,[id,ownerId]);
+    if(!found.rowCount || !found.rows[0].claim_token || !safeEqual(token,found.rows[0].claim_token))throw new AppError(404,'job_not_found','Claimed agent job not found');
+    const j=found.rows[0],q=(await this.db.query('SELECT * FROM quotes WHERE id=$1',[j.quote_id])).rows[0];
+    let result:AgentResult;
+    try {result=validateAgentResult(raw,j.input,q.model);}catch(error){
+      if(error instanceof ProviderError)throw new AppError(400,'invalid_agent_result','Result does not match the frozen typed question and model contract');
+      throw error;
+    }
+    const hash=digest(result);
+    return transaction(this.db,async tx=>{
+      this.activeBuyer(await this.lockAccounts(tx,[ownerId,j.account_id]),ownerId);
+      await tx.query('SELECT id FROM sellers WHERE id=$1 FOR UPDATE',[q.seller_id]);
+      const d=(await tx.query('SELECT * FROM decisions WHERE id=$1 FOR UPDATE',[id])).rows[0];
+      const current=(await tx.query('SELECT * FROM agent_jobs WHERE decision_id=$1 FOR UPDATE',[id])).rows[0];
+      if(current.result_hash && current.result_hash!==hash)throw new AppError(409,'result_conflict','A different result was already submitted; recover the original submission');
+      if(current.result_hash)return this.receipt(d);
+      const receipt=await this.settle(tx,d,q,result,Math.max(0,Date.now()-new Date(d.created_at).getTime()));
+      await tx.query('UPDATE agent_jobs SET result_hash=$1,completed_at=clock_timestamp() WHERE decision_id=$2',[hash,id]);
+      return receipt;
     });
   }
 
