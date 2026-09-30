@@ -218,6 +218,12 @@
       "result": "One 1 XEC active-session decision succeeded; original 10 XEC withdrawal settled after six confirmations and finality with 2.19 XEC fee; exact bytes, ledger and 102.81 XEC buyer balance reconciled; post-settlement encrypted recovery and daily schedule verified",
       "receipt": ".local/plugin-evidence/hetzner-paid-acceptance-terminal.json",
       "sha256": "20ac203bb5c506773c9aa883b515707a1b2ebc082d5f7548f8c013b1320f0b8e"
+    },
+    {
+      "check": "repeatable bounded streaming off-host backup verifier",
+      "result": "Real encrypted backup and repeated copies verified without plaintext files or identity export; 133 unit and 85 PostgreSQL tests plus Linux/Windows/macOS CI passed; PR6 merged; deployed runtime and exact public plugin release unchanged",
+      "receipt": ".local/plugin-evidence/maintenance-20260930-0900/completion.json",
+      "sha256": "6b6264d6a62ec87b88d5b59231a98a7e1d3c32e0de8c3de443f1fa4822a6d30f"
     }
   ],
   "blockers": [
@@ -710,7 +716,7 @@
       }
     }
   },
-  "lastOperationAt": "2026-09-30T07:17:07.679Z",
+  "lastOperationAt": "2026-09-30T07:26:22.464Z",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -763,10 +769,16 @@
   },
   "maintenance": {
     "workItem": "repeatable_bounded_streaming_offhost_backup_verification",
-    "status": "locally_verified_ready_for_remote_CI",
-    "receipt": ".local/plugin-evidence/maintenance-20260930-0900/receipt.json",
-    "sha256": "dd751cbab1e46333730c51f82d8c22fe2fae8cf7c1e36e67251f8f0456c0f2c9",
+    "status": "merged_operational_backup_verifier_in_use",
+    "receipt": ".local/plugin-evidence/maintenance-20260930-0900/completion.json",
+    "sha256": "6b6264d6a62ec87b88d5b59231a98a7e1d3c32e0de8c3de443f1fa4822a6d30f",
     "scriptSha256": "30d2ca81c9d9c73ddabb5b537371ae3987c13231feee02226f0a706afd13c44b",
-    "checkedAt": "2026-09-30T07:17:07.679Z"
+    "checkedAt": "2026-09-30T07:17:07.679Z",
+    "testedCommit": "63bf7fa71069c4d354fbe6a23de5c5e41b38bf7d",
+    "mergeCommit": "c78f52769060c9dc65229c724f86b50f163ff28b",
+    "pullRequestUrl": "https://github.com/QuantumStonks/ZoKo/pull/6",
+    "remoteCi": "all_Linux_Windows_macOS_checks_passed",
+    "unitTests": 133,
+    "postgresIntegrationTests": 85
   }
 }
