@@ -1,8 +1,11 @@
 # Independent recovery and encrypted replication
 
 ZoKo's hourly age-encrypted database snapshots are working. A separate replicator
-is implemented, but **not configured or enabled** until an owner-approved storage
-destination and its restricted credentials are supplied. A local backend rehearsal
+is implemented, but **not configured or enabled** until independently hosted storage
+and its restricted credentials are provisioned. The owner authorized implementing
+both storage and separate recovery-key custody on 30 September 2026 within the
+standing hosting budget. Provisioning currently awaits the owner's Hetzner login,
+not a new approval of the backup work. A local backend rehearsal
 does not establish off-site protection. The portable configuration/account-key
 bundle must also be copied to the independent destination; hourly database copies
 alone cannot recover the wallet configuration after total server loss.
@@ -25,10 +28,21 @@ from Gridz or other projects and do not export desktop connector credentials.
 The server receives only the storage credential and public age recipient.
 **Never upload the private recovery identity to the server or the storage bucket.**
 
-The owner must store the identity independently of both the VPS and this desktop,
-for example in their existing secure offline custody. Test fresh-process decryption
-using that independent copy and record the ciphertext and plaintext hashes. A copy
-in another folder on this desktop does not satisfy independent custody.
+The private identity now has an independently stored copy in the owner's connected
+Google Drive account, in a newly created private custody folder. Folder and file
+permissions were read back as one owner and no sharing. Downloaded identity bytes
+matched the protected original, and that downloaded copy decrypted the real
+11:00 UTC Linux backup in a fresh process with matching ciphertext/plaintext
+hashes. No identity or decrypted database was sent to the VPS. Exact private
+location and receipts are under ignored `.local/plugin-evidence/`.
+
+This is cloud account custody independent of the VPS and laptop, not an offline
+hardware copy or proof that account recovery will work after loss of all sign-in
+factors. Keep ciphertext storage separate from this custody account; do not put
+encrypted wallet/database bundles into the key folder. A copy in another folder
+on this desktop does not satisfy independent custody. The provider-held key is
+protected by the account's authentication and access controls rather than a
+second passphrase generated and retained only on this laptop.
 
 ## Install without touching the marketplace runtime
 
