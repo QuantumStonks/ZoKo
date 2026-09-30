@@ -3,7 +3,7 @@
   "updatedAt": "2026-09-30",
   "repository": "QuantumStonks/ZoKo",
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
-  "branch": "codex/native-xec-validation",
+  "branch": "codex/offsite-backup-replication",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
   "implementation": "1.3.1_live_website_public_release_independent_catalog_and_private_account_verified",
   "distribution": {
@@ -716,7 +716,7 @@
       }
     }
   },
-  "lastOperationAt": "2026-09-30T08:18:53.302Z",
+  "lastOperationAt": "2026-09-30T08:31:33.942Z",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -768,6 +768,46 @@
     "deploymentReceiptSha256": "f5abe5b0f1a7e061972872e149513b3fad1fc8eb2a5d3f118516506ef5c3fd5e"
   },
   "maintenance": {
+    "workItem": "isolated_ciphertext_only_offsite_replication",
+    "status": "merged_installed_isolated_service_disabled_external_destination_pending",
+    "receipt": ".local/plugin-evidence/offsite-maintenance-20260930/completion.json",
+    "sha256": "263f4c95e543810dacb67ffa80a47e203333bfce6d4d7035a21e1dd50c89d827",
+    "testedCommit": "31b44c20df1a0cb25eff19eed1f0c02af46934a6",
+    "mergeCommit": "15a8d70963512e23fb0cad2acc91f55e6970f236",
+    "pullRequestUrl": "https://github.com/QuantumStonks/ZoKo/pull/7",
+    "unitTests": 140,
+    "postgresIntegrationTests": 85,
+    "remoteCi": "Linux_Windows_macOS_all_passed"
+  },
+  "offsiteReplication": {
+    "status": "merged_service_installed_disabled_destination_credentials_and_independent_key_custody_pending",
+    "workItem": "ciphertext_only_immutable_replication_with_remote_readback",
+    "branch": "codex/offsite-backup-replication",
+    "unitTests": 140,
+    "localRcloneRehearsal": "passed_real_upload_repeat_readback_and_age_decryption_not_independent_storage",
+    "receipt": ".local/plugin-evidence/offsite-maintenance-20260930/completion.json",
+    "identityUploaded": false,
+    "plaintextUploaded": false,
+    "activated": false,
+    "ownerIndependentKeyCustody": "pending",
+    "nextAction": "configure_owner_approved_independent_destination_and_restricted_credentials_then_verify_remote_bytes_and_independent_recovery",
+    "testedCommit": "31b44c20df1a0cb25eff19eed1f0c02af46934a6",
+    "mergeCommit": "15a8d70963512e23fb0cad2acc91f55e6970f236",
+    "sha256": "263f4c95e543810dacb67ffa80a47e203333bfce6d4d7035a21e1dd50c89d827",
+    "installedFiles": {
+      "/opt/zoko/backup-tools/replicate-encrypted-backups.mjs": "ce3d54b13052cd659f3e1ec4bde33a0e675127dcebdaa41458ca6a03215423da",
+      "/opt/zoko/backup-tools/verify-encrypted-backup.mjs": "30d2ca81c9d9c73ddabb5b537371ae3987c13231feee02226f0a706afd13c44b",
+      "/etc/systemd/system/zoko-offsite-backup.service": "cd771c4793842e28a630a23bb0a93029d41e03d7a233f6b769f9b3050c2e3550",
+      "/etc/systemd/system/zoko-offsite-backup.timer": "94c836397aa2f8ab1f79a2356fd75a9c854998b4bfc7e3f4e3fcf0ffe11bdfe7",
+      "/opt/zoko/encrypted-backup.sh": "cbe7cdbc5200d89b9cbca3c7a98d3b1edcd58e98eae7d08dbaa789958b7fe66a"
+    },
+    "remoteCi": "Linux_Windows_macOS_all_passed",
+    "postgresIntegrationTests": 85,
+    "isolatedLinuxReadback": "passed_real_rclone_local_backend_not_independent_storage",
+    "timer": "disabled"
+  },
+  "directoryPolicyCheckedAt": "2026-09-30T08:18:53.301Z",
+  "previousMaintenance": {
     "workItem": "repeatable_bounded_streaming_offhost_backup_verification",
     "status": "merged_operational_backup_verifier_in_use",
     "receipt": ".local/plugin-evidence/maintenance-20260930-0900/completion.json",
@@ -780,19 +820,5 @@
     "remoteCi": "all_Linux_Windows_macOS_checks_passed",
     "unitTests": 133,
     "postgresIntegrationTests": 85
-  },
-  "offsiteReplication": {
-    "status": "implemented_testing_destination_and_credentials_pending",
-    "workItem": "ciphertext_only_immutable_replication_with_remote_readback",
-    "branch": "codex/offsite-backup-replication",
-    "unitTests": 140,
-    "localRcloneRehearsal": "passed_real_upload_repeat_readback_and_age_decryption_not_independent_storage",
-    "receipt": ".local/plugin-evidence/offsite-rehearsal-20260930T081725251Z/receipt.json",
-    "identityUploaded": false,
-    "plaintextUploaded": false,
-    "activated": false,
-    "ownerIndependentKeyCustody": "pending",
-    "nextAction": "configure_owner_approved_independent_destination_and_restricted_credentials_then_verify_remote_bytes_and_independent_recovery"
-  },
-  "directoryPolicyCheckedAt": "2026-09-30T08:18:53.301Z"
+  }
 }

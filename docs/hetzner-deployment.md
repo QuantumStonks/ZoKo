@@ -48,6 +48,16 @@ The helper transfers a bounded backup over pinned SSH, verifies its checksum, en
 
 To recover, first stop the sole live signer, retain the current database and all signed/broadcast withdrawal evidence, recover the **matching original** configuration and database, and run the doctor/reconciliation before enabling payments. Follow the destructive restore runbook only for actual authorized recovery. Do not use the production restore command merely to test a backup, and never run two signers using the same seed.
 
+The separate off-site replication service/timer is installed but disabled, with
+no storage credentials configured. Its tested source is
+`31b44c20df1a0cb25eff19eed1f0c02af46934a6`, merged as
+`15a8d70963512e23fb0cad2acc91f55e6970f236` in PR7. The producer now writes immutable
+per-snapshot metadata; the revised producer ran successfully and its fresh Linux
+ciphertext decrypted on Windows with matching hashes. Real rclone rehearsals on
+local backends are distinct from independently hosted storage. See
+[independent recovery](offsite-recovery.md) for credentials, custody and activation.
+The API image, financial acceptance and public plugin ZIP remain unchanged.
+
 ### Repeatable off-host verification
 
 Use `scripts/verify-encrypted-backup.mjs` to verify an already copied age ciphertext against its protected server metadata receipt. It checks both SHA256 hashes and exact byte counts, streams decryption directly into a hash, and writes no plaintext. The ciphertext, original receipt and private identity remain unchanged across repeat checks. Node 24 and a trusted `age` executable are required; keep the private identity on the recovery host.
