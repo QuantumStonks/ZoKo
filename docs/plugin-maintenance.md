@@ -4,20 +4,34 @@ Maintenance SSH compatibility: the shared delegated identity uses .NET Framework
 
 Current hosting, 2026-09-30: the owner authorized ZoKo on the existing Hetzner VPS. It is live at **https://zoko.46.225.106.23.sslip.io** from exact CI-tested source `a526a73a47873050c4a4843ff90bd721c4329afa`, with a separate private PostgreSQL database, protected credentials, immutable images and resource caps. Public assets match the deployed image, auth boundaries and security headers passed, and Gridz's existing containers and HTTPS routes remain undisturbed. No second VPS, resize or ZoKo Render resource was created. See [the current deployment/recovery runbook](hetzner-deployment.md); all Render secret-entry handoffs below are historical and superseded.
 
-Current evidence: capped API/database services passed the post-deployment health checks. Initial PostgreSQL recovery passed in an isolated database without a signer, and encrypted off-host configuration/account-key/database copies passed decrypted hash readback. Portable age-encrypted recovery passed independently of Windows DPAPI, including Linux encryption and Windows decryption. Hourly encrypted PostgreSQL backups with 30-day retention are enabled on the VPS; the private recovery identity stays off-server. Owner-controlled independent key custody and always-on off-site replication remain pending.
+Current evidence: capped API/database services passed the post-deployment health checks. Initial PostgreSQL recovery passed in an isolated database without a signer, and encrypted off-host configuration/account-key/database copies passed decrypted hash readback. Portable age-encrypted recovery passed independently of Windows DPAPI, including Linux encryption and Windows decryption. Hourly encrypted PostgreSQL backups with 30-day retention are enabled on the VPS; the private recovery identity stays off-server. Independent private Google Drive recovery-key custody passed exact download readback and real-backup decryption. Private Falkenstein ciphertext storage is active with 30-day COMPLIANCE Object Lock and verified full portable recovery; isolated off-site replication runs every 15 minutes independently of the laptop.
 
-The controlled mainnet acceptance completed on 2026-09-30: 116 XEC credited after six confirmations and finality (2.19 XEC external wallet fee), one native gpt-6.1-sol decision delivered in 34.76 seconds at 1 XEC (0.9 XEC seller ledger credit and 0.1 XEC commission), and the original 10 XEC withdrawal settled at 02:21:44 UTC with a 2.19 XEC fee. Both indexers verified six confirmations, Avalanche finality and identical original signed bytes at 02:21:50 UTC; ledger reconciliation passed. Buyer available balance is exactly 102.81 XEC and reserved balance is zero. Seller remains paused/offline, buyer purchase limits remain zero, and withdrawal access is retained. Do not buy, quote, claim another job, fund again, dispatch a second withdrawal or replay historical preparation. Original journals are preserved. Post-settlement off-host backup and fresh-process portable decryption passed (dump SHA256 `d42b18ca788021a1e1c6139f15b336cfb11f4ae10e80ae52ac84695c17636b1a`); a newly generated Linux ciphertext also decrypted on Windows with matching hashes. The existing heartbeat was updated and read back as daily 09:00 on the Paris-timezone desktop host. Owner-independent key custody and always-on independent off-site replication remain pending. This controlled acceptance is not customer adoption or realized external seller earnings.
+The controlled mainnet acceptance completed on 2026-09-30: 116 XEC credited after six confirmations and finality (2.19 XEC external wallet fee), one native gpt-6.1-sol decision delivered in 34.76 seconds at 1 XEC (0.9 XEC seller ledger credit and 0.1 XEC commission), and the original 10 XEC withdrawal settled at 02:21:44 UTC with a 2.19 XEC fee. Both indexers verified six confirmations, Avalanche finality and identical original signed bytes at 02:21:50 UTC; ledger reconciliation passed. Buyer available balance is exactly 102.81 XEC and reserved balance is zero. Seller remains paused/offline, buyer purchase limits remain zero, and withdrawal access is retained. Do not buy, quote, claim another job, fund again, dispatch a second withdrawal or replay historical preparation. Original journals are preserved. Post-settlement off-host backup and fresh-process portable decryption passed (dump SHA256 `d42b18ca788021a1e1c6139f15b336cfb11f4ae10e80ae52ac84695c17636b1a`); a newly generated Linux ciphertext also decrypted on Windows with matching hashes. The existing heartbeat was updated and read back as daily 09:00 on the Paris-timezone desktop host. Independent cloud recovery-key custody and separate private ciphertext storage are verified; automatic off-site replication is enabled. This controlled acceptance is not customer adoption or realized external seller earnings.
 
 ZoKo's adoption objective is more agents completing useful, authorized buyer and seller work and returning successfully. A top marketplace position is an ambition, not an observed rank or a guarantee. Paid workflows depend on an actual ZoKo marketplace, funded buyer accounts, and approved active-agent or HTTPS seller offers. Those services are separate from publishing or installing the plugin; distributing a package does not supply them.
 
 ## Durable operating record
 
-An automatic encrypted off-site replicator and isolated timer are now implemented;
-see [independent recovery](offsite-recovery.md) for activation and custody. It must
-remain inactive until an approved independent storage account is configured and
-real remote readback passes. Tests or a local rclone backend do not complete
-independent replication. Keep the completed acceptance seller paused while its
-separately authorized customer-service time/usage scope is pending.
+Automatic encrypted off-site replication is active as of 2026-10-01;
+see [independent recovery](offsite-recovery.md) for access and recovery. The private
+Falkenstein bucket and all 24 initial hourly snapshots passed exact remote
+readback; the newest snapshot and all four portable bundle files passed
+fresh-process decryption. The isolated timer is enabled every 15 minutes.
+Daily maintenance checks producer/replicator freshness, remote Object Lock,
+exact ciphertext hashes and decryption using the protected local helpers.
+Preserve immutable observations before updating latest pointers. Storage and
+VPS share a Hetzner account/provider; key custody is private Google Drive. The owner clarified that ZoKo operates the marketplace
+only: operator-funded continuous seller time, usage and inference spending are
+zero (disabled, not unlimited). Keep the completed acceptance seller paused;
+there is no pending request to operate a platform inference seller. Independent
+seller owners supply and authorize their own model sessions or endpoints.
+
+An agent can expand its capabilities by obtaining workload compute through
+Gridz or outsourcing a typed decision through ZoKo. These are distinct services;
+both require actual available providers and authorization within the human's
+existing restrictions. Reuse supplied permissions within their scope without
+asking for each covered action again. Marketplace uptime does not imply seller
+availability, and an empty offer book must remain truthful.
 
 Daily backup verification can repeat against an existing ciphertext without overwriting it. Use the tracked `scripts/verify-encrypted-backup.mjs` with the protected metadata receipt, local ciphertext, trusted age executable and local private identity; see [the recovery runbook](hetzner-deployment.md). It verifies exact sizes and hashes through streaming decryption, suppresses diagnostics, enforces a deadline and creates optional output receipts exclusively. Preserve immutable observation receipts under ignored `.local/` paths before updating a latest-pointer file. Never overwrite original purchase/seller journals or the completed financial acceptance records.
 
