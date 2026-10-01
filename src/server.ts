@@ -4,6 +4,7 @@ import staticFiles from '@fastify/static';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { z } from 'zod';
+import { randomUUID } from 'node:crypto';
 import { Config, MoneySchema, PositiveMoneySchema } from './config.js';
 import { auditLedger, createAccount, Db, transaction, transfer } from './db.js';
 import { Market, PolicySchema, Provider } from './market.js';
@@ -88,7 +89,7 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     return result;
   };
 
-  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.3.0'}));
+  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.4.0'}));
   app.get('/health/ready',async(_req,reply)=>{
     try {
       const migration=await db.query('SELECT max(version)::integer AS version FROM zoko_migrations');
@@ -104,16 +105,41 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     } catch {reply.code(503);return {ok:false,tradingReady:false,database:'unavailable'};}
   });
   app.get('/v1/catalog',async()=>({sellers:await market.catalog()}));
+  app.post('/v1/enroll',{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async(req,reply)=>{
+    if (!config.publicEnrollment) throw new AppError(403,'enrollment_closed','Self-service enrollment is not enabled on this marketplace');
+    const apiKey=bearer(req.headers);
+    if (!/^zoko_[A-Za-z0-9_-]{43}$/.test(apiKey)) throw new AppError(400,'invalid_enrollment_key','Use a locally generated 256-bit ZoKo account key');
+    const input=CreateAccountSchema.parse(req.body), hash=keyHash(apiKey);
+    const account=await transaction(db,async tx=>{
+      await tx.query("SELECT pg_advisory_xact_lock(hashtextextended('zoko:public-enrollment',0))");
+      const existing=(await tx.query('SELECT * FROM accounts WHERE api_key_hash=$1',[hash])).rows[0];
+      if (existing) {
+        if(existing.disabled) throw new AppError(403,'account_disabled','Account is disabled');
+        if(existing.name!==input.name || existing.daily_limit_nanos!==input.dailyLimitNanos || existing.max_price_nanos!==input.maxPriceNanos || JSON.stringify(existing.allowed_sellers)!==JSON.stringify(input.allowedSellers??null)) throw new AppError(409,'enrollment_conflict','Preserve the original enrollment file; account policy cannot be changed through enrollment');
+        return accountView(existing);
+      }
+      const count=(await tx.query('SELECT count(*)::integer AS n FROM accounts')).rows[0].n;
+      if(count>=(config.enrollmentAccountCap??1000)) throw new AppError(503,'enrollment_capacity','Marketplace enrollment capacity reached; existing accounts continue to work');
+      const id=randomUUID();
+      const row=(await tx.query('INSERT INTO accounts(id,name,api_key_hash,daily_limit_nanos,max_price_nanos,allowed_sellers) VALUES($1,$2,$3,$4,$5,$6) RETURNING *',[id,input.name,hash,input.dailyLimitNanos,input.maxPriceNanos,input.allowedSellers??null])).rows[0];
+      await tx.query('INSERT INTO wallets(id) VALUES($1),($2)',[`available:${id}`,`reserved:${id}`]);
+      await tx.query('INSERT INTO audit_events(actor,action,subject) VALUES($1,$2,$3)',[`agent:${id}`,'account.self_enrolled',id]);
+      return accountView(row);
+    });
+    reply.header('cache-control','no-store');
+    return {account,credentialReturned:false,sellerApprovalRequired:true};
+  });
   app.get('/.well-known/zoko.json',async()=>({
-    name:'Zoko',version:'1.3.0',protocol:'typesafe-systemone-v1',
+    name:'Zoko',version:'1.4.0',protocol:'typesafe-systemone-v1',
     catalog:'/v1/catalog',quote:'/v1/quotes',execute:'/v1/decisions',
-    authentication:{scheme:'Bearer',provisioning:'operator_issued_scoped_account_key',accountRoles:['buyer','seller']},
+    authentication:{scheme:'Bearer',provisioning:config.publicEnrollment?'local_key_self_service_enrollment':'operator_issued_scoped_account_key',accountRoles:['buyer','seller'],enrollment:config.publicEnrollment?'/v1/enroll':null,credentials:config.publicEnrollment?'generated_locally_never_returned':'operator_provisioned',defaultPurchaseLimits:'zero_unless_owner_supplies_budget'},
     marketplace:{role:'intermediary',sellerOffers:'/v1/seller/offers',approvalRequired:true,ownership:'authenticated_seller_account',sellerPaysDeliveryCosts:true},
     agentDelivery:{register:'/v1/seller/agent-offers',claim:'/v1/seller/jobs/claim',complete:'/v1/seller/jobs/:id/complete',presenceSeconds:120,capacityPerOffer:1,tokenUsage:'unavailable',inference:'active_seller_session',credentials:'seller_local_only'},
     payment:{currency:'XEC',ledgerUnit:'nanoXEC',unitsPerXec:'1000000000',unitsPerOnChainAtom:'10000000',method:'custodial_prepaid_balance',network:config.payments.network,verification:'hosted_chronik',fundingWallet:'cashtab',depositHistory:'/v1/deposits'},
     billing:{quoteTtlSeconds:config.quoteTtlSeconds,idempotencyHeader:'Idempotency-Key',successfulResponseIsBillable:true,lowConfidenceResponseIsBillable:true,failedExecutionIsRefunded:true,platformCommissionBps:config.platformFeeBps,commissionPolicy:'deducted_from_seller_price'},
     limits:{inputBytes:32768,questions:20,maximumProviderTimeoutMs:config.providerMaxTimeoutMs},
     documentation:'https://github.com/QuantumStonks/ZoKo',
+    installation:{repository:'https://github.com/QuantumStonks/ZoKo',ref:'codex/zoko-marketplace',plugin:'zoko@zoko',node:'24.x',guide:'https://github.com/QuantumStonks/ZoKo/blob/main/docs/agent-first-use.md',automaticUse:'installed_skills_selectable_by_host_for_relevant_authorized_tasks',globalDirectoryApproval:false},
   }));
   app.get('/v1/me',async req=>{
     const id=await agentAccount(req.headers);

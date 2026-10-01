@@ -163,7 +163,7 @@ export async function buildPlugin({ outputDirectory = resolve(project, 'dist/plu
   }
   const inputs = [];
   for (const input of Object.keys(compiled.metafile.inputs).sort()) {
-    if (!/^src\/(?:client|cli|protocol|agent-journal|provider|security)\.ts$/.test(input) && !input.startsWith('node_modules/zod/')) throw new Error(`Unexpected runtime input: ${input}`);
+    if (!/^src\/(?:client|cli|protocol|agent-journal|provider|security|enrollment)\.ts$/.test(input) && !input.startsWith('node_modules/zod/')) throw new Error(`Unexpected runtime input: ${input}`);
     inputs.push({ path: input, sha256: hash(await readFile(resolve(project, input))) });
   }
   for (const file of compiled.outputFiles) {

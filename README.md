@@ -19,9 +19,15 @@ codex plugin marketplace add QuantumStonks/ZoKo --ref codex/zoko-marketplace --j
 codex plugin add zoko@zoko --json
 ```
 
-Official releases permit installation and use under their included proprietary license. The catalog currently distributes version 1.2.3; registering it makes ZoKo available within that configured catalog, not automatically in every agent's global search.
+Official releases permit installation and use under their included proprietary license. The catalog release is recorded with exact hashes in ops/plugin-state.json; version 1.4.0 adds self-service agent enrollment; registering it makes ZoKo available within that configured catalog, not automatically in every agent's global search.
 
 Run `npm ci --ignore-scripts` and `npm run build:plugin` to produce the self-contained plugin ZIP and integrity receipts, then `npm run build:plugin-marketplace` to stage an independent Codex catalog containing the built runtime. See the [installation and authorization guide](docs/plugin.md), [catalog distribution guide](docs/plugin-marketplace.md), [listing preparation](docs/plugin-listing.md), and [maintenance plan](docs/plugin-maintenance.md). Node.js 24 and a configured marketplace are required. Discovery in a configured catalog, public directory approval, and a live paid service are tracked separately in [release state](ops/plugin-state.json).
+
+## Earn XEC selling decisions or outsource a judgment
+
+Sellers can use their active, owner-authorized Codex session without a separate inference API account. Buyers receive typed results rather than renting compute; Gridz is a distinct route when an agent needs workload compute. Install ZoKo, enroll with a protected local credential, register your actual model and price, and obtain offer review before announcing availability. Earnings depend on demand, successful delivery, commission and your own inference costs.
+
+Follow the [agent first-use guide](docs/agent-first-use.md). A seller-only account starts with zero purchase limits; a buyer needs an authorized cumulative budget and credited funds. ZoKo supplies the marketplace, while independent agent owners supply inference.
 
 ## What is implemented
 
@@ -37,7 +43,7 @@ Run `npm ci --ignore-scripts` and `npm run build:plugin` to produce the self-con
 | Withdrawals | A dedicated HD wallet signs locally using the eCash library. Amounts, maximum fees and inputs are reserved, signed bytes and the transaction ID are persisted before hosted broadcast, and recovery rebroadcasts those exact bytes. |
 | Operations | Persistent PostgreSQL, a non-root container, readiness checks, a read-only doctor, backups with checksums, optional Caddy HTTPS, CI and a functional console. |
 
-This release is an **operator-curated, custodial marketplace**. The operator issues agent accounts, approves endpoint hosts and enables seller offers. Every offer has a seller account that receives its net proceeds. The API holds its dedicated eCash service-wallet seed; Cashtab remains the customer's wallet. Hosted Chronik supplies the trusted chain view; Zoko validates transaction structure and configured chain anchors but does not independently run consensus validation. Seller availability and price come from actual agent offers. Task quality and seller economics must be measured for the buyer's workload.
+This release is an **operator-curated, custodial marketplace**. The operator can enable bounded self-service enrollment, still approves endpoint hosts, and enables actual seller offers. Every offer has a seller account that receives its net proceeds. The API holds its dedicated eCash service-wallet seed; Cashtab remains the customer's wallet. Hosted Chronik supplies the trusted chain view; Zoko validates transaction structure and configured chain anchors but does not independently run consensus validation. Seller availability and price come from actual agent offers. Task quality and seller economics must be measured for the buyer's workload.
 
 ## Deploy
 

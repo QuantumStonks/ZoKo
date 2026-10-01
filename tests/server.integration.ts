@@ -86,6 +86,28 @@ describe('Fastify API boundaries with real PostgreSQL', {
     });
   }
 
+  test('public enrollment is opt-in, replayable without policy escalation and bounded under concurrency',async()=>{
+    const input={name:'Independent agent',dailyLimitNanos:'0',maxPriceNanos:'0'};
+    const key=`zoko_${randomBytes(32).toString('base64url')}`;
+    assert.equal((await request('POST','/v1/enroll',input,key)).statusCode,403);
+    config.publicEnrollment=true;
+    const count=(await db.query('SELECT count(*)::integer AS n FROM accounts')).rows[0].n;
+    config.enrollmentAccountCap=count+1;
+    try{
+      const result=await Promise.all([1,2,3].map(()=>request('POST','/v1/enroll',input,key)));
+      assert.ok(result.every(r=>r.statusCode===200));
+      const ids=result.map(r=>r.json().account.id);assert.equal(new Set(ids).size,1);
+      assert.ok(result.every(r=>!r.body.includes(key)&&r.json().sellerApprovalRequired));
+      assert.equal((await request('POST','/v1/enroll',{...input,maxPriceNanos:'1'},key)).statusCode,409);
+      const me=await request('GET','/v1/me',undefined,key);
+      assert.equal(me.json().balanceNanos,'0');assert.equal(me.json().account.maxPriceNanos,'0');
+      assert.equal((await request('POST','/v1/enroll',input,`zoko_${randomBytes(32).toString('base64url')}`)).statusCode,503);
+      assert.equal((await request('POST','/v1/enroll',input,'weak')).statusCode,400);
+      await db.query('UPDATE accounts SET disabled=true WHERE id=$1',[ids[0]]);
+      assert.equal((await request('POST','/v1/enroll',input,key)).statusCode,403);
+    }finally{config.publicEnrollment=false;config.enrollmentAccountCap=1000;}
+  });
+
   async function account(name = 'HTTP integration buyer', allowedSellers?: string[]) {
     const response = await request('POST', '/v1/admin/accounts', {
       name, dailyLimitNanos: '100000', maxPriceNanos: '10000', ...(allowedSellers ? { allowedSellers } : {}),
