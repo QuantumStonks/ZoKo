@@ -33,14 +33,15 @@ function processEnvironment() {
   return Object.fromEntries(Object.entries(process.env).filter(([key])=>!/^RCLONE_/i.test(key)));
 }
 
-export function rcloneOperation(options, args, expected, spawnProcess=spawn) {
-  return new Promise((accept,reject)=>{
+export async function rcloneOperation(options, args, expected, spawnProcess=spawn) {
+  const result=await new Promise((accept,reject)=>{
     const child=spawnProcess(options.rclone??'rclone',[
       '--config',resolve(options.config),'--log-level','ERROR','--stats','0',
       '--retries','1','--low-level-retries','2','--contimeout','10s','--timeout','30s',
       ...args,
     ],{stdio:['ignore','pipe','pipe'],shell:false,windowsHide:true,env:processEnvironment()});
     let bytes=0,finished=false;
+    const statChunks=[];
     const hash=createHash('sha256');
     const finish=(error,result)=>{
       if(finished) return;
@@ -54,16 +55,34 @@ export function rcloneOperation(options, args, expected, spawnProcess=spawn) {
     child.stderr.resume(); // Suppress credential-bearing backend diagnostics.
     child.stdout.on('data',chunk=>{
       bytes+=chunk.length;
-      if(bytes>(expected?.bytes??65536)) finish(Error('Encrypted replication readback exceeds its bound.'));
+      if(bytes>(expected?.statOutput?65536:(expected?.bytes??65536))) finish(Error('Encrypted replication readback exceeds its bound.'));
+      else if(expected?.statOutput) statChunks.push(chunk);
       else hash.update(chunk);
     });
     child.on('close',(code,signal)=>{
       if(expected&&(code===3||code===4)&&bytes===0&&!signal) return finish(null,{missing:true});
       if(code!==0||signal) return finish(Error('Encrypted replication failed; retry after checking the protected configuration.'));
+      if(expected?.statOutput) {
+        try {
+          const stat=JSON.parse(Buffer.concat(statChunks).toString('utf8'));
+          if(stat===null) return finish(null,{missing:true});
+          if(stat&&typeof stat==='object'&&!Array.isArray(stat)&&stat.IsDir===false&&Number.isSafeInteger(stat.Size)&&stat.Size>=0) return finish(null,{missing:false});
+        } catch {}
+        return finish(Error('Invalid remote encrypted object stat; no upload attempted.'));
+      }
+      if(expected&&bytes===0&&args[0]==='cat') return finish(null,{emptyReadback:true});
       if(expected&&(bytes!==expected.bytes||hash.digest('hex')!==expected.sha256)) return finish(Error('Remote encrypted backup checksum mismatch; no replacement attempted.'));
       finish(null,{missing:false});
     });
   });
+  if(result.emptyReadback) {
+    // Object-store cat can exit successfully with no matches. Confirm absence
+    // independently: a real zero-byte object must remain a checksum failure.
+    const stat=await rcloneOperation(options,['lsjson',args[1],'--stat','--files-only'],{statOutput:true},spawnProcess);
+    if(stat.missing) return {missing:true};
+    throw Error('Remote encrypted backup checksum mismatch; no replacement attempted.');
+  }
+  return result;
 }
 
 async function boundedJson(path) {

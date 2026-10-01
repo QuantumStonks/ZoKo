@@ -21,13 +21,15 @@ async function fixture() {
   const metadata={encryptedBackup:join(options.root,name),completedAt:'2026-09-30T07:00:25Z',encryptedSha256:hash(cipher),encryptedBytes:cipher.length,plaintextBytes:123,plaintextSha256:'a'.repeat(64),secret:'MUST_NOT_UPLOAD'};
   await writeFile(join(options.root,name),cipher);await writeFile(join(options.root,`${name}.json`),JSON.stringify(metadata));
   const commands:string[][]=[];
-  const execute=(failReadback=false)=>(executable:string,args:string[],childOptions:object)=>{
+  const execute=(failReadback=false,missingCode=4)=>(executable:string,args:string[],childOptions:object)=>{
     assert.equal(executable,'test-rclone');commands.push(args);
-    const command=args.find(a=>a==='copyto'||a==='cat')!;
-    const position=args.indexOf(command),target=args[position+(command==='cat'?1:2)]!;
+    const command=args.find(a=>a==='copyto'||a==='cat'||a==='lsjson')!;
+    const position=args.indexOf(command),target=args[position+(command==='copyto'?2:1)]!;
     const path=join(remote,target.replace('testremote:','').replaceAll('/','_'));
-    const program=command==='cat'
-      ? `const fs=require('fs');if(!fs.existsSync(${JSON.stringify(path)})){process.exit(4);} ${failReadback?'process.stdout.write("wrong");':`process.stdout.write(fs.readFileSync(${JSON.stringify(path)}));`}`
+    const program=command==='lsjson'
+      ? `const fs=require('fs');process.stdout.write(JSON.stringify(fs.existsSync(${JSON.stringify(path)})?{IsDir:false,Size:fs.statSync(${JSON.stringify(path)}).size}:null));`
+      : command==='cat'
+      ? `const fs=require('fs');if(!fs.existsSync(${JSON.stringify(path)})){process.exit(${missingCode});} ${failReadback?'process.stdout.write("wrong");':`process.stdout.write(fs.readFileSync(${JSON.stringify(path)}));`}`
       : `require('fs').copyFileSync(${JSON.stringify(args[position+1])},${JSON.stringify(path)});`;
     return spawn(process.execPath,['-e',program],childOptions);
   };
@@ -41,6 +43,31 @@ test('offsite replication validates destination scope and refuses secret-bearing
   for(const invalid of ['/local',':local:/etc','https://host','store:bucket/../other','store:bucket/./other','store:']) assert.throws(()=>parseReplicationArguments([...args.slice(0,-1),invalid]));
   assert.throws(()=>parseReplicationArguments([...args,'--identity','private']));
   assert.throws(()=>parseReplicationArguments([...args,'--token','private']));
+});
+
+test('S3 successful empty cat requires stat-confirmed absence and preserves existing zero-byte objects',async()=>{
+  const f=await fixture();
+  try {
+    const first=await replicateEncryptedBackups(f.options,f.execute(false,0));
+    assert.equal(first.verified,1);
+    assert.equal(f.commands.filter(c=>c.includes('lsjson')).length,2);
+    assert.deepEqual(await readFile(f.target),f.cipher);
+    const uploads=f.commands.filter(c=>c.includes('copyto')).length;
+    await writeFile(f.target,Buffer.alloc(0));
+    await assert.rejects(replicateEncryptedBackups(f.options,f.execute(false,0)),/checksum/);
+    assert.equal(f.commands.filter(c=>c.includes('copyto')).length,uploads);
+    assert.equal((await readFile(f.target)).length,0);
+  } finally {await f.cleanup();}
+});
+
+test('empty S3 readback does not bypass failed or malformed object-stat evidence',async()=>{
+  const f=await fixture();
+  try {
+    for(const [code,body] of [[1,''],[0,'not-json'],[0,'{}'],[0,'{"IsDir":true,"Size":0}']] as const) {
+      const execute=(_executable:string,args:string[],opts:object)=>spawn(process.execPath,['-e',args.includes('lsjson')?`process.stdout.write(${JSON.stringify(body)});process.exit(${code})`:'process.exit(0)'],opts);
+      await assert.rejects(rcloneOperation(f.options,['cat','target'],{bytes:4,sha256:'a'.repeat(64)},execute));
+    }
+  } finally {await f.cleanup();}
 });
 
 test('offsite upload requires full readback and repeats without replacing receipts or uploading sidecar secrets',async()=>{
