@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-01",
+  "updatedAt": "2026-10-01T23:22:17.812Z",
   "repository": "QuantumStonks/ZoKo",
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
-  "branch": "codex/s3-backup-activation",
+  "branch": "codex/agent-onboarding",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
   "implementation": "1.3.1_live_website_public_release_independent_catalog_and_private_account_verified",
   "distribution": {
@@ -689,11 +689,11 @@
         "retentionDays": 30,
         "independentOffsiteScheduler": true,
         "lastObserved": {
-          "checkedAt": "2026-10-01T08:11:10.281609+02:00",
+          "checkedAt": "2026-10-01T07:02:25.734576+00:00",
           "timerActive": true,
           "serviceResult": "success",
           "execMainStatus": 0,
-          "latestCompletedAt": "2026-10-01T08:00:07.829776+02:00"
+          "latestCompletedAt": "2026-10-01T07:00:47.715542+00:00"
         }
       },
       "sshCompatibility": {
@@ -731,10 +731,14 @@
       "terminalReadiness": {
         "receipt": ".local/plugin-evidence/hetzner-terminal-readiness.json",
         "sha256": "dd20082263d9e5fc9408ad1f88d9f7c23a359485431a57d8cef9de9071868465"
+      },
+      "dailyReadiness": {
+        "receipt": ".local/plugin-evidence/maintenance-20261001-0900/health-probes.json",
+        "sha256": "d86663908a975831cdb6d1fd6752df44cdcaee32028a69ec81ea43b7b143521a"
       }
     }
   },
-  "lastOperationAt": "2026-10-01T08:14:16.179275+02:00",
+  "lastOperationAt": "2026-10-01T07:05:11.532891+00:00",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -796,7 +800,9 @@
     "currentHandoff": {
       "receipt": ".local/plugin-evidence/storage-activation-completion-20261001.json",
       "sha256": "b0e16bbf29117a0133f8ff36ffdf5dc42c2a828b67caa5450e9562a4b300ef18"
-    }
+    },
+    "mergeCommit": "f8ee4802e728c803895d0ea082fd3803876f226e",
+    "finalReviewHead": "b4c02da0773e602ec2b5bc901a040e2301fa05aa"
   },
   "offsiteReplication": {
     "status": "active_private_Falkenstein_remote_readback_and_decryption_verified",
@@ -819,7 +825,7 @@
       "/etc/systemd/system/zoko-offsite-backup.timer": "94c836397aa2f8ab1f79a2356fd75a9c854998b4bfc7e3f4e3fcf0ffe11bdfe7",
       "/opt/zoko/encrypted-backup.sh": "cbe7cdbc5200d89b9cbca3c7a98d3b1edcd58e98eae7d08dbaa789958b7fe66a"
     },
-    "remoteCi": "Linux_Windows_macOS_all_passed_tested_code_head",
+    "remoteCi": "final_review_head_Linux_Windows_macOS_all_passed",
     "postgresIntegrationTests": 85,
     "isolatedLinuxReadback": "passed_real_rclone_local_backend_not_independent_storage",
     "timer": "enabled_active_every_15_minutes",
@@ -841,18 +847,20 @@
       }
     },
     "liveStatus": {
-      "receipt": ".local/plugin-evidence/hetzner-live-replication-status.json",
-      "sha256": "0003736ad6bd88975a4df416ecb89e4449158d9ae8553818ef5d266580759e26"
+      "receipt": ".local/plugin-evidence/maintenance-20261001-0900/hetzner-live-replication-status.json",
+      "sha256": "fffd795147af704ce1134ba2454c5b4d1a4b7e932dcfa6d388bdf643c11a016c"
     },
     "remoteRecoveryVerification": {
-      "receipt": ".local/plugin-evidence/hetzner-live-storage-recovery-verification.json",
-      "sha256": "0628f3e340a18b9972be94a731dcf560ddc0f04444c0abd04baf8e2d685ed772"
+      "receipt": ".local/plugin-evidence/maintenance-20261001-0900/hetzner-live-storage-recovery-verification.json",
+      "sha256": "55963bd2e18959567cb1f345cc9ca8a0f6d6c3f030759bba2a1b3252440c35f4"
     },
     "fullPortableBundle": {
       "receipt": ".local/plugin-evidence/hetzner-recovery-storage-readback.json",
       "sha256": "4f0943c01443a1be5d222a85f9931753426dbc66055234c52d0f794c5ce1df7c"
     },
-    "verifiedSnapshotCount": 24
+    "verifiedSnapshotCount": 25,
+    "mergeCommit": "f8ee4802e728c803895d0ea082fd3803876f226e",
+    "finalReviewHead": "b4c02da0773e602ec2b5bc901a040e2301fa05aa"
   },
   "directoryPolicyCheckedAt": "2026-09-30T08:18:53.301Z",
   "previousMaintenance": {
@@ -897,5 +905,25 @@
     "ciphertextStoredWithKey": false,
     "privateReceipt": ".local/plugin-evidence/cloud-key-custody-20260930.json",
     "sha256": "3957206bcd7e475b0366f3a988f1f2f9505c5ede03437d42694a642c0603ba93"
+  },
+  "lastDailyMaintenance": {
+    "receipt": ".local/plugin-evidence/maintenance-20261001-0900/completion.json",
+    "sha256": "559dffad83290c44a5bd9825dda791d52b850bd22efead78a1ec0d6934379f57",
+    "status": "healthy_no_action_required",
+    "checkedAt": "2026-10-01T07:05:11.532891+00:00",
+    "nextAction": "Continue daily health, freshest remote backup retention/readback/decryption and resource checks. Preserve originals; no repeated financial test or operator inference. Full portable bundle refresh only after separately authorized changes."
+  },
+  "currentWork": {
+    "status": "implementing_self_service_enrollment_and_discovery_1.4.0",
+    "buyerCampaign": {
+      "authority": "user_selected_wallet_funds_and_agent_selected_budget_20261002",
+      "cumulativeCapXec": "1000",
+      "maximumDecisionXec": "10",
+      "operatorContinuousSellerSpendingXec": "0",
+      "funding": "wallet_UI_verified_marketplace_deposit_not_yet_created",
+      "purchases": "none",
+      "supply": "independent_sellers_required"
+    },
+    "next": "Validate emitted onboarding on Windows/Linux/macOS and PostgreSQL; publish exact catalog and live first-use surfaces; create separate authorized buyer account only after tested deployment."
   }
 }

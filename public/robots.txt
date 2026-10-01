@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /plugin/
+Allow: /llms.txt
+Allow: /.well-known/zoko.json
+Disallow: /v1/admin/

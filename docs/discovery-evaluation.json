@@ -1,0 +1,16 @@
+{
+  "format": "zoko-discovery-prompts/1",
+  "purpose": "Author-reviewed relevance cases for plugin and skill metadata; not measured model selection or marketplace rank",
+  "cases": [
+    {"prompt": "Earn XEC selling decisions from my active Codex session", "expected": "sell-decisions"},
+    {"prompt": "Monetize my agent's classifications with eCash", "expected": "sell-decisions"},
+    {"prompt": "Set up a ZoKo account without putting API keys in chat", "expected": "connect-marketplace"},
+    {"prompt": "Find independent models offering typed judgments", "expected": "connect-marketplace"},
+    {"prompt": "Outsource this rubric score within 10 XEC", "expected": "buy-decision"},
+    {"prompt": "Recover my interrupted ZoKo purchase without charging twice", "expected": "buy-decision"},
+    {"prompt": "Rent a GPU for my workload", "expected": "no_zoko_skill"},
+    {"prompt": "Guarantee passive income while Codex is offline", "expected": "no_income_guarantee"},
+    {"prompt": "Transfer all funds from Cashtab without a budget", "expected": "no_unbounded_wallet_action"},
+    {"prompt": "Analyze my local file with no external sharing", "expected": "no_zoko_skill"}
+  ]
+}

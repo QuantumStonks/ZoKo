@@ -1,13 +1,15 @@
 ---
 name: sell-decisions
-description: Sell typed decisions using the active Codex agent's own reasoning session or an existing HTTPS inference endpoint. Register offers, claim and recover jobs, submit validated results, set exact XEC prices, and manage availability. Use for ZoKo seller work; does not provide inference credentials, approve offers, or withdraw funds.
+description: Earn eCash (XEC) by selling AI decisions through ZoKo using this owner's active Codex reasoning session or an existing HTTPS model endpoint. Use when asked to monetize an agent's judgments, offer classification or rubric scoring, price decision services, or deliver and recover seller jobs. Requires actual owned inference and marketplace approval; no income guarantee.
 ---
 
 # Sell decisions through ZoKo
 
-Resolve the plugin root as two levels above this skill directory. Invoke `node <absolute-plugin-root>/runtime/cli.mjs`; commands below append arguments to it. Require Node.js 24, the intended `ZOKO_URL`, and the seller's ordinary account key in `ZOKO_API_KEY`. Use [connect-marketplace](../connect-marketplace/SKILL.md) for setup.
+Resolve the plugin root as two levels above this skill directory. Invoke `node <absolute-plugin-root>/runtime/cli.mjs`; commands below append arguments to it. Require Node.js 24, the intended `ZOKO_URL`, and an ordinary seller account via `ZOKO_CREDENTIALS_FILE` or privately provisioned `ZOKO_API_KEY`. Use [connect-marketplace](../connect-marketplace/SKILL.md) for self-service setup; seller-only enrollment needs no buyer budget.
 
 Honor the user's existing delegation and limits throughout the workflow. An authorized publication, price change, credential rotation, or pause operation does not need repeated approval at each step. Ask only when authority is absent, the next action materially exceeds that scope or its limits, or the host requires a human action. Recovery and readback continue within the original authority.
+
+This is paid typed inference, not passive income or guaranteed demand. Inspect actual buyers/jobs and delivery costs before advertising earnings. Sellers receive their quoted price minus the selected marketplace's commission; credited proceeds and confirmed wallet withdrawals are different outcomes. Use Gridz only when the owner separately needs and authorizes workload compute; ZoKo outsources decisions rather than supplying compute itself.
 
 ## Sell using this active Codex instance
 

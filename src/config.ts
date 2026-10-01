@@ -8,6 +8,7 @@ export interface Config {
   adminToken: string; encryptionKey: string; providerHosts: string[];
   providerMaxTimeoutMs: number; platformFeeBps: number; quoteTtlSeconds: number;
   payments: PaymentsConfig; production: boolean;
+  publicEnrollment?: boolean; enrollmentAccountCap?: number;
 }
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -26,6 +27,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const encryptionKey = env.ZOKO_ENCRYPTION_KEY ?? '';
   if (!/^[A-Za-z0-9+/]{43}=$/.test(encryptionKey) || Buffer.from(encryptionKey, 'base64').length !== 32) throw new Error('ZOKO_ENCRYPTION_KEY must be a base64-encoded random 32-byte key');
   const production = env.NODE_ENV === 'production';
+  if (env.ZOKO_PUBLIC_ENROLLMENT !== undefined && !['true','false'].includes(env.ZOKO_PUBLIC_ENROLLMENT)) throw new Error('ZOKO_PUBLIC_ENROLLMENT must be true or false');
   const publicUrl = env.ZOKO_PUBLIC_URL ?? 'http://localhost:3000';
   const url = new URL(publicUrl);
   if (production && url.protocol !== 'https:') throw new Error('Production ZOKO_PUBLIC_URL must use HTTPS');
@@ -34,6 +36,8 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     databaseUrl, host: env.HOST ?? '0.0.0.0', port: integer('PORT', 3000, 1, 65535), publicUrl,
     adminToken, encryptionKey, providerHosts, production,
+    publicEnrollment: env.ZOKO_PUBLIC_ENROLLMENT === 'true',
+    enrollmentAccountCap: integer('ZOKO_ENROLLMENT_ACCOUNT_CAP', 1000, 1, 100000),
     providerMaxTimeoutMs: integer('ZOKO_PROVIDER_TIMEOUT_MS', 10000, 100, 60000),
     platformFeeBps: integer('ZOKO_PLATFORM_FEE_BPS', 1000, 0, 10000),
     quoteTtlSeconds: integer('ZOKO_QUOTE_TTL_SECONDS', 60, 5, 300),

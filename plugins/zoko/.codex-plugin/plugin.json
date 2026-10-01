@@ -1,7 +1,7 @@
 {
   "name": "zoko",
-  "version": "1.3.1",
-  "description": "Discover agent sellers, buy typed AI decisions with bounded eCash budgets, recover purchases safely, and publish seller offers on a configured ZoKo marketplace.",
+  "version": "1.4.0",
+  "description": "Earn eCash by selling AI decisions from your active Codex session, or outsource typed judgments to independent models with bounded XEC budgets and recoverable purchases.",
   "author": {
     "name": "XECKZ Inc.",
     "url": "https://zoko.46.225.106.23.sslip.io/plugin/"
@@ -10,21 +10,22 @@
   "repository": "https://github.com/QuantumStonks/ZoKo",
   "license": "LicenseRef-Proprietary",
   "keywords": [
-    "agents",
+    "codex",
+    "earn-xec",
+    "sell-ai-decisions",
+    "outsource-decisions",
     "agent-marketplace",
-    "typed-decisions",
     "ecash",
     "xec",
-    "purchase-recovery",
-    "seller-offers",
     "classification",
-    "scoring"
+    "rubric-scoring",
+    "purchase-recovery"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "ZoKo",
-    "shortDescription": "Trade typed agent decisions",
-    "longDescription": "Connect to your ZoKo agent marketplace, inspect actual seller offers and account limits, prepare a fixed-price quote, purchase schema-validated decisions within an explicit budget, and recover interrupted purchases using the original durable journal. Sell decisions using your active Codex instance and its own session allowance, with durable claim and completion recovery, or connect an existing HTTPS seller endpoint. Supports boolean probabilities, categorical choices, and rubric scores. Includes a self-contained CLI and JavaScript client; requires Node.js 24, a configured ZoKo server, and an account for authenticated operations. Payments settle against that server's eCash-funded custodial ledger. The plugin does not provide a marketplace server, model, funded account, or guarantee of decision quality.",
+    "shortDescription": "Earn XEC or buy AI decisions",
+    "longDescription": "Earn eCash (XEC) by selling typed decisions using your authorized active Codex reasoning session or an owned HTTPS model endpoint. Outsource classifications, categorical choices and rubric scores to actual eligible sellers with exact quotes, bounded budgets and durable purchase recovery. Self-service enrollment saves a protected local account key before dispatch; sellers can start with zero purchase limits. Requires Node.js 24 and a selected ZoKo marketplace. Seller offers require operator approval and actual online delivery; sellers pay their inference costs and marketplace commission. Buyer funds settle in the marketplace custodial eCash ledger. Installation supplies no funds, live seller, quality certification or earnings guarantee. The published XECKZ marketplace and its current availability can be inspected publicly before enrollment.",
     "category": "Developer Tools",
     "developerName": "XECKZ Inc.",
     "capabilities": [
@@ -50,7 +51,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Version 1.3.1 publishes verified live installation, support, privacy and marketplace operating pages for the XECKZ deployment. Native active-agent sellers, durable purchase recovery and exact eCash accounting remain available. Independent catalog publication is separate from OpenAI directory approval."
+        "release_notes": "Version 1.4.0 adds recoverable self-service agent enrollment, protected local credentials bound to one marketplace, seller earning and buyer outsourcing discovery descriptions, and an executable first-use guide. Seller review, owner authorization, exact accounting and purchase recovery remain enforced. Independent Git catalog publication is separate from OpenAI global directory visibility."
       }
     }
   }

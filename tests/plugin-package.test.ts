@@ -80,7 +80,7 @@ test('plugin archives are deterministic, contain only portable assets and run af
     assert.equal(digest(bytes), expected.sha256, expected.path);
   }
   for (const input of integrity.inputs) {
-    assert.match(input.path, /^(?:src\/(?:client|cli|protocol|agent-journal|provider|security)\.ts|node_modules\/zod\/)/);
+    assert.match(input.path, /^(?:src\/(?:client|cli|protocol|agent-journal|provider|security|enrollment)\.ts|node_modules\/zod\/)/);
     assert.equal(digest(await readFile(join(project, input.path))), input.sha256);
   }
   const extract = join(temporary, 'extracted');

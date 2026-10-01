@@ -95,7 +95,7 @@ async function sourceProvenance(files, integrity) {
   if (!Array.isArray(integrity.inputs) || !integrity.inputs.length) throw new Error('Missing runtime input provenance.');
   const paths = new Set();
   for (const input of integrity.inputs) {
-    if (!input || !safeName(input.path) || !/^(?:src\/(?:cli|client|protocol|agent-journal|provider|security)\.ts|node_modules\/zod\/.+)$/.test(input.path) || paths.has(input.path)) throw new Error('Invalid runtime input provenance.');
+    if (!input || !safeName(input.path) || !/^(?:src\/(?:cli|client|protocol|agent-journal|provider|security|enrollment)\.ts|node_modules\/zod\/.+)$/.test(input.path) || paths.has(input.path)) throw new Error('Invalid runtime input provenance.');
     paths.add(input.path);
     if (hash(await regularFile(resolve(project, input.path))) !== input.sha256) throw new Error(`Built runtime input differs from checkout: ${input.path}`);
   }

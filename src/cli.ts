@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { AmbiguousDecisionError, ZokoApiError, ZokoClient, parseXec, validateIdempotencyKey, type PurchasePolicy, type Quote, type RegisterSellerOfferInput, type UpdateSellerOfferInput } from './client.js';
 import { DecisionInputSchema, type DecisionInput } from './protocol.js';
 import { claimWithJournal, completeWithJournal } from './agent-journal.js';
+import { prepareEnrollment, readAgentCredentials } from './enrollment.js';
 
 const help = `Zoko — typed decisions, exact XEC accounting
 
@@ -15,11 +16,14 @@ Environment:
   ZOKO_API_KEY   Buyer API key; use the operator token for admin commands.
                 Credentials are read from the environment, never CLI arguments.
   ZOKO_JOURNAL_DIR  Private purchase journal directory (default ~/.zoko/purchases)
+  ZOKO_CREDENTIALS_FILE  Protected enrollment file; keeps account keys out of prompts
 
 Commands:
   keygen [--out FILE]                         Generate operator + encryption environment keys
   doctor                                     Inspect public live and ready probes
   discover                                   Read public service and billing metadata
+  enroll --credentials FILE --name NAME       Generate/protect a local key and enroll
+         [--daily-limit XEC] [--max-price XEC] Defaults to zero purchase authority
   catalog | me | history [--limit 1..100]      Read the market or your account
   decision --id ID                           Read one original decision receipt
   deposits [--txid TXID] [--limit 1..100]      Read your verified deposit history
@@ -245,8 +249,21 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     } else process.stdout.write(secret);
     return;
   }
-  const baseUrl = process.env.ZOKO_URL ?? 'http://127.0.0.1:3000';
-  const client = new ZokoClient({ baseUrl, apiKey: process.env.ZOKO_API_KEY || undefined });
+  const saved=process.env.ZOKO_CREDENTIALS_FILE ? await readAgentCredentials(process.env.ZOKO_CREDENTIALS_FILE) : undefined;
+  const baseUrl = process.env.ZOKO_URL ?? saved?.baseUrl ?? 'http://127.0.0.1:3000';
+  if(saved && new ZokoClient({baseUrl}).baseUrl!==saved.baseUrl) throw Error('Credentials belong to a different marketplace; no authenticated request sent');
+  if(command==='enroll') {
+    allowedFlags(flags,['credentials','name','daily-limit','max-price']);positional(words,1);
+    if(!process.env.ZOKO_URL) throw Error('Set the intended ZOKO_URL before enrollment');
+    const input={name:requireFlag(flags,'name'),dailyLimitNanos:parseXec(flags['daily-limit']??'0'),maxPriceNanos:parseXec(flags['max-price']??'0')};
+    const credential=await prepareEnrollment(requireFlag(flags,'credentials'),baseUrl,input);
+    const enrollmentClient=new ZokoClient({baseUrl:credential.baseUrl,apiKey:credential.apiKey});
+    const discovery=await enrollmentClient.discover<{authentication?:{enrollment?:string}}>();
+    if(discovery.authentication?.enrollment!=='/v1/enroll') throw Error('This marketplace does not support self-service enrollment; protected credentials preserved');
+    const result=await enrollmentClient.enroll(credential.enrollment);
+    output({credentialsFile:resolve(requireFlag(flags,'credentials')),result,next:'Set ZOKO_CREDENTIALS_FILE to this protected file and run me; never print the key'});return;
+  }
+  const client = new ZokoClient({ baseUrl, apiKey: process.env.ZOKO_API_KEY || saved?.apiKey });
   if (command === 'doctor') { allowedFlags(flags, []); positional(words, 1); await doctor(client); return; }
   if (command === 'discover' || command === 'catalog' || command === 'me' || command === 'history') {
     allowedFlags(flags, command === 'history' ? ['limit'] : []);

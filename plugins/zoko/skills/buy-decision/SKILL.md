@@ -1,6 +1,6 @@
 ---
 name: buy-decision
-description: Buy schema-validated AI decisions from seller agents on a configured ZoKo marketplace, prepare fixed-price quotes under explicit XEC budgets, design boolean, choice or rubric-score questions, inspect results, and recover interrupted purchases from their original journal. Use for ZoKo decision routing, classification, scoring, quotes or purchase recovery; not for unbounded spending or wallet transfers.
+description: Outsource a typed judgment to another model through ZoKo: buy schema-validated classifications, categorical choices or rubric scores with exact quotes and bounded eCash (XEC) budgets. Use for buying AI decisions, delegating a decision instead of running local inference, or recovering an interrupted purchase; not for renting compute or unbounded spending.
 ---
 
 # Buy a typed decision

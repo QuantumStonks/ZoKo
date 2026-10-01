@@ -247,6 +247,10 @@ export class ZokoClient {
   async catalog<T = unknown>(signal?: AbortSignal): Promise<T> { return (await this.requestWithStatus<T>('GET', '/v1/catalog', undefined, { signal, public: true })).body; }
   /** Public machine-readable protocol, billing rules and marketplace capabilities. */
   async discover<T = unknown>(signal?: AbortSignal): Promise<T> { return (await this.requestWithStatus<T>('GET', '/.well-known/zoko.json', undefined, { signal, public: true })).body; }
+  /** Enroll with a locally generated key; replay the same key and exact input after interruption. */
+  enroll(input: {name:string;dailyLimitNanos:string;maxPriceNanos:string;allowedSellers?:string[]}): Promise<unknown> {
+    return this.request('POST','/v1/enroll',input);
+  }
   async health<T = unknown>(probe: 'live' | 'ready', signal?: AbortSignal): Promise<T> {
     if (!['live', 'ready'].includes(probe)) throw new TypeError('Health probe must be live or ready.');
     return (await this.requestWithStatus<T>('GET', `/health/${probe}`, undefined, { signal, public: true })).body;

@@ -80,6 +80,31 @@ test('public discovery/catalog/probes omit authorization even with a configured 
   assert.equal(paths.length, 3);
 });
 
+test('CLI enrollment preserves the original locally protected key after a lost response and binds it to one origin',async t=>{
+  const f=await fixture(t);let enrolled:string|undefined;let attempts=0;
+  const api=await server(t,call=>{
+    if(call.path==='/.well-known/zoko.json'){assert.equal(call.headers.authorization,undefined);return {body:{authentication:{enrollment:'/v1/enroll'}}};}
+    if(call.path==='/v1/enroll'){
+      const key=call.headers.authorization!;assert.match(key,/^Bearer zoko_[A-Za-z0-9_-]{43}$/);
+      if(enrolled)assert.equal(key,enrolled);enrolled=key;attempts++;
+      assert.deepEqual(call.body,{name:'Independent seller',dailyLimitNanos:'0',maxPriceNanos:'0'});
+      return attempts===1?{status:503,body:{error:{code:'temporary_unavailable',message:'Lost enrollment response'}}}:{body:{account:{id:account},credentialReturned:false}};
+    }
+    if(call.path==='/v1/me'){assert.equal(call.headers.authorization,enrolled);return {body:{account:{id:account},balanceNanos:'0'}};}
+    assert.fail(`Unexpected ${call.path}`);
+  });
+  const credentials=join(f.directory,'agent.json');
+  const args=['enroll','--credentials',credentials,'--name','Independent seller'];
+  const first=await cli(args,api.url);assert.equal(first.code,1);
+  const original=await readFile(credentials,'utf8');
+  const next=await cli(args,api.url);assert.equal(next.code,0,next.stderr);
+  assert.equal(await readFile(credentials,'utf8'),original);assert.equal(attempts,2);
+  const key=JSON.parse(original).apiKey;assert.ok(![first.stdout,first.stderr,next.stdout,next.stderr].some(s=>s.includes(key)));
+  const me=await cli(['me'],api.url,{ZOKO_API_KEY:'',ZOKO_CREDENTIALS_FILE:credentials});assert.equal(me.code,0,me.stderr);
+  const before=api.calls.length;
+  const wrong=await cli(['me'],'https://another-market.example',{ZOKO_API_KEY:'',ZOKO_CREDENTIALS_FILE:credentials});assert.equal(wrong.code,1);assert.match(wrong.stderr,/different marketplace/);assert.equal(api.calls.length,before);
+});
+
 test('transport rejects unsafe API paths and malformed account keys before network access', async () => {
   const client = new ZokoClient({ baseUrl: 'https://zoko.example/market', apiKey: 'private-key', fetch: async () => { assert.fail('Unsafe request dispatched'); } });
   for (const path of ['//another.example', '/\\another.example', '/../other', '/%2e%2e/other', '/v1/me#secret', '/v1/me\r\nInjected: value']) await assert.rejects(client.request('GET', path), /API path/);

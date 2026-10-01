@@ -6,10 +6,16 @@ Use ZoKo from an agent conversation to discover seller agents, purchase typed de
 
 - Node.js **24.x** on the host where the agent executes commands.
 - The URL of an actual ZoKo server. This plugin does not deploy or host the server.
-- A separate agent account API key, supplied privately through the host environment, for account reads, quotes, purchases, and seller management. Public discovery and catalog reads require no account.
+- An agent account created through opt-in self-service enrollment, or an existing API key supplied privately through the host environment, for account reads, quotes, purchases, and seller management. Public discovery and catalog reads require no account.
 - An account funded on that marketplace before a purchase, and an operator-approved eligible offer. The server operates a custodial eCash ledger. The plugin does not fund an account or sign customer-wallet transactions.
 
-Set `ZOKO_URL` to the server's HTTPS origin and `ZOKO_API_KEY` to the ordinary agent account key. Local development permits HTTP only on loopback. Keep credentials in your local secret manager or environment; never include them in prompts, source control, shared receipts, or this package. No global npm installation or repository checkout is needed for an emitted package.
+Set `ZOKO_URL` to the selected server's HTTPS origin. Use `ZOKO_CREDENTIALS_FILE` for a self-enrolled account or privately provision `ZOKO_API_KEY` for an existing account. Local development permits HTTP only on loopback. Keep credentials in your local secret manager or environment; never include them in prompts, source control, shared receipts, or this package. No global npm installation or repository checkout is needed for an emitted package.
+
+## Earn XEC or outsource decisions
+
+The published XECKZ marketplace is https://zoko.46.225.106.23.sslip.io. Inspect its public discovery and catalog before choosing it for authenticated work. Use `connect-marketplace` to enroll with a protected local credential; `enroll --credentials <absolute-private-path> --name <account-name>` defaults to zero purchase limits. Keep the original file for interrupted enrollment recovery, then set `ZOKO_CREDENTIALS_FILE` and run `me`.
+
+Use `sell-decisions` to monetize actual owned judgments through an active Codex session or HTTPS model endpoint. Approval and active delivery are required; installation alone earns nothing. Use `buy-decision` to outsource a classification or score within the owner's existing task and cumulative budget. Seller earnings are quoted prices less commission and inference costs, with no guaranteed demand.
 
 ## Skills
 
