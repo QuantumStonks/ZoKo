@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-30",
+  "updatedAt": "2026-10-01",
   "repository": "QuantumStonks/ZoKo",
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
-  "branch": "codex/offsite-backup-replication",
+  "branch": "codex/s3-backup-activation",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
   "implementation": "1.3.1_live_website_public_release_independent_catalog_and_private_account_verified",
   "distribution": {
@@ -58,6 +58,10 @@
     "marketplaceCustodyReadback": {
       "receipt": ".local/plugin-evidence/marketplace-custody-automation-20260930.json",
       "sha256": "599dd7de0c5bfacbb9f61f4e7e770a41823a56e377e7dca61b87ba120e7324ec"
+    },
+    "storageActivationReadback": {
+      "receipt": ".local/plugin-evidence/storage-activation-automation-20261001.json",
+      "sha256": "b458db037a7e1f9b23a8f82f08903021dbc1e6e2438843992fe5911ccf7f6ecb"
     }
   },
   "evidence": [
@@ -234,20 +238,26 @@
       "result": "Owner-only unshared cloud identity downloaded with matching hash and used for streaming decryption of the actual 11:00 UTC Linux backup. Seven current HTTPS/local/auth probes passed; no new financial action, infrastructure charge or Gridz runtime change. Independent ciphertext storage still requires owner Hetzner login.",
       "receipt": ".local/plugin-evidence/storage-custody-handoff-20260930.json",
       "sha256": "85a3fa86fa778bd0b91a94c5911b234f6a0526d292e506024636391f754f5b89"
+    },
+    {
+      "check": "Actual independent locked S3 storage and scheduled replication",
+      "result": "Private FSN1 bucket, 30-day COMPLIANCE retention, least-privilege separate uploader denied deletion/bypass/admin/outside-prefix writes; full four-file portable recovery and newest of 24 remote database snapshots decrypted with exact hashes; isolated 15-minute timer enabled; 142 unit tests and exact code Linux/Windows/macOS CI passed; no new financial workflow or Gridz restart.",
+      "receipt": ".local/plugin-evidence/storage-activation-completion-20261001.json",
+      "sha256": "b0e16bbf29117a0133f8ff36ffdf5dc42c2a828b67caa5450e9562a4b300ef18"
     }
   ],
   "blockers": [
     "Universal directory only: current official guidelines prohibit digital-service commerce and list execution of crypto transfers as prohibited. ZoKo eligibility remains unresolved; this is policy interpretation, not a provider rejection. Independent public catalog and download are verified.",
     "Universal directory only: XECKZ Inc. is owner-designated. Provider publisher verification and authorized developer legal attestations remain pending. All four public URLs are verified.",
-    "Recovery: independent Google Drive key custody is verified with owner-only permissions, exact download readback and real-backup fresh-process decryption. Independent ciphertext storage provisioning awaits the owner's Hetzner login; replication remains disabled. Offline hardware custody and independent-machine restore are not claimed.",
-    "Customer availability: participating seller agents must remain actively able to claim and deliver. Installation does not create continuously online inference or establish customer adoption."
+    "Customer availability: participating seller agents must remain actively able to claim and deliver. Installation does not create continuously online inference or establish customer adoption.",
+    "Recovery scope: independent host/datacenter ciphertext storage and private different-provider cloud key custody are verified. Both VPS and ciphertext bucket remain under Hetzner account/provider; offline hardware custody and loss-of-all-login-factors recovery are not tested."
   ],
   "nextActions": [
     "Improve successful first use from the published Git catalog. Keep source, catalog, account package and exact archive hashes synchronized; validate anonymous remote install for each release.",
     "Controlled acceptance is complete with verified post-settlement recovery copies and daily maintenance. Preserve 102.81 XEC buyer funds, original journals and paused seller/purchase locks; no new financial workflow is authorized.",
     "Reassess universal-directory eligibility against authoritative new evidence. Do not send the declined support inquiry; company verification and submission attestations apply to that separate route.",
     "Measure successful first use and retention when authoritative data exists; repository traffic and downloads remain acquisition proxies.",
-    "Owner signs in to the retained Hetzner Brave tab; verify billing, provision private versioned locked ciphertext storage and restricted uploader, upload full recovery bundle, verify remote bytes, then enable isolated replication timer. ZoKo operates the marketplace only; operator continuous inference time, usage and spending remain zero."
+    "Daily check hourly producer, off-site timer, newest remote receipt/retention and fresh-process decryption; preserve original journals. Refresh remote full portable bundle after independently authorized financial/configuration/key changes. Monitor usage; do not weaken policies or replay acceptance."
   ],
   "policyEvidence": {
     "clarificationDraft": "docs/plugin-policy-review.md",
@@ -508,11 +518,9 @@
         "checkedAt": "2026-09-30T02:35:13.551Z"
       }
     },
-    "pendingUserInputs": [
-      "Sign in to the retained Hetzner Brave tab to provision independently hosted ciphertext storage under the existing hosting budget."
-    ],
+    "pendingUserInputs": [],
     "preferredMonthlyCap": 30,
-    "costScope": "Existing VPS; owner-reported EUR price. No new server, resize or paid infrastructure upgrade created. Prior Render USD estimate is historical only.",
+    "costScope": "Verified existing shared VPS/IPv4 plus new private Object Storage; no server resize or Render resources. Before storage/traffic overages.",
     "deploymentCandidateCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
     "deploymentCandidateCi": {
       "runs": [
@@ -532,7 +540,7 @@
       "encryptedOffHostCopy": "verified_decrypted_hash_readback",
       "matchingInstalledHash": true,
       "uploadedRedundantSecretRemoved": true,
-      "recoveryLimitation": "cloud_key_custody_verified_offline_hardware_and_independent_machine_restore_not_tested_ciphertext_storage_awaits_Hetzner_login",
+      "recoveryLimitation": "same_Hetzner_account_provider_for_VPS_and_ciphertext_storage_offline_hardware_and_loss_of_login_factors_restore_not_tested",
       "noCodexAuthenticationTransferred": true
     },
     "renderPreparation": {
@@ -611,16 +619,22 @@
         "receipt": ".local/plugin-evidence/hetzner-timeout-receipt.json",
         "sha256": "b2f81c38bbe0bc8072da85793c992fadd18a24d3687e1e23007c480bf74ae83a"
       },
-      "lastCheckedAt": "2026-09-30T00:55:15.377785+00:00"
+      "lastCheckedAt": "2026-09-30T02:55:15.377785+02:00"
     },
     "cost": {
       "existingVpsOwnerReportedEurMonthly": "19.95",
-      "providerBillingReadback": false,
+      "providerBillingReadback": true,
       "newVps": false,
       "resized": false,
       "additionalRenderResources": false,
-      "newPaidInfrastructure": false,
-      "inference": "each participating active Codex instance consumes its own allowance"
+      "newPaidInfrastructure": true,
+      "inference": "marketplace_operator_zero_independent_agents_own_their_inference",
+      "existingVpsEurMonthlyIncludingVat": "19.35",
+      "ipv4EurMonthlyIncludingVat": "0.61",
+      "objectStorageEurMonthlyIncludingVat": "7.85",
+      "totalEurMonthlyIncludingVat": "27.81",
+      "usdEquivalentAt20260930EcbRate": "31.58",
+      "beforeUsageOverages": true
     },
     "recovery": {
       "status": "isolated_network_none_database_restore_passed_without_wallet_signer",
@@ -634,26 +648,27 @@
       "noSecondSigner": true,
       "latestBackup": {
         "receipt": ".local/plugin-evidence/hetzner-backup-latest.json",
-        "sha256": "77ce7edfcd1e033b6df80deb474e6eea0ac4f87071dfb5a21eadc42719f559da",
-        "dumpSha256": "d42b18ca788021a1e1c6139f15b336cfb11f4ae10e80ae52ac84695c17636b1a",
+        "sha256": "b1bad8278cffc24ba7169a63edf3b4b0b65f4264553b48b09c26e39f5fa2497c",
+        "dumpSha256": "82c345f94655054becb7e4b5b4f7c76671c216982f034eb0880977148c25a5d1",
         "encryptedReadbackVerified": true,
-        "checkedAt": "2026-09-30T04:22:44.437358+02:00",
+        "checkedAt": "2026-10-01T07:37:49.38056+02:00",
         "postSettlement": true
       },
-      "automation": "hourly_VPS_encrypted_database_backup_30_day_retention_and_local_offhost_snapshot_after_financial_changes",
+      "automation": "hourly_encrypted_database_production_every_15_minutes_remote_replication_30_day_COMPLIANCE_lock",
       "independentPortableRecovery": true,
       "externalAlwaysOnBackupScheduler": false,
       "portableRecovery": {
         "receipt": ".local/plugin-evidence/hetzner-portable-recovery.json",
-        "sha256": "a2e7b357ceba04414a5b742c4d72c80320b7ff426b2b7bf437c5966a99c05bbb",
+        "sha256": "dd29e9905ec25cf88889afc2674c95442ff0dbf600b4bb78c38d282f4a1b9c8a",
         "format": "age-encryption.org/v1",
         "recipientType": "X25519 + ML-KEM-768",
         "requiresWindowsDPAPI": false,
         "privateIdentityOnServer": false,
-        "offlineIdentityCustody": "owner_export_pending",
-        "createdAt": "2026-09-30T02:22:56.1131234Z",
+        "offlineIdentityCustody": "not_implemented_no_hardware_available",
+        "createdAt": "2026-10-01T05:38:31.2769028Z",
         "postSettlement": true,
-        "dumpSha256": "d42b18ca788021a1e1c6139f15b336cfb11f4ae10e80ae52ac84695c17636b1a"
+        "dumpSha256": "82c345f94655054becb7e4b5b4f7c76671c216982f034eb0880977148c25a5d1",
+        "cloudIdentityCustody": "verified_owner_only_Google_Drive"
       },
       "crossPlatformVerification": {
         "receipt": ".local/plugin-evidence/maintenance-20260930-0900/hetzner-cross-platform-recovery.json",
@@ -672,13 +687,13 @@
         "timer": "zoko-encrypted-backup.timer",
         "cadence": "hourly",
         "retentionDays": 30,
-        "independentOffsiteScheduler": false,
+        "independentOffsiteScheduler": true,
         "lastObserved": {
-          "checkedAt": "2026-09-30T07:17:07.679Z",
+          "checkedAt": "2026-10-01T08:11:10.281609+02:00",
           "timerActive": true,
           "serviceResult": "success",
           "execMainStatus": 0,
-          "latestCompletedAt": "2026-09-30T09:00:25.512609+02:00"
+          "latestCompletedAt": "2026-10-01T08:00:07.829776+02:00"
         }
       },
       "sshCompatibility": {
@@ -696,7 +711,8 @@
         "plaintextWrittenToDisk": false,
         "byteLimit": 50000000,
         "decryptionTimeoutMs": 60000
-      }
+      },
+      "laptopIndependentRemoteReplication": true
     },
     "liveVerification": {
       "receipt": ".local/plugin-evidence/hetzner-live-verification.json",
@@ -713,20 +729,12 @@
       "paidDecision": true,
       "withdrawal": "settled_and_reconciled",
       "terminalReadiness": {
-        "receipt": ".local/plugin-evidence/maintenance-20260930-0900/hetzner-terminal-readiness.json",
-        "sha256": "4c26dd97bdf0b5af2ae03f289b7cece8f36b38c98f3d07ff13e4df793d6e977f",
-        "checkedAt": "2026-09-30T07:02:19.217706+00:00",
-        "vantage": "VPS public HTTPS via delegated SSH",
-        "health": true,
-        "paymentsReady": true,
-        "privateAuthStatus": 401,
-        "adminAuthStatus": 401,
-        "gridzRoutesStatus": 200,
-        "desktopTransport": "VPS public HTTPS observation; no desktop transport failure on this cycle"
+        "receipt": ".local/plugin-evidence/hetzner-terminal-readiness.json",
+        "sha256": "dd20082263d9e5fc9408ad1f88d9f7c23a359485431a57d8cef9de9071868465"
       }
     }
   },
-  "lastOperationAt": "2026-09-30T12:05:03.405Z",
+  "lastOperationAt": "2026-10-01T08:14:16.179275+02:00",
   "deployedSourceCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
   "publicWebsite": {
     "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
@@ -778,6 +786,76 @@
     "deploymentReceiptSha256": "f5abe5b0f1a7e061972872e149513b3fad1fc8eb2a5d3f118516506ef5c3fd5e"
   },
   "maintenance": {
+    "workItem": "independent_storage_activation_and_real_S3_absence_fix",
+    "status": "deployed_active_remote_verified",
+    "testedCommit": "35eefc3907c31fa9768c80d2d1a53e7a3a6a2658",
+    "pullRequestUrl": "https://github.com/QuantumStonks/ZoKo/pull/8",
+    "unitTests": 142,
+    "postgresIntegrationTests": 85,
+    "remoteCi": "Linux_Windows_macOS_all_passed_tested_code_head",
+    "currentHandoff": {
+      "receipt": ".local/plugin-evidence/storage-activation-completion-20261001.json",
+      "sha256": "b0e16bbf29117a0133f8ff36ffdf5dc42c2a828b67caa5450e9562a4b300ef18"
+    }
+  },
+  "offsiteReplication": {
+    "status": "active_private_Falkenstein_remote_readback_and_decryption_verified",
+    "workItem": "ciphertext_only_immutable_replication_with_remote_readback",
+    "branch": "codex/s3-backup-activation",
+    "unitTests": 142,
+    "localRcloneRehearsal": "passed_real_upload_repeat_readback_and_age_decryption_not_independent_storage",
+    "receipt": ".local/plugin-evidence/storage-activation-completion-20261001.json",
+    "identityUploaded": false,
+    "plaintextUploaded": false,
+    "activated": true,
+    "ownerIndependentKeyCustody": "verified_private_cloud_copy_exact_download_and_real_backup_decryption",
+    "nextAction": "Daily check hourly producer, off-site timer, newest remote receipt/retention and fresh-process decryption; preserve original journals. Refresh remote full portable bundle after independently authorized financial/configuration/key changes. Monitor usage; do not weaken policies or replay acceptance.",
+    "testedCommit": "35eefc3907c31fa9768c80d2d1a53e7a3a6a2658",
+    "sha256": "b0e16bbf29117a0133f8ff36ffdf5dc42c2a828b67caa5450e9562a4b300ef18",
+    "installedFiles": {
+      "/opt/zoko/backup-tools/replicate-encrypted-backups.mjs": "7f31fb26c0dba9c798ab7055fec25f2277fe23f9731e5c695e15f590d8ac3ad8",
+      "/opt/zoko/backup-tools/verify-encrypted-backup.mjs": "30d2ca81c9d9c73ddabb5b537371ae3987c13231feee02226f0a706afd13c44b",
+      "/etc/systemd/system/zoko-offsite-backup.service": "cd771c4793842e28a630a23bb0a93029d41e03d7a233f6b769f9b3050c2e3550",
+      "/etc/systemd/system/zoko-offsite-backup.timer": "94c836397aa2f8ab1f79a2356fd75a9c854998b4bfc7e3f4e3fcf0ffe11bdfe7",
+      "/opt/zoko/encrypted-backup.sh": "cbe7cdbc5200d89b9cbca3c7a98d3b1edcd58e98eae7d08dbaa789958b7fe66a"
+    },
+    "remoteCi": "Linux_Windows_macOS_all_passed_tested_code_head",
+    "postgresIntegrationTests": 85,
+    "isolatedLinuxReadback": "passed_real_rclone_local_backend_not_independent_storage",
+    "timer": "enabled_active_every_15_minutes",
+    "storage": {
+      "provider": "Hetzner",
+      "location": "Falkenstein FSN1",
+      "bucket": "zoko-recovery-20261001-a13f82",
+      "endpoint": "https://fsn1.your-objectstorage.com",
+      "private": true,
+      "versioning": "Enabled",
+      "objectLockMode": "COMPLIANCE",
+      "retentionDays": 30,
+      "deletionProtection": true,
+      "automaticDeletion": false,
+      "sameProviderAndAccountAsVps": true,
+      "configuration": {
+        "receipt": ".local/plugin-evidence/hetzner-independent-storage-configuration.json",
+        "sha256": "17be494f92f562512acabecb5c5ed9be3f17d62bceb762a475a2daafac18aa43"
+      }
+    },
+    "liveStatus": {
+      "receipt": ".local/plugin-evidence/hetzner-live-replication-status.json",
+      "sha256": "0003736ad6bd88975a4df416ecb89e4449158d9ae8553818ef5d266580759e26"
+    },
+    "remoteRecoveryVerification": {
+      "receipt": ".local/plugin-evidence/hetzner-live-storage-recovery-verification.json",
+      "sha256": "0628f3e340a18b9972be94a731dcf560ddc0f04444c0abd04baf8e2d685ed772"
+    },
+    "fullPortableBundle": {
+      "receipt": ".local/plugin-evidence/hetzner-recovery-storage-readback.json",
+      "sha256": "4f0943c01443a1be5d222a85f9931753426dbc66055234c52d0f794c5ce1df7c"
+    },
+    "verifiedSnapshotCount": 24
+  },
+  "directoryPolicyCheckedAt": "2026-09-30T08:18:53.301Z",
+  "previousMaintenance": {
     "workItem": "independent_storage_and_separate_cloud_key_custody",
     "status": "cloud_key_custody_complete_independent_storage_waiting_owner_login",
     "receipt": ".local/plugin-evidence/offsite-maintenance-20260930/completion.json",
@@ -792,48 +870,6 @@
       "receipt": ".local/plugin-evidence/storage-custody-handoff-20260930.json",
       "sha256": "85a3fa86fa778bd0b91a94c5911b234f6a0526d292e506024636391f754f5b89"
     }
-  },
-  "offsiteReplication": {
-    "status": "merged_service_installed_disabled_storage_provisioning_awaits_Hetzner_login_key_cloud_custody_verified",
-    "workItem": "ciphertext_only_immutable_replication_with_remote_readback",
-    "branch": "codex/offsite-backup-replication",
-    "unitTests": 140,
-    "localRcloneRehearsal": "passed_real_upload_repeat_readback_and_age_decryption_not_independent_storage",
-    "receipt": ".local/plugin-evidence/offsite-maintenance-20260930/completion.json",
-    "identityUploaded": false,
-    "plaintextUploaded": false,
-    "activated": false,
-    "ownerIndependentKeyCustody": "verified_private_cloud_copy_exact_download_and_real_backup_decryption",
-    "nextAction": "Owner signs in to the retained Hetzner Brave tab; verify billing, provision private versioned locked ciphertext storage and restricted uploader, upload full recovery bundle, verify remote bytes, then enable isolated replication timer.",
-    "testedCommit": "31b44c20df1a0cb25eff19eed1f0c02af46934a6",
-    "mergeCommit": "15a8d70963512e23fb0cad2acc91f55e6970f236",
-    "sha256": "263f4c95e543810dacb67ffa80a47e203333bfce6d4d7035a21e1dd50c89d827",
-    "installedFiles": {
-      "/opt/zoko/backup-tools/replicate-encrypted-backups.mjs": "ce3d54b13052cd659f3e1ec4bde33a0e675127dcebdaa41458ca6a03215423da",
-      "/opt/zoko/backup-tools/verify-encrypted-backup.mjs": "30d2ca81c9d9c73ddabb5b537371ae3987c13231feee02226f0a706afd13c44b",
-      "/etc/systemd/system/zoko-offsite-backup.service": "cd771c4793842e28a630a23bb0a93029d41e03d7a233f6b769f9b3050c2e3550",
-      "/etc/systemd/system/zoko-offsite-backup.timer": "94c836397aa2f8ab1f79a2356fd75a9c854998b4bfc7e3f4e3fcf0ffe11bdfe7",
-      "/opt/zoko/encrypted-backup.sh": "cbe7cdbc5200d89b9cbca3c7a98d3b1edcd58e98eae7d08dbaa789958b7fe66a"
-    },
-    "remoteCi": "Linux_Windows_macOS_all_passed",
-    "postgresIntegrationTests": 85,
-    "isolatedLinuxReadback": "passed_real_rclone_local_backend_not_independent_storage",
-    "timer": "disabled"
-  },
-  "directoryPolicyCheckedAt": "2026-09-30T08:18:53.301Z",
-  "previousMaintenance": {
-    "workItem": "repeatable_bounded_streaming_offhost_backup_verification",
-    "status": "merged_operational_backup_verifier_in_use",
-    "receipt": ".local/plugin-evidence/maintenance-20260930-0900/completion.json",
-    "sha256": "6b6264d6a62ec87b88d5b59231a98a7e1d3c32e0de8c3de443f1fa4822a6d30f",
-    "scriptSha256": "30d2ca81c9d9c73ddabb5b537371ae3987c13231feee02226f0a706afd13c44b",
-    "checkedAt": "2026-09-30T07:17:07.679Z",
-    "testedCommit": "63bf7fa71069c4d354fbe6a23de5c5e41b38bf7d",
-    "mergeCommit": "c78f52769060c9dc65229c724f86b50f163ff28b",
-    "pullRequestUrl": "https://github.com/QuantumStonks/ZoKo/pull/6",
-    "remoteCi": "all_Linux_Windows_macOS_checks_passed",
-    "unitTests": 133,
-    "postgresIntegrationTests": 85
   },
   "operatorInference": {
     "contract": "marketplace_only_independent_agent_owned_sellers",

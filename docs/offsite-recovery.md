@@ -1,24 +1,46 @@
 # Independent recovery and encrypted replication
 
-ZoKo's hourly age-encrypted database snapshots are working. A separate replicator
-is implemented, but **not configured or enabled** until independently hosted storage
-and its restricted credentials are provisioned. The owner authorized implementing
-both storage and separate recovery-key custody on 30 September 2026 within the
-standing hosting budget. Provisioning currently awaits the owner's Hetzner login,
-not a new approval of the backup work. A local backend rehearsal
-does not establish off-site protection. The portable configuration/account-key
-bundle must also be copied to the independent destination; hourly database copies
-alone cannot recover the wallet configuration after total server loss.
+ZoKo produces hourly age-encrypted database snapshots. The owner authorized a
+private Falkenstein Hetzner Object Storage bucket, 30-day COMPLIANCE Object Lock,
+separate local administrator credentials and a restricted VPS uploader on
+1 October 2026. The uploaded full portable database, service configuration and
+account-key bundle passed exact remote readback and fresh-process decryption.
+The independent key copy remains in the owner's private Google Drive account.
+The isolated replication timer is enabled every 15 minutes. All 24 initial
+hourly snapshots passed remote readback, and the newest remote snapshot passed
+fresh-process decryption. Exact activation, installed hashes, Object Lock and
+timer receipts are recorded in `ops/plugin-state.json`.
 
 ## Destination and access
 
 Use an independently hosted private object-storage bucket with versioning and
 provider-enforced retention/Object Lock where supported. Restrict the dedicated
-backup credential to reading, listing and creating objects in one ZoKo prefix;
+backup credential to reading and creating objects in the approved ZoKo prefixes;
 deny deletion and retention bypass. Configure provider lifecycle expiry separately
 under the owner's retention and storage budget. The program never calls sync,
 delete, purge, move or overwrite. Rclone's `--immutable` is a client-side safeguard,
 not protection against a compromised uploader credential or provider deletion.
+
+The deployed bucket uses a dedicated project. Its uploader key belongs to a
+different empty project and can list only the dedicated ZoKo bucket; object
+read/write grants cover `zoko/database/*` and `zoko/recovery/*`. Listing the bucket
+also permits S3 to distinguish missing objects from access-denied responses.
+The local administrator has an explicit recovery-read grant for uploader-owned
+objects. Actual denial checks cover deletion, retention bypass, bucket policy
+access and writes outside the approved prefixes. The bucket is private,
+versioned and protected against bucket deletion. Default retention and each
+tested object's COMPLIANCE mode/retain-until timestamp were read back through S3.
+No lifecycle deletion has been configured; locked objects are retained for at
+least 30 days, not automatically erased on day 30. The full configuration bundle
+must be refreshed after independently authorized service/account key changes.
+
+Falkenstein storage is separate from the Nuremberg VPS and does not depend on
+the laptop being online. Both resources remain under one Hetzner provider/account;
+this is not protection against losing that entire provider account. The key copy
+uses a different provider. The verified account's Object Storage base maximum is
+EUR 7.85/month including VAT; shared VPS plus IPv4 and storage total EUR 27.81/month
+before excess storage/traffic. At the 30 September ECB rate this is about USD 31.58,
+within the owner's USD 50 fallback ceiling. Monitor actual usage and exchange rates.
 
 Install a verified rclone release as `/usr/local/bin/zoko-rclone`, owned by root
 and mode 0755. Use a separate static storage credential in
@@ -100,6 +122,13 @@ remains retryable under the same object name. Receipts are preserved, and the ne
 snapshot is read back again on every wakeup. Each cycle also drains up to 23 older
 unverified snapshots from the retained backlog. Older receipts prove their recorded
 readback time only; they do not prove perpetual provider retention.
+
+Some object-store backends return a successful empty stream from `cat` for a
+missing object. Before uploading in that case, the replicator independently checks
+`lsjson --stat --files-only`: only a null result or an explicit missing-file error
+counts as absence. An existing zero-byte object, malformed stat or permission
+failure stops without upload. COMPLIANCE retention protects existing versions;
+the uploader cannot shorten retention or delete them.
 
 The script's exclusive `replication.lock` prevents competing jobs. If a process is
 forcibly killed, inspect the service state and lock's PID/time before removing that
