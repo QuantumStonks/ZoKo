@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-01T23:22:17.812Z",
+  "updatedAt": "2026-10-01T23:46:03.389Z",
   "repository": "QuantumStonks/ZoKo",
   "sourceBase": "0b66982c6699248a49fef0445f7e5f41b1d64dba",
   "branch": "codex/agent-onboarding",
   "objective": "Make ZoKo useful and discoverable as a Codex plugin; improve reliability, successful adoption, and retention through measured maintenance.",
-  "implementation": "1.3.1_live_website_public_release_independent_catalog_and_private_account_verified",
+  "implementation": "1.4.0_live_self_service_enrollment_public_catalog_release_private_account_and_anonymous_install_verified",
   "distribution": {
-    "package": "built_1.3.1_isolated_archive_tests_passed",
+    "package": "built_1.4.0_isolated_archive_tests_passed",
     "personalMarketplace": "registered_source_verified_installation_not_confirmed",
-    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.3.1",
+    "privateAccountPlugin": "updated_and_read_back_PRIVATE_USER_1.4.0",
     "publicDirectory": "not_submitted_apparent_commerce_policy_conflict",
     "publicDistributionAuthorization": "user_authorized_2026-09-29_keep_all_rights_reserved",
-    "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.3.1",
-    "publicRelease": "published_GitHub_release_provider_digest_and_anonymous_archive_bytes_verified_1.3.1"
+    "independentMarketplace": "published_public_Git_catalog_anonymous_Codex_discovery_install_and_skills_verified_1.4.0",
+    "publicRelease": "published_GitHub_release_provider_digest_and_anonymous_archive_bytes_verified_1.4.0"
   },
   "publisher": {
     "displayName": "ZoKo",
@@ -25,15 +25,15 @@
     "licensePermission": "Official unmodified plugin releases may be downloaded, installed and executed for authorized work; proprietary ownership and other rights remain reserved."
   },
   "package": {
-    "version": "1.3.1",
-    "archive": "dist/plugins/zoko-1.3.1.zip",
-    "sha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640",
-    "files": 22,
-    "bytes": 1383768
+    "version": "1.4.0",
+    "archive": "dist/plugins/zoko-1.4.0.zip",
+    "sha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0",
+    "files": 23,
+    "bytes": 1387597
   },
   "accountPlugin": {
     "pluginId": "plugins_6abc19b188e8819185ecd292ad424e42",
-    "releaseId": "pluginrel_6abc512b4ed48191b2417f9e881e4150",
+    "releaseId": "pluginrel_6abeed453d20819185f0a1c3fa5a44dc",
     "url": "https://chatgpt.com/plugins/plugins_6abc19b188e8819185ecd292ad424e42",
     "scope": "USER",
     "discoverability": "PRIVATE"
@@ -268,7 +268,7 @@
     "scope": "Universal ChatGPT and Codex directory",
     "inquiryAuthorization": "user_declined_sending_2026-09-29"
   },
-  "testedImplementationCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
+  "testedImplementationCommit": "4a1da27d1192110922e30f6da795fd280dea6ad0",
   "pullRequest": {
     "headRefOid": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
     "mergeCommit": {
@@ -283,16 +283,13 @@
   },
   "remoteCI": {
     "status": "completed_success",
-    "implementationCommit": "bbaf7ef88dcc1ba71840dd43936dfded6d8156fb",
-    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36649697932",
+    "implementationCommit": "4a1da27d1192110922e30f6da795fd280dea6ad0",
+    "pullRequestRun": "https://github.com/QuantumStonks/ZoKo/actions/runs/36941000915",
     "jobs": [
       "verify: success",
       "plugin-portability (macos-latest): success",
       "plugin-portability (windows-latest): success"
-    ],
-    "receipt": ".local/plugin-evidence/source-merge-1.3.1.json",
-    "receiptSha256": "20fdec1ada5e998292a4013575c19eb41e6d639bf8bb87b987afe74c72ba0776",
-    "releasePackageSourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd"
+    ]
   },
   "discoveryEvidence": {
     "checkedAt": "2026-09-29",
@@ -309,39 +306,39 @@
     "registryStableCli": "0.159.0"
   },
   "independentMarketplace": {
-    "observedAt": "2026-09-30T00:03:39.681Z",
+    "observedAt": "2026-10-01T23:37:04.964Z",
     "repository": "QuantumStonks/ZoKo",
     "branch": "codex/zoko-marketplace",
-    "commit": "2b63b4f6da096954d4879810d3094b32806d1f2f",
-    "parentCommit": "63c121fadb8c9ea4a4dd2ac88aceebd42d6dbd13",
-    "sourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
-    "version": "1.3.1",
+    "commit": "c771852adb17585ce381e342a5a0b5dcba5873d4",
+    "parentCommit": "2b63b4f6da096954d4879810d3094b32806d1f2f",
+    "sourceCommit": "4a1da27d1192110922e30f6da795fd280dea6ad0",
+    "version": "1.4.0",
     "archive": {
-      "name": "zoko-1.3.1.zip",
-      "bytes": 1383768,
-      "sha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640"
+      "name": "zoko-1.4.0.zip",
+      "bytes": 1387597,
+      "sha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0"
     },
-    "provenanceSha256": "9610db8670e46af22adbf9226c261395555e493c6e0bf12a10d8bb508b1d2129",
-    "files": 25,
+    "provenanceSha256": "f3d60e3b3d7ee112282913a39bdfed626934e663bbb4cbaa2ca20660aea6275e",
+    "files": 26,
     "remoteRefVerified": true,
     "url": "https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace",
     "scope": "public independent Git catalog; no universal-directory publication or live paid workflow",
     "publicationReceipt": {
-      "receipt": ".local/plugin-evidence/public-marketplace-1.3.1.json",
-      "sha256": "8c7f93e9ff1e8062e4fe1dc7d15b5713d49dbb617c3fcfa0f11548c7532a0c0f"
+      "receipt": ".local/plugin-evidence/public-marketplace-1.4.0.json",
+      "sha256": "6fb6015ecd9e531c275a5ea79e509b406843766bab69ee2e075f40330a24517b"
     },
     "installationReceipt": {
-      "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.3.1.json",
-      "sha256": "7f4bfc5fece0cd1ff225e71ac847d59692651fabb68b8d0ecd895af47aa5f14b"
+      "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.4.0.json",
+      "sha256": "0a503306fbe47ddc382faa7430414c1e92076f779fdb6da0f6d8d7f938985e4b"
     },
     "anonymous": true,
-    "installedFiles": 22,
+    "installedFiles": 23,
     "enabledSkills": 3,
     "universalDirectory": false
   },
   "hostedMarketplace": {
     "requestedAt": "2026-09-29",
-    "status": "live_controlled_mainnet_acceptance_complete",
+    "status": "live_1.4.0_public_enrollment_historical_acceptance_complete",
     "hostingReview": {
       "observedAt": "2026-09-30",
       "trigger": "Owner asked to wait and compare a 20-30 EUR Hetzner VPS before usage",
@@ -392,7 +389,7 @@
       "zoko-database-1",
       "zoko_postgres_data"
     ],
-    "deployedCommit": "a526a73a47873050c4a4843ff90bd721c4329afa",
+    "deployedCommit": "4a1da27d1192110922e30f6da795fd280dea6ad0",
     "node": {
       "active": "24.14.0",
       "installedWindowsRuntime": "24.14.1",
@@ -575,7 +572,7 @@
       "status": "historical_preparation_only_no_ZoKo_resources_created"
     },
     "provider": "Hetzner",
-    "apiImageId": "sha256:eb6ddc6356b38ea956cba34adb884b0951fad6a82a4046f345e7cf12df4c47cc",
+    "apiImageId": "sha256:eb705b7efdcac400806a1e879bb14791e724893c6f5a2fe92d22a1aabe41d269",
     "databaseImageId": "sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652",
     "baseImages": {
       "node:24-bookworm-slim": "node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6",
@@ -790,18 +787,15 @@
     "deploymentReceiptSha256": "f5abe5b0f1a7e061972872e149513b3fad1fc8eb2a5d3f118516506ef5c3fd5e"
   },
   "maintenance": {
-    "workItem": "independent_storage_activation_and_real_S3_absence_fix",
-    "status": "deployed_active_remote_verified",
-    "testedCommit": "35eefc3907c31fa9768c80d2d1a53e7a3a6a2658",
-    "pullRequestUrl": "https://github.com/QuantumStonks/ZoKo/pull/8",
-    "unitTests": 142,
-    "postgresIntegrationTests": 85,
+    "workItem": "first_buyer_independent_supply_and_relevant_discovery",
+    "status": "published_waiting_owner_funding_and_independent_sellers",
+    "testedCommit": "4a1da27d1192110922e30f6da795fd280dea6ad0",
+    "pullRequestUrl": "https://github.com/QuantumStonks/ZoKo/pull/9",
+    "unitTests": 145,
+    "postgresIntegrationTests": 86,
     "remoteCi": "Linux_Windows_macOS_all_passed_tested_code_head",
-    "currentHandoff": {
-      "receipt": ".local/plugin-evidence/storage-activation-completion-20261001.json",
-      "sha256": "b0e16bbf29117a0133f8ff36ffdf5dc42c2a828b67caa5450e9562a4b300ef18"
-    },
-    "mergeCommit": "f8ee4802e728c803895d0ea082fd3803876f226e",
+    "currentHandoff": ".local/plugin-evidence/growth-release-completion.json",
+    "mergeCommit": "525b858e9012b39bcc2ac49ac1630ef729c19592",
     "finalReviewHead": "b4c02da0773e602ec2b5bc901a040e2301fa05aa"
   },
   "offsiteReplication": {
@@ -914,16 +908,139 @@
     "nextAction": "Continue daily health, freshest remote backup retention/readback/decryption and resource checks. Preserve originals; no repeated financial test or operator inference. Full portable bundle refresh only after separately authorized changes."
   },
   "currentWork": {
-    "status": "implementing_self_service_enrollment_and_discovery_1.4.0",
+    "status": "first_buyer_waiting_owner_wallet_send_and_independent_supply",
     "buyerCampaign": {
       "authority": "user_selected_wallet_funds_and_agent_selected_budget_20261002",
-      "cumulativeCapXec": "1000",
-      "maximumDecisionXec": "10",
-      "operatorContinuousSellerSpendingXec": "0",
-      "funding": "wallet_UI_verified_marketplace_deposit_not_yet_created",
-      "purchases": "none",
-      "supply": "independent_sellers_required"
+      "cumulativeCapNanos": "1000000000000",
+      "maximumDecisionNanos": "10000000000",
+      "initialDepositNanos": "100000000000",
+      "depositAddress": "ecash:qrr308k7czkfn27kkgqc27jhcjcgqfvpv5xsvp54at",
+      "accountId": "cb1f0cd3-8c68-4ebe-88c7-9111f0e86f70",
+      "fundingWallet": "ecash:qpmd6yc5wqs0cahgegqn6a4zx5ejp3afe5samqv8gg",
+      "walletDisplayXec": "419212.58",
+      "walletAddressIndexerUtxos": "zero_on_two_indexers_not_wallet_aggregate_verification",
+      "spentNanos": "0",
+      "reservedNanos": "0",
+      "walletFeeNanos": null,
+      "marketplaceCreditedNanos": "0",
+      "expiresAt": "2026-10-09T21:59:59Z",
+      "funding": "100_XEC_prepared_in_Cashtab_owner_final_send_required",
+      "credentialFile": "C:/Users/admin/.codex/secrets/zoko-recovery/first-buyer-20261002.json",
+      "credentialOffsiteEncrypted": true,
+      "purchases": [],
+      "independentEligibleSellers": 0,
+      "taskScope": "Evaluate public ZoKo onboarding and skill routing with typed judgments; independent approved sellers only, no self-trades, no private customer payloads",
+      "operatorContinuousSellerSpendingNanos": "0"
     },
-    "next": "Validate emitted onboarding on Windows/Linux/macOS and PostgreSQL; publish exact catalog and live first-use surfaces; create separate authorized buyer account only after tested deployment."
+    "next": "Owner completes staged 100 XEC transfer; record exact txid and wallet fee once. Verify original deposit after six confirmations and finality. Observe actual independent offers and review ownership/authorization before a bounded useful purchase. Preserve prior acceptance locks. No unsolicited outreach."
+  },
+  "releaseHistory": [
+    {
+      "version": "1.3.1",
+      "package": {
+        "version": "1.3.1",
+        "archive": "dist/plugins/zoko-1.3.1.zip",
+        "sha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640",
+        "files": 22,
+        "bytes": 1383768
+      },
+      "accountPlugin": {
+        "pluginId": "plugins_6abc19b188e8819185ecd292ad424e42",
+        "releaseId": "pluginrel_6abc512b4ed48191b2417f9e881e4150",
+        "url": "https://chatgpt.com/plugins/plugins_6abc19b188e8819185ecd292ad424e42",
+        "scope": "USER",
+        "discoverability": "PRIVATE"
+      },
+      "independentMarketplace": {
+        "observedAt": "2026-09-30T00:03:39.681Z",
+        "repository": "QuantumStonks/ZoKo",
+        "branch": "codex/zoko-marketplace",
+        "commit": "2b63b4f6da096954d4879810d3094b32806d1f2f",
+        "parentCommit": "63c121fadb8c9ea4a4dd2ac88aceebd42d6dbd13",
+        "sourceCommit": "d5f4aaceed857bf1a656633c54a6bd4cf6c747dd",
+        "version": "1.3.1",
+        "archive": {
+          "name": "zoko-1.3.1.zip",
+          "bytes": 1383768,
+          "sha256": "f2bd767fe294c83c82a25f4b760eae5a4b1b532372e62971fd5ced8e4294d640"
+        },
+        "provenanceSha256": "9610db8670e46af22adbf9226c261395555e493c6e0bf12a10d8bb508b1d2129",
+        "files": 25,
+        "remoteRefVerified": true,
+        "url": "https://github.com/QuantumStonks/ZoKo/tree/codex/zoko-marketplace",
+        "scope": "public independent Git catalog; no universal-directory publication or live paid workflow",
+        "publicationReceipt": {
+          "receipt": ".local/plugin-evidence/public-marketplace-1.3.1.json",
+          "sha256": "8c7f93e9ff1e8062e4fe1dc7d15b5713d49dbb617c3fcfa0f11548c7532a0c0f"
+        },
+        "installationReceipt": {
+          "receipt": ".local/plugin-evidence/remote-codex-marketplace-1.3.1.json",
+          "sha256": "7f4bfc5fece0cd1ff225e71ac847d59692651fabb68b8d0ecd895af47aa5f14b"
+        },
+        "anonymous": true,
+        "installedFiles": 22,
+        "enabledSkills": 3,
+        "universalDirectory": false
+      }
+    }
+  ],
+  "currentRelease": {
+    "version": "1.4.0",
+    "sourceCommit": "4a1da27d1192110922e30f6da795fd280dea6ad0",
+    "mainMergeCommit": "525b858e9012b39bcc2ac49ac1630ef729c19592",
+    "pullRequest": "https://github.com/QuantumStonks/ZoKo/pull/9",
+    "unitTests": 145,
+    "postgresIntegrationTests": 86,
+    "ciRuns": [
+      "36940912350",
+      "36941000915"
+    ],
+    "ci": "Linux_Windows_macOS_success",
+    "productionImage": "sha256:eb705b7efdcac400806a1e879bb14791e724893c6f5a2fe92d22a1aabe41d269",
+    "publicSite": {
+      "siteUrl": "https://zoko.46.225.106.23.sslip.io/plugin/",
+      "siteRoot": "/var/www/zoko-plugin/releases/0297f63c67be7dd882fbf7719f5685af7864267fafb72db60e78c97ff6482cfb",
+      "archiveSha256": "0297f63c67be7dd882fbf7719f5685af7864267fafb72db60e78c97ff6482cfb",
+      "previousIngressSha256": "17ca40f7091adb186e32e6ef52c1e9200a37261295dc7e73a67ffaf7744b6162",
+      "ingressSha256": "aedfa1a799a05b1e068bb1c3125137e32f3367943d18a40043d1bfd34703e7cb",
+      "pluginArchiveSha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0"
+    },
+    "receipt": ".local/plugin-evidence/growth-public-verification.json",
+    "sha256": "c16c5ba0093428034926a2a47f4cecab9c17dbf78492656a6deb875d5425af11",
+    "privateAccountReadback": "23_files_manifests_and_enrollment_reference_1.4.0",
+    "offsiteRecovery": {
+      "receipt": ".local/plugin-evidence/growth-recovery-storage-readback.json",
+      "sha256": "414489491422dd5f3c388058d75b78eb37c8f877b742acb28042b0b044c3b594"
+    },
+    "gridzUnchanged": true
+  },
+  "growth": {
+    "metadata": "earn_XEC_sell_AI_decisions_outsource_typed_judgments",
+    "firstUse": "protected_self_service_enrollment_verified_from_exact_installed_package",
+    "discoveryEvaluation": "10_author_reviewed_cases_not_measured_routing_accuracy",
+    "globalRanking": "not_available_or_claimed",
+    "supply": "zero_eligible_independent_sellers",
+    "adoption": "no_external_customer_or_earnings_verified",
+    "repositoryMetadata": {
+      "receipt": ".local/plugin-evidence/growth-repository-readback.json",
+      "sha256": "487fe4e085ded0f9fa06a61889438f8fb46d61ebd7e627b1177dd5fc12e7558f"
+    },
+    "acquisitionProxiesPrivate": [
+      {
+        "receipt": ".local/plugin-evidence/growth-traffic-views-private.json",
+        "sha256": "f493e8242ccefbee6a90cb3e1b34a1d614786fc9998f8007cf7a9a2f2ed4f18a"
+      },
+      {
+        "receipt": ".local/plugin-evidence/growth-traffic-clones-private.json",
+        "sha256": "786a5b112239d751a124c8b724a9612c954f20e25c9f12cfa42d5d091d207deb"
+      }
+    ]
+  },
+  "publicRelease": {
+    "version": "1.4.0",
+    "url": "https://github.com/QuantumStonks/ZoKo/releases/tag/zoko-v1.4.0",
+    "archiveSha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0",
+    "anonymousDownloadVerified": true,
+    "providerDigestVerified": true
   }
 }
