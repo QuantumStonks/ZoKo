@@ -1,0 +1,105 @@
+{
+  "format": "zoko-agent-discovery-state/1",
+  "updatedAt": "2026-10-02T22:58:38.516Z",
+  "objective": "Relevant discovery and successful authorized first use; no guaranteed rank or income",
+  "automation": "maintain-zoko-plugin",
+  "weeklyDiscoveryCheckLast": "2026-10-02T22:55:33.777Z",
+  "publicVersion": "1.4.0",
+  "sourceStudy": {
+    "codexVersion": "0.159.0",
+    "sourceCommit": "687a119f0fcaace47e1f1abcc77cec6c813fd6da",
+    "pathHostVersion": "0.130.0-alpha.5",
+    "sourceBlobsVerified": [
+      {
+        "sourcePath": "codex-rs/core-plugins/src/remote/search.rs",
+        "gitBlob": "f4a6021c2813393f19fcb0ac94383e6c4a867619",
+        "sha256": "b14a65a809d08c7bce638055ac6010eed4a9b8291542aaa15b75b86fd993c61c"
+      },
+      {
+        "sourcePath": "codex-rs/app-server/src/request_processors/plugins/search.rs",
+        "gitBlob": "6cc25e4b8bf1fdec5d58f9cd4c8c9e9e5c64bb85",
+        "sha256": "cd994b811fd43dfbf3376c0a43262b3ac6982e94445d85dc5a9fe3920f501a91"
+      },
+      {
+        "sourcePath": "codex-rs/ext/skills/src/config.rs",
+        "gitBlob": "563bcb55dd29ca8a15fa2791ecd4124ad6cdf2c4",
+        "sha256": "0991c91d0fec7052e57068bc56a787e9ad92b6867804a8104a276fcffa46ae8c"
+      },
+      {
+        "sourcePath": "codex-rs/ext/skills/src/dynamic_skill_selector.rs",
+        "gitBlob": "6a2db5e473acd29503007d1542ae54cd08debccd",
+        "sha256": "d38e78a3f654ca90ed76e527e413a78ee582ac6913c39476fe82815eada91dd2"
+      },
+      {
+        "sourcePath": "codex-rs/ext/skills/src/render.rs",
+        "gitBlob": "ede504ada01b28390e07a324765cc44873c3aa83",
+        "sha256": "6718e1dcc6daaa78b9749fdf8703cb296d45895bb9180d637d72a4578d7813a9"
+      },
+      {
+        "sourcePath": "codex-rs/ext/skills/src/shadow_selection_experiment/mod.rs",
+        "gitBlob": "dde04d4b7c3621641a07069611d6afcc384120b9",
+        "sha256": "4b34dec55c11b5d42d39245f72a592983e0692c59c98ba81c0ae1ba09e99a9d4"
+      }
+    ],
+    "localRankingScope": "version_specific_app_server_name_keyword_tiers",
+    "remoteBackendAlgorithm": "not_established",
+    "dynamicSkillSelectors": "shadow_only_in_inspected_source"
+  },
+  "directoryBaseline": {
+    "receipt": ".local/plugin-evidence/agent-seo-directory-baseline-20261003.json",
+    "sha256": "edc23ac2de04b9ad43e0750dacb5a0f1081ee91c73904e5f7f1b1d79aed846c5"
+  },
+  "directoryStatus": "ZoKo_not_returned_in_three_bounded_queries_global_approval_unverified",
+  "dataset": {
+    "path": "docs/discovery-evaluation-v2.json",
+    "cases": 32,
+    "sha256": "d5977e04800ff7b3386c8902cdd40227f8dcb539e227fdeb3958fd182a17d38f",
+    "labels": "public_maintainer_authored_not_blind_independent_benchmark"
+  },
+  "metadataSha256": "f9664290920d2d26b4151c6c676e9a12388023ce5c9324601eeb3a27e8254cb3",
+  "controlledPilot": {
+    "surface": "controlled_summary_choice",
+    "hostVersion": "0.159.0",
+    "hostSha256": "0e2a4cd6ac1b329e64ec74745e38b71a3d4fa701102c86f49cf605d23a02c4df",
+    "coverage": {
+      "total": 32,
+      "measured": 8,
+      "errors": 0,
+      "unobserved": 24
+    },
+    "routeAccuracy": 1,
+    "precision": 1,
+    "recall": 1,
+    "grade": {
+      "receipt": ".local/plugin-evidence/agent-seo-controlled-trials-20261003-r2/grade.json",
+      "sha256": "460362c03c7c5c62b4be73f52aec13b3131f476a89f3135cc46cbf6e0ad11def"
+    },
+    "observations": {
+      "receipt": ".local/plugin-evidence/agent-seo-controlled-trials-20261003-r2/observations.json",
+      "sha256": "0f255e4bd123d80d0ed79e5316a7964db21b34d8700f823c32780312816c8107"
+    },
+    "scope": "supplied_descriptions_constrained_choices_eight_case_subset_only"
+  },
+  "naturalSkillInvocation": "unmeasured",
+  "automaticInstallation": "not_claimed",
+  "customerAdoption": "no_independent_paid_customer_verified",
+  "automationReadback": {
+    "receipt": ".local/plugin-evidence/agent-seo-automation-verified-20261003.json",
+    "sha256": "7f02039cf9e20c973f6388a4ce3e16917f7d85d15ccc95ab4e83e24fa6ea1b3a"
+  },
+  "validation": {
+    "typecheck": "passed",
+    "unitTests": 150,
+    "unitTestFailures": 0,
+    "runtimeChanged": false,
+    "packageReleased": false,
+    "nativeControlledTrialCount": 8,
+    "scope": "isolated_discovery_branch_based_on_91bc390",
+    "build": "passed",
+    "pluginBuild": "passed_not_released",
+    "emittedArchiveSha256": "5f0e13ee67424ead69adb18eebe0c420515d646dd0c36297af8ab44c4316cf3c",
+    "publishedArchiveSha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0",
+    "publishedExecutableAndSkillBytesUnchanged": true
+  },
+  "next": "Evaluate an evidenced metadata or first-use candidate on development cases before holdouts; retain negative controls and exact release checks. Watch independent supply and original campaign funding without replaying financial actions."
+}
