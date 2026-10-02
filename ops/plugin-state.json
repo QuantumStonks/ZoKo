@@ -1015,7 +1015,7 @@
   "growth": {
     "metadata": "earn_XEC_sell_AI_decisions_outsource_typed_judgments",
     "firstUse": "protected_self_service_enrollment_verified_from_exact_installed_package",
-    "discoveryEvaluation": "10_author_reviewed_cases_not_measured_routing_accuracy",
+    "discoveryEvaluation": "32_author_labeled_cases_8_measured_controlled_choices_not_natural_activation_or_rank",
     "globalRanking": "not_available_or_claimed",
     "supply": "zero_eligible_independent_sellers",
     "adoption": "no_external_customer_or_earnings_verified",
@@ -1032,7 +1032,13 @@
         "receipt": ".local/plugin-evidence/growth-traffic-clones-private.json",
         "sha256": "786a5b112239d751a124c8b724a9612c954f20e25c9f12cfa42d5d091d207deb"
       }
-    ]
+    ],
+    "agentDiscovery": {
+      "state": "ops/discovery-state.json",
+      "research": "docs/agent-discovery-research.md",
+      "automation": "maintain-zoko-plugin",
+      "metadataChanged": false
+    }
   },
   "publicRelease": {
     "version": "1.4.0",
