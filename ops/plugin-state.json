@@ -914,18 +914,16 @@
       "cumulativeCapNanos": "1000000000000",
       "maximumDecisionNanos": "10000000000",
       "initialDepositNanos": "100000000000",
-      "depositAddress": "ecash:qrr308k7czkfn27kkgqc27jhcjcgqfvpv5xsvp54at",
-      "accountId": "cb1f0cd3-8c68-4ebe-88c7-9111f0e86f70",
-      "fundingWallet": "ecash:qpmd6yc5wqs0cahgegqn6a4zx5ejp3afe5samqv8gg",
-      "walletDisplayXec": "419212.58",
-      "walletAddressIndexerUtxos": "zero_on_two_indexers_not_wallet_aggregate_verification",
+      "privateReceipt": {
+        "receipt": ".local/plugin-evidence/growth-release-completion.json",
+        "sha256": "ce7969e90e9a43d0ae23e9752ca2bbfae1a6397fb9ab4ffacbdd288cef526455"
+      },
       "spentNanos": "0",
       "reservedNanos": "0",
       "walletFeeNanos": null,
       "marketplaceCreditedNanos": "0",
       "expiresAt": "2026-10-09T21:59:59Z",
       "funding": "100_XEC_prepared_in_Cashtab_owner_final_send_required",
-      "credentialFile": "C:/Users/admin/.codex/secrets/zoko-recovery/first-buyer-20261002.json",
       "credentialOffsiteEncrypted": true,
       "purchases": [],
       "independentEligibleSellers": 0,
@@ -1042,5 +1040,15 @@
     "archiveSha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0",
     "anonymousDownloadVerified": true,
     "providerDigestVerified": true
+  },
+  "privacyCorrection": {
+    "status": "current_file_redacted_history_and_caches_not_remediated",
+    "baseCommit": "2a41d5dc1eeeca0eeb2742052d3ee58c698612bf",
+    "verification": {
+      "receipt": ".local/plugin-evidence/privacy-correction-20261002T020442953Z-final.json",
+      "sha256": "ec4ad78f989a9e4ac05b3a1b87517591a021ae8cb387bccf951f696631bcbd28"
+    },
+    "remainingContainment": "Historical commits, PR copies and caches remain outside this correction.",
+    "next": "Review separate historical and cached-copy containment before authorizing those actions."
   }
 }
