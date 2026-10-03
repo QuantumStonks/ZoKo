@@ -9,6 +9,20 @@ const MoneySchema=z.string().regex(/^(0|[1-9][0-9]{0,29})$/);
 const CredentialSchema=z.object({format:z.literal('zoko-agent-credentials/1'),baseUrl:z.string(),apiKey:z.string().regex(/^zoko_[A-Za-z0-9_-]{43}$/),enrollment:z.object({name:z.string().trim().min(1).max(120),dailyLimitNanos:MoneySchema,maxPriceNanos:MoneySchema}).strict()}).strict();
 export type AgentCredentials=z.infer<typeof CredentialSchema>;
 
+async function syncCredentialDirectories(target:string):Promise<void> {
+  // Include every ancestor on recovery too: a prior sync failure may have left
+  // newly created parent entries unpersisted even though the file now exists.
+  for(let path=dirname(target);;path=dirname(path)) {
+    let directory;
+    try {directory=await open(path,'r');await directory.sync();}
+    catch(error) {
+      // Match init-env: portable Node cannot fsync directories on Windows.
+      if(process.platform!=='win32' || !['EINVAL','ENOTSUP','EISDIR','EPERM','EACCES'].includes((error as NodeJS.ErrnoException).code??'')) throw error;
+    } finally {await directory?.close();}
+    if(dirname(path)===path)break;
+  }
+}
+
 function windowsSecurity(path:string, protect:boolean):void {
   const prefix=`$ErrorActionPreference='Stop'; $p='${path.replaceAll("'","''")}'; $u=[System.Security.Principal.WindowsIdentity]::GetCurrent().User; $system=New-Object System.Security.Principal.SecurityIdentifier('S-1-5-18');`;
   const action=protect?`$a=New-Object System.Security.AccessControl.FileSecurity; $a.SetAccessRuleProtection($true,$false); foreach($sid in @($u,$system)){$a.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule($sid,'FullControl','Allow')))}; [System.IO.File]::SetAccessControl($p,$a);`:'';
@@ -31,11 +45,15 @@ export async function prepareEnrollment(path:string,baseUrl:string,input:AgentCr
   const normalized=new ZokoClient({baseUrl}).baseUrl;
   input=CredentialSchema.shape.enrollment.parse(input);
   const target=resolve(path);
+  let existing:AgentCredentials|undefined;
   try {
-    const saved=await readAgentCredentials(target);
-    if(saved.baseUrl!==normalized || JSON.stringify(saved.enrollment)!==JSON.stringify(input)) throw Error('Enrollment differs from the original protected file; preserve its key and input');
-    return saved;
+    existing=await readAgentCredentials(target);
   } catch(error) {if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+  if(existing) {
+    if(existing.baseUrl!==normalized || JSON.stringify(existing.enrollment)!==JSON.stringify(input)) throw Error('Enrollment differs from the original protected file; preserve its key and input');
+    await syncCredentialDirectories(target);
+    return existing;
+  }
   await mkdir(dirname(target),{recursive:true,mode:0o700});
   const saved=CredentialSchema.parse({format:'zoko-agent-credentials/1',baseUrl:normalized,apiKey:`zoko_${randomBytes(32).toString('base64url')}`,enrollment:input});
   const file=await open(target,'wx',0o600);
@@ -44,5 +62,8 @@ export async function prepareEnrollment(path:string,baseUrl:string,input:AgentCr
    await file.writeFile(JSON.stringify(saved,null,2)+'\n');await file.sync();
   } catch(error){await file.close();await unlink(target);throw error;}
   finally {await file.close();}
+  // Preserve the original key if directory sync fails; retry must reconcile
+  // this same file rather than generate another enrollment identity.
+  await syncCredentialDirectories(target);
   return saved;
 }
