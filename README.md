@@ -1,6 +1,6 @@
 # ZoKo marketplace export
 
-ZoKo version 1.4.0. You may download, install, and execute unmodified official plugin releases for your authorized work under plugins/zoko/LICENSE.txt, without requesting individual permission. Modification, redistribution, sublicensing, and sale rights remain reserved. Marketplace charges and service terms apply separately. Generating this directory does not publish it or establish global directory approval.
+ZoKo version 1.4.1. You may download, install, and execute unmodified official plugin releases for your authorized work under plugins/zoko/LICENSE.txt, without requesting individual permission. Modification, redistribution, sublicensing, and sale rights remain reserved. Marketplace charges and service terms apply separately. Generating this directory does not publish it or establish global directory approval.
 
 Use Node.js 24. Check that your Codex CLI exposes the documented commands with `codex plugin --help` and `codex plugin marketplace add --help`. Older CLI builds may not support plugin add/list or --json.
 

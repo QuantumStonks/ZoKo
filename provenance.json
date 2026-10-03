@@ -1,13 +1,13 @@
 {
   "format": "zoko-plugin-marketplace/1",
   "name": "zoko",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "archive": {
-    "name": "zoko-1.4.0.zip",
-    "bytes": 1387597,
-    "sha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0"
+    "name": "zoko-1.4.1.zip",
+    "bytes": 1387952,
+    "sha256": "1aecb7eb2da39fa8bc3734a24276f07c76a7923fdd8afa8e4a5f080c5de32601"
   },
-  "sourceCommit": "4a1da27d1192110922e30f6da795fd280dea6ad0",
+  "sourceCommit": "dc9990735ef490cd7ef85c6f949e3b84d0de7773",
   "packageSourcesClean": true,
   "packageMatchesCheckout": true,
   "files": [
@@ -19,12 +19,12 @@
     {
       "path": "README.md",
       "bytes": 1464,
-      "sha256": "026f2028f0791377b02b2ea7a33e3a46fceb74b1d9b6cce6a672e9e22a0cf2e4"
+      "sha256": "fdfa1ba3e3e67ae821f0b7a827e2a995d8bac954c2a76328623405b1070a46ec"
     },
     {
       "path": "plugins/zoko/.codex-plugin/plugin.json",
-      "bytes": 3725,
-      "sha256": "6ad2cade1bddfe612b5c1718d623a4ccae5bdf48dfa79d513b50b8fbefe5ad29"
+      "bytes": 3673,
+      "sha256": "30bd9dda1dccbbdac3cbe1fa910a7888518690b1d804c1d0c7e0c04e22ac7e8b"
     },
     {
       "path": "plugins/zoko/LICENSE.txt",
@@ -54,17 +54,17 @@
     {
       "path": "plugins/zoko/integrity.json",
       "bytes": 18878,
-      "sha256": "61ed1188886030f1ea4f704c589fea8b359eaa1bb3b7b54a2d07b77b374b2c53"
+      "sha256": "2ac338645af91327ce8f37605ba4ca0c53bc90d72db846b8a62ff51153cd8456"
     },
     {
       "path": "plugins/zoko/plugin.json",
-      "bytes": 3940,
-      "sha256": "2373b8dd0a8745f158300f7c537f0f4baeab52d8725341bbe72787382bfe7360"
+      "bytes": 3888,
+      "sha256": "b0ed4f9154e3536184f5b12a7b63d6b540364de5c3d3b6f940f07b2da8a1267e"
     },
     {
       "path": "plugins/zoko/runtime/cli.mjs",
-      "bytes": 491712,
-      "sha256": "9d4b6b4b348a3b76e56324e5f67041279eb077fb8356a69bf920366a26031047"
+      "bytes": 492166,
+      "sha256": "6ef5973826a8f6569b57c3a911fca01e37732840b92f1ed19106c7d1a88dbbd3"
     },
     {
       "path": "plugins/zoko/runtime/client.mjs",
@@ -113,8 +113,8 @@
     },
     {
       "path": "plugins/zoko/skills/connect-marketplace/references/enrollment.md",
-      "bytes": 2384,
-      "sha256": "154acc985725c6f003fcc81ff999041e5acb13a9d5c8674beaded2516524e2db"
+      "bytes": 2868,
+      "sha256": "94cc8213407ccbe4085fd6dbdd3b7571d58ae446a0f8e61ca00fb6b2ad374de5"
     },
     {
       "path": "plugins/zoko/skills/sell-decisions/SKILL.md",

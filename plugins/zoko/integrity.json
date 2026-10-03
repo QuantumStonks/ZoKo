@@ -1,7 +1,7 @@
 {
   "format": "zoko-plugin-integrity/1",
   "name": "zoko",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "runtime": "Node.js >=24.0.0 <25",
   "compiler": {
     "name": "esbuild",
@@ -394,34 +394,34 @@
     },
     {
       "path": "src/cli.ts",
-      "sha256": "00484b252c25ff6d63b1fae39d50ea6ef734d3b0a6a571aaad25d632c148cf65"
+      "sha256": "b04137ddb4d937795dabd6b8e3776c4970d5d0be5e356ba9589174ec7ba3fb7a"
     },
     {
       "path": "src/client.ts",
-      "sha256": "c8ee0a12ba060aded94706635d81de1e5a4fe4b0132648fafb494c3cfa1ff885"
+      "sha256": "1353f5130594770b4c363bee48eab1c1566cc8fa5eab34e39b564141340bd393"
     },
     {
       "path": "src/enrollment.ts",
-      "sha256": "7d75ae1c24026d81d42e4e98cbc7104da5d7eca46311d23faf75fbdf71503846"
+      "sha256": "ba2d6ccb6668821e42fc51551e49df711863db0d698a6f875b5a70ed7dd5d8d9"
     },
     {
       "path": "src/protocol.ts",
-      "sha256": "39d3410d43dd3f279f561cfd315e69a45af73a466338033a42fa478deff8cca1"
+      "sha256": "d466f3293ee86cb507b8a424febce914fc6d249e7cba7a8f406b961031989d6c"
     },
     {
       "path": "src/provider.ts",
-      "sha256": "85a105044ebb8e9f10ca49d8a3fcdba6ff345b80b992276e057fc5c112201d2f"
+      "sha256": "dbd7e9f3106e880c2ebd0bc0baac0e64cfa3081264caa615680f26caa6ee721a"
     },
     {
       "path": "src/security.ts",
-      "sha256": "658b9f334b13a9d8f262264cf9761ed2b29968f5a05b3421a56dd9b4d8e994f5"
+      "sha256": "185498d7f297a58ae9d83a1a93175eed9777a8b677df0c13a79d9fc8c52b65c3"
     }
   ],
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "bytes": 3725,
-      "sha256": "6ad2cade1bddfe612b5c1718d623a4ccae5bdf48dfa79d513b50b8fbefe5ad29"
+      "bytes": 3673,
+      "sha256": "30bd9dda1dccbbdac3cbe1fa910a7888518690b1d804c1d0c7e0c04e22ac7e8b"
     },
     {
       "path": "LICENSE.txt",
@@ -450,13 +450,13 @@
     },
     {
       "path": "plugin.json",
-      "bytes": 3940,
-      "sha256": "2373b8dd0a8745f158300f7c537f0f4baeab52d8725341bbe72787382bfe7360"
+      "bytes": 3888,
+      "sha256": "b0ed4f9154e3536184f5b12a7b63d6b540364de5c3d3b6f940f07b2da8a1267e"
     },
     {
       "path": "runtime/cli.mjs",
-      "bytes": 491712,
-      "sha256": "9d4b6b4b348a3b76e56324e5f67041279eb077fb8356a69bf920366a26031047"
+      "bytes": 492166,
+      "sha256": "6ef5973826a8f6569b57c3a911fca01e37732840b92f1ed19106c7d1a88dbbd3"
     },
     {
       "path": "runtime/client.mjs",
@@ -505,8 +505,8 @@
     },
     {
       "path": "skills/connect-marketplace/references/enrollment.md",
-      "bytes": 2384,
-      "sha256": "154acc985725c6f003fcc81ff999041e5acb13a9d5c8674beaded2516524e2db"
+      "bytes": 2868,
+      "sha256": "94cc8213407ccbe4085fd6dbdd3b7571d58ae446a0f8e61ca00fb6b2ad374de5"
     },
     {
       "path": "skills/sell-decisions/SKILL.md",
