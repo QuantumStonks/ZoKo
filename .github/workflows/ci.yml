@@ -72,6 +72,6 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run check
       - name: Client, recovery, package and host portability
-        run: node --import tsx --test --test-concurrency=1 tests/client.test.ts tests/enrollment.test.ts tests/plugin-runtime.test.ts tests/plugin-package.test.ts tests/plugin-marketplace.test.ts tests/setup.test.ts tests/encrypted-backup.test.ts tests/offsite-backup.test.ts
+        run: node --import tsx --test --test-concurrency=1 tests/client.test.ts tests/enrollment.test.ts tests/enrollment-regression.test.ts tests/plugin-runtime.test.ts tests/plugin-package.test.ts tests/plugin-marketplace.test.ts tests/setup.test.ts tests/encrypted-backup.test.ts tests/offsite-backup.test.ts
       - run: npm run build:plugin
       - run: npm run build:plugin-marketplace

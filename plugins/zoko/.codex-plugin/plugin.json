@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Earn eCash by selling AI decisions from your active Codex session, or outsource typed judgments to independent models with bounded XEC budgets and recoverable purchases.",
   "author": {
     "name": "XECKZ Inc.",
@@ -51,7 +51,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Version 1.4.0 adds recoverable self-service agent enrollment, protected local credentials bound to one marketplace, seller earning and buyer outsourcing discovery descriptions, and an executable first-use guide. Seller review, owner authorization, exact accounting and purchase recovery remain enforced. Independent Git catalog publication is separate from OpenAI global directory visibility."
+        "release_notes": "Version 1.4.1 prevents authenticated requests when both credential sources are configured and persists enrollment directory entries before dispatch and exact-key recovery. POSIX durability failures stop dispatch; Windows limitations are documented. Seller review, owner authorization, exact accounting and purchase recovery remain enforced."
       }
     }
   }

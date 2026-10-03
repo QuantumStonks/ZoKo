@@ -249,6 +249,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     } else process.stdout.write(secret);
     return;
   }
+  if(process.env.ZOKO_CREDENTIALS_FILE && process.env.ZOKO_API_KEY) throw Error('Competing credential sources: use either ZOKO_CREDENTIALS_FILE or ZOKO_API_KEY; no request sent');
   const saved=process.env.ZOKO_CREDENTIALS_FILE ? await readAgentCredentials(process.env.ZOKO_CREDENTIALS_FILE) : undefined;
   const baseUrl = process.env.ZOKO_URL ?? saved?.baseUrl ?? 'http://127.0.0.1:3000';
   if(saved && new ZokoClient({baseUrl}).baseUrl!==saved.baseUrl) throw Error('Credentials belong to a different marketplace; no authenticated request sent');
