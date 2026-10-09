@@ -12,8 +12,10 @@ const hash=(v:unknown)=>createHash('sha256').update(canonical(v)).digest('hex');
 const money=(v:unknown):bigint=>{if(typeof v!=='string'||!/^(0|[1-9][0-9]{0,29})$/.test(v))throw new Error('Invalid integer nanoXEC');return BigInt(v);};
 const sameKeys=(v:any,keys:string[])=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));
 const probability=(v:any)=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1;
-export function validateTypedOutput(result:any,input:DecisionInput,model:string,usageRequired:boolean):void{
-  if(!sameKeys(result,['model','answers','usage'])||result.model!==model||!sameKeys(result.answers,Object.keys(input.questions)))throw new Error('Model or answer schema mismatch');
+export function validateTypedOutput(result:any,input:DecisionInput,model:string,usageRequired:boolean,contracted=false):void{
+  if(!sameKeys(result,['model','answers','usage'])||!sameKeys(result.answers,Object.keys(input.questions)))throw new Error('Model or answer schema mismatch');
+  const resolvesLegacyAlias=!contracted&&(model==='jev-latest'||model==='jev-preview')&&typeof result.model==='string'&&/^jev-[0-9]+\.[0-9]+\.[0-9]+$/.test(result.model);
+  if(result.model!==model&&!resolvesLegacyAlias)throw new Error('Model or answer schema mismatch');
   for(const [key,q] of Object.entries(input.questions)){
     const a=result.answers[key];
     if(!a||a.type!==q.type)throw new Error('Answer type mismatch');
@@ -108,7 +110,7 @@ export class ZokoHttpClient {
     if(!receipt?.id||!['running','succeeded','failed','indeterminate'].includes(receipt.status))throw new Error('Invalid receipt');
     if(receipt.status==='succeeded'){
       if(receipt.priceNanos!==journal.quote.priceNanos||receipt.sellerId!==journal.quote.sellerId||receipt.requestHash!==journal.quote.requestHash||receipt.schemaHash!==journal.quote.schemaHash)throw new Error('Receipt quote mismatch');
-      validateTypedOutput(receipt.result,journal.input,journal.quote.model,journal.quote.inferenceContract?.usageRequirement!=='backend_reported_optional'&&journal.quote.deliveryMode!=='agent');
+      validateTypedOutput(receipt.result,journal.input,journal.quote.model,journal.quote.inferenceContract?.usageRequirement!=='backend_reported_optional'&&journal.quote.deliveryMode!=='agent',journal.quote.inferenceContract!=null);
     }
   }
 }

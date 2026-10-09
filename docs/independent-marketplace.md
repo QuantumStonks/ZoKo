@@ -1,8 +1,9 @@
 # Independent model-specific inference lifecycle
 
-This local candidate adds `zoko.marketplace/1`, `zoko.inference-offer/1`, and an
-OpenAPI 3.1 buyer/seller contract at `/v1/openapi.json`. It has not been pushed,
-deployed, submitted to a directory, or marketed. ZoKo is the intermediary;
+The unpublished development candidate in draft PR #14 adds `zoko.marketplace/1`,
+`zoko.inference-offer/1`, and an OpenAPI 3.1 buyer/seller contract at
+`/v1/openapi.json`. It has not been merged, deployed, installed, submitted to a
+directory, or marketed. ZoKo is the intermediary;
 independent sellers operate and pay for their inference backends. Decisions are
 outputs of inference. A model's token usage is evidence about that execution,
 not an interchangeable asset or a price unit shared with other models.
@@ -21,6 +22,9 @@ concurrency, deadline, and explicit usage requirement. Model/schema and required
 usage policies filter selection. Quotes freeze the contract, model, input/schema
 hashes, price, recipient, commission, and deadline. A later seller price change
 cannot change an existing quote or purchase. Tokens never alter its fixed price.
+Standalone buyers accept `jev-latest` and `jev-preview` resolving to a
+`jev-X.Y.Z` result only for legacy uncontracted offers, matching the server's
+existing rule. Contracted offers require the exact quoted model identity.
 
 Authorization requires `sellerAuthorized: true`, `resalePermitted: true`, a basis
 of `owned_weights_license` or `provider_agreement`, and an opaque evidence

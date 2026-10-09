@@ -239,6 +239,54 @@ class TLSFixtureServer(FixtureServer):
 
 
 class ReliabilityTests(unittest.TestCase):
+    def test_legacy_jev_aliases_recover_same_synthetic_purchase_and_contracts_stay_exact(self):
+        versioned = {**RESULT, "model": "jev-1.2.3"}
+        for alias in ("jev-latest", "jev-preview"):
+            validate_typed_output(versioned, INPUT, alias, True)
+            with self.assertRaisesRegex(ValueError, "Model or answer schema mismatch"):
+                validate_typed_output(versioned, INPUT, alias, True, contracted=True)
+        for bad_model in ("jev-1.2", "jev-1.2.3-extra", "other-model"):
+            with self.assertRaisesRegex(ValueError, "Model or answer schema mismatch"):
+                validate_typed_output({**versioned, "model": bad_model}, INPUT, "jev-latest", True)
+        with self.assertRaisesRegex(ValueError, "Model or answer schema mismatch"):
+            validate_typed_output({**versioned, "model": "other-model"}, INPUT, "jev-latest", True, contracted=True)
+        for alias in ("jev-latest", "jev-preview"):
+            with self.subTest(alias=alias):
+                quote = {**QUOTE, "model": alias, "inferenceContract": None}
+                receipt = {**RECEIPT, "result": versioned}
+                client = ZokoHttpClient("http://127.0.0.1", "fixture-key")
+                path = fixture_directory() / ("alias-" + uuid.uuid4().hex + ".json")
+                journal = {"version": 1, "origin": client.origin, "accountId": "fixture-account",
+                           "idempotencyKey": str(uuid.uuid4()), "input": INPUT, "quote": quote,
+                           "policy": {"maxPriceNanos": "1"}}
+                dispatches = []
+
+                def synthetic_request(method, route, body=None, key=None):
+                    if method == "GET" and route == "/v1/me":
+                        return {"account": {"id": "fixture-account"}}
+                    if method == "POST" and route == "/v1/decisions":
+                        dispatches.append((body, key))
+                        return receipt
+                    raise AssertionError("Unexpected synthetic route")
+
+                contracted_path = fixture_directory() / ("contracted-" + uuid.uuid4().hex + ".json")
+                try:
+                    path.write_text(json.dumps(journal), encoding="utf-8")
+                    with patch.object(client, "request", side_effect=synthetic_request):
+                        self.assertEqual(client.execute(path), receipt)
+                        self.assertEqual(client.recover(path), receipt)
+                        contracted_path.write_text(json.dumps({**journal, "quote": {**quote,
+                            "inferenceContract": {"usageRequirement": "backend_reported_required"}}}), encoding="utf-8")
+                        with self.assertRaisesRegex(ValueError, "Model or answer schema mismatch"):
+                            client.execute(contracted_path)
+                    self.assertEqual(dispatches[:2], [({"quoteId": quote["id"], **INPUT}, journal["idempotencyKey"])] * 2)
+                    self.assertEqual(json.loads(Path(str(path) + ".receipt.json").read_text(encoding="utf-8")), receipt)
+                    self.assertFalse(Path(str(contracted_path) + ".receipt.json").exists())
+                finally:
+                    for purchase in (path, contracted_path):
+                        for suffix in ("", ".attempt.json", ".decision.json", ".receipt.json"):
+                            Path(str(purchase) + suffix).unlink(missing_ok=True)
+
     def test_dns_queue_and_thread_construction_fail_before_slot_acquisition(self):
         server = FixtureServer()
         slots = threading.BoundedSemaphore(1)

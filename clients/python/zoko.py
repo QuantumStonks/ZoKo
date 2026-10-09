@@ -81,8 +81,12 @@ def probability(value):
     return type(value) in (float, int) and math.isfinite(value) and 0 <= value <= 1
 
 
-def validate_typed_output(result, data, model, usage_required):
-    if not same_keys(result, ("model", "answers", "usage")) or result["model"] != model or not same_keys(result["answers"], data["questions"]):
+def validate_typed_output(result, data, model, usage_required, contracted=False):
+    if not same_keys(result, ("model", "answers", "usage")) or not same_keys(result["answers"], data["questions"]):
+        raise ValueError("Model or answer schema mismatch")
+    resolves_legacy_alias = (not contracted and model in ("jev-latest", "jev-preview")
+        and isinstance(result["model"], str) and re.fullmatch(r"jev-[0-9]+\.[0-9]+\.[0-9]+", result["model"]) is not None)
+    if result["model"] != model and not resolves_legacy_alias:
         raise ValueError("Model or answer schema mismatch")
     for key, question in data["questions"].items():
         answer = result["answers"][key]
@@ -337,7 +341,7 @@ class ZokoHttpClient:
             if any(receipt.get(k) != quote[k] for k in ("sellerId", "priceNanos", "requestHash", "schemaHash")):
                 raise ValueError("Receipt quote mismatch")
             contract = quote.get("inferenceContract") or {}
-            validate_typed_output(receipt["result"], journal["input"], quote["model"], contract.get("usageRequirement") != "backend_reported_optional" and quote.get("deliveryMode") != "agent")
+            validate_typed_output(receipt["result"], journal["input"], quote["model"], contract.get("usageRequirement") != "backend_reported_optional" and quote.get("deliveryMode") != "agent", quote.get("inferenceContract") is not None)
 
     def execute(self, path):
         journal = self._journal(path)
