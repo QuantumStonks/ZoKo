@@ -29,6 +29,9 @@ describe('Durable marketplace and payment schema upgrades with PostgreSQL',{
     if(control){try{await control.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);}finally{await control.end();}}
   });
   async function removeAgentSchema(){
+    await db.query('ALTER TABLE sellers DROP COLUMN inference_contract,DROP COLUMN capacity_until');
+    await db.query('ALTER TABLE quotes DROP COLUMN inference_contract');
+    await db.query('DELETE FROM zoko_migrations WHERE version=5');
     await db.query('DROP TABLE agent_jobs');
     await db.query('ALTER TABLE sellers DROP COLUMN delivery_mode,DROP COLUMN agent_ready_until');
     await db.query('ALTER TABLE quotes DROP COLUMN delivery_mode');
@@ -53,7 +56,7 @@ describe('Durable marketplace and payment schema upgrades with PostgreSQL',{
     const before=await db.query('SELECT * FROM transfers ORDER BY id');
     await migrate(db);
     await migrate(db);
-    assert.deepEqual((await db.query('SELECT version FROM zoko_migrations ORDER BY version')).rows.map(r=>r.version),[1,2,3,SCHEMA_VERSION]);
+    assert.deepEqual((await db.query('SELECT version FROM zoko_migrations ORDER BY version')).rows.map(r=>r.version),[1,2,3,4,SCHEMA_VERSION]);
     assert.deepEqual((await db.query("SELECT value FROM payments_state WHERE key='wallet-identity'")).rows[0].value,identity);
     assert.deepEqual((await db.query('SELECT * FROM transfers ORDER BY id')).rows,before.rows);
     assert.equal((await db.query('SELECT balance::text FROM wallets WHERE id=$1',[`available:${account.id}`])).rows[0].balance,'100000000000');
@@ -110,7 +113,7 @@ describe('Durable marketplace and payment schema upgrades with PostgreSQL',{
       [{enabled:false,paused:false,payout_account_id:null}]);
     assert.deepEqual((await db.query('SELECT enabled,paused,payout_account_id FROM sellers WHERE id=$1',[ownedId])).rows,
       [{enabled:true,paused:false,payout_account_id:seller.id}]);
-    assert.deepEqual((await db.query('SELECT * FROM quotes ORDER BY id')).rows,before.quotes.map(q=>({...q,delivery_mode:'https'})));
+    assert.deepEqual((await db.query('SELECT * FROM quotes ORDER BY id')).rows,before.quotes.map(q=>({...q,delivery_mode:'https',inference_contract:null})));
     assert.deepEqual((await db.query('SELECT * FROM decisions ORDER BY id')).rows,before.decisions);
     assert.deepEqual((await db.query('SELECT * FROM transfers ORDER BY id')).rows,before.transfers);
     assert.deepEqual((await db.query('SELECT * FROM wallets ORDER BY id')).rows,before.wallets);

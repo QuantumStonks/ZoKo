@@ -1,10 +1,10 @@
 {
   "format": "zoko-agent-discovery-state/1",
-  "updatedAt": "2026-10-02T22:58:38.516Z",
+  "updatedAt": "2026-10-04T01:31:00.531351+00:00",
   "objective": "Relevant discovery and successful authorized first use; no guaranteed rank or income",
   "automation": "maintain-zoko-plugin",
   "weeklyDiscoveryCheckLast": "2026-10-02T22:55:33.777Z",
-  "publicVersion": "1.4.0",
+  "publicVersion": "1.4.1",
   "sourceStudy": {
     "codexVersion": "0.159.0",
     "sourceCommit": "687a119f0fcaace47e1f1abcc77cec6c813fd6da",
@@ -89,17 +89,140 @@
   },
   "validation": {
     "typecheck": "passed",
-    "unitTests": 150,
+    "unitTests": 160,
     "unitTestFailures": 0,
     "runtimeChanged": false,
     "packageReleased": false,
     "nativeControlledTrialCount": 8,
-    "scope": "isolated_discovery_branch_based_on_91bc390",
-    "build": "passed",
-    "pluginBuild": "passed_not_released",
-    "emittedArchiveSha256": "5f0e13ee67424ead69adb18eebe0c420515d646dd0c36297af8ab44c4316cf3c",
-    "publishedArchiveSha256": "7cee2294b41dbf76a2fd4993b9c15b3a059eecc5bc71bac643760feed3aed6e0",
-    "publishedExecutableAndSkillBytesUnchanged": true
+    "scope": "shared_working_tree_with_concurrent_enrollment_changes"
   },
-  "next": "Evaluate an evidenced metadata or first-use candidate on development cases before holdouts; retain negative controls and exact release checks. Watch independent supply and original campaign funding without replaying financial actions."
+  "next": "Verify per-run native/MCP tool isolation and installed-skill inventory for the preserved read-only assessment protocol before dispatch; no trial or metadata change has occurred. Keep current controlled-choice baseline and exposed holdouts unchanged. Finish isolated release validation for pending enrollment changes before shipping. Await original owner campaign deposit and independent authorized online supply within the existing cumulative cap and expiry.",
+  "review": {
+    "url": "https://github.com/QuantumStonks/ZoKo/pull/12",
+    "sourceHead": "6a20cfe1da9cc97c171b261d9c75d14fa5189ada",
+    "isolatedBase": "91bc390444396a4b0500b8a9b2a6931b1cbecccc",
+    "isolatedUnitTests": 150,
+    "ciRuns": [
+      "37076182631",
+      "37076129887"
+    ],
+    "ciStatus": "Linux_Windows_macOS_success",
+    "packageReleased": false,
+    "state": "MERGED",
+    "mergeCommit": "314d018fbb28f87e1be54dab3dcf45e7ef04e30c",
+    "mergeReceipt": {
+      "receipt": ".local/plugin-evidence/agent-seo-merge-20261003.json",
+      "sha256": "4f990699855706016dc597ef452d88e71721123466acce72551fa740ec33ad44"
+    }
+  },
+  "controlledCorpusCompletion": {
+    "checkedAt": "2026-10-03T14:29:30.907989+00:00",
+    "surface": "controlled_summary_choice",
+    "hostVersion": "0.159.0",
+    "hostSha256": "0e2a4cd6ac1b329e64ec74745e38b71a3d4fa701102c86f49cf605d23a02c4df",
+    "modelIdentity": "not_observed_in_native_JSONL",
+    "metadataSha256": "f9664290920d2d26b4151c6c676e9a12388023ce5c9324601eeb3a27e8254cb3",
+    "datasetSha256": "d5977e04800ff7b3386c8902cdd40227f8dcb539e227fdeb3958fd182a17d38f",
+    "coverage": {
+      "total": 32,
+      "measured": 32,
+      "errors": 0,
+      "unobserved": 0
+    },
+    "confusion": {
+      "truePositive": 20,
+      "falsePositive": 0,
+      "trueNegative": 12,
+      "falseNegative": 0
+    },
+    "routeAccuracy": 0.9375,
+    "precision": 1,
+    "recall": 1,
+    "grade": {
+      "receipt": ".local/plugin-evidence/maintenance-20261003-1419/combined-grade.json",
+      "sha256": "ac4e13536183ca3c7c6b30440c0d441136bfa1120ad7872e28f135edf161d6dd"
+    },
+    "observations": {
+      "receipt": ".local/plugin-evidence/maintenance-20261003-1419/combined-observations.json",
+      "sha256": "b42f137549bad358f5ea13e6578940b4d65ccb3ad1fcec2242e24f6d4045a045"
+    },
+    "predeclaration": {
+      "receipt": ".local/plugin-evidence/maintenance-20261003-1419/trial-predeclaration.json",
+      "sha256": "2fd8f3d473f4cf7d9318f61a6381b42ffe7e8578bf94305c68288c443da00cc4"
+    },
+    "sources": [
+      {
+        "receipt": ".local/plugin-evidence/agent-seo-controlled-trials-20261003-r2/observations.json",
+        "sha256": "0f255e4bd123d80d0ed79e5316a7964db21b34d8700f823c32780312816c8107"
+      },
+      {
+        "receipt": ".local/plugin-evidence/discovery-remaining-20261003-1419/observations.json",
+        "sha256": "8256b3ccdd28febaf817356e70d3e966de27c767a20fb54826bbd0cb071bd467"
+      }
+    ],
+    "routeMisses": [
+      {
+        "id": "buy-cheap",
+        "split": "holdout",
+        "selectedSkills": [
+          "buy-decision",
+          "connect-marketplace"
+        ],
+        "correct": false
+      },
+      {
+        "id": "buy-no-supply",
+        "split": "holdout",
+        "selectedSkills": [
+          "buy-decision",
+          "connect-marketplace"
+        ],
+        "correct": false
+      }
+    ],
+    "metadataChanged": false,
+    "scope": "Public author-labeled constrained summary choices across two dated disjoint runs; no natural activation, directory rank, installation or adoption inferred."
+  },
+  "automationMaintenanceReadback": {
+    "receipt": ".local/plugin-evidence/maintenance-20261003-1419/automation-readback.json",
+    "sha256": "10fc641cf29aa51b46826823afba502d086ef3f88f44969e6ea352d7a1297f18"
+  },
+  "nativeSkillReadProtocol": {
+    "receipt": ".local/plugin-evidence/maintenance-20261003-1621/native-skill-read-protocol.json",
+    "sha256": "46a3939671a4db625df9b5c86cee4210cef04a45366e9418a37c5f4051952019",
+    "status": "native_reader_integrated_whole_turn_isolation_not_established",
+    "surface": "native_skill_load_read_only_onboarding_assessment",
+    "preflight": {
+      "receipt": ".local/plugin-evidence/maintenance-20261004-0128/native-preflight.json",
+      "sha256": "e6da01d7f40ee835aa413a1ad3a4992c0428bb5d69eca28136289628e6108788"
+    },
+    "readerVerification": {
+      "receipt": ".local/plugin-evidence/maintenance-20261003-2327/reader-v3/tests/reader-verification.json",
+      "sha256": "b40df4467c831525124dd526905737b57780576611fc13dc7b977141e75dde0b"
+    },
+    "nativeIntegrationVerification": {
+      "receipt": ".local/plugin-evidence/maintenance-20261003-2327/native-integration-verification.json",
+      "sha256": "c5f84f702d1f35f3be68dd5b6f6c2b992cc7fedcf44b2edda08a7cb92f26e7c3"
+    },
+    "environmentToolGates": {
+      "receipt": ".local/plugin-evidence/maintenance-20261004-0027/native-tool-gates.json",
+      "sha256": "4a4d9a3a6ec21ea4c46356ea132bd54dd341e763c938e3b601dd1265d8f21f92"
+    },
+    "generatedApiAudit": {
+      "receipt": ".local/plugin-evidence/maintenance-20261004-0128/native-api-audit.json",
+      "sha256": "6785de93a712b00278613ef678ec9867665f090b6a54e3a197ea910011fb9c47"
+    }
+  },
+  "releasedMetadataSnapshot": {
+    "releasedMetadataSha256": "e598a853aaed57131355f4277599c6b8c5155e4d274533cd800e5b5e1541fa38",
+    "datasetSha256": "d5977e04800ff7b3386c8902cdd40227f8dcb539e227fdeb3958fd182a17d38f",
+    "modelRoutingReplayForNewMetadata": false,
+    "baselineScoresReassigned": false,
+    "sourceCommit": "dc9990735ef490cd7ef85c6f949e3b84d0de7773",
+    "receipt": {
+      "receipt": ".local/plugin-evidence/maintenance-20261003-1823/review-discovery-snapshot.json",
+      "sha256": "4e56780f4904370fd60176803f422d9f48a7c55adc5c1710d86d1906ee81597d"
+    },
+    "note": "Existing 1.4.0 controlled-choice results retained at their original metadata fingerprint. No new model-routing score assigned to released 1.4.1."
+  }
 }

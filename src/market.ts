@@ -5,36 +5,46 @@ import { transaction, transfer, lockWallets } from './db.js';
 import { MoneySchema, type Config } from './config.js';
 import { AppError, decrypt, digest, safeEqual, validateEndpoint } from './security.js';
 import { DecisionInputSchema, type DecisionInput } from './protocol.js';
-import { evaluateProvider, resultConfidence, validateAgentResult, ProviderError, type AgentResult } from './provider.js';
+import { evaluateProvider, resultConfidence, validateAgentResult, validateProviderResult, ProviderError, type AgentResult } from './provider.js';
 import { evaluateRestrictedProvider } from './provider-network.js';
+import { supportsInput, type OfferContract } from './offer-contract.js';
 
 export const PolicySchema = z.object({
   maxPriceNanos: MoneySchema.optional(),
   maxLatencyMs: z.number().int().min(100).max(60000).optional(),
   minConfidence: z.number().min(0).max(1).optional(),
   allowedSellers: z.array(z.string().min(1).max(64)).min(1).max(100).optional(),
+  model: z.string().min(1).max(128).optional(),
+  usageRequirement: z.literal('backend_reported_required').optional(),
 }).strict();
 export type Policy = z.infer<typeof PolicySchema>;
 export type Provider = typeof evaluateProvider;
 type Row = Record<string, any>; // PostgreSQL rows, narrowed at trust boundaries by schema and SQL constraints.
+const MAX_QUOTE_ADMISSIONS = 16;
 
 export class Market {
   constructor(private db: Db, private config: Config, private provider: Provider = evaluateRestrictedProvider) {}
 
   async catalog(): Promise<unknown[]> {
-    const sellers = await this.db.query(`SELECT s.id,s.name,s.model,s.price_nanos,s.enabled,s.circuit_until,s.delivery_mode,
-      (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
-        (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running'))) AS delivery_ready,
+    const sellers = await this.db.query(`SELECT s.id,s.name,s.model,s.price_nanos,s.enabled,s.circuit_until,s.delivery_mode,s.inference_contract,s.capacity_until,
+      ((s.inference_contract IS NULL OR (s.capacity_until>clock_timestamp() AND
+        (SELECT count(*) FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running') < (s.inference_contract->>'maxConcurrency')::integer))
+        AND (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
+        (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running')))) AS delivery_ready,
       (SELECT count(*)::integer FROM decisions d WHERE d.seller_id=s.id AND d.status='succeeded') AS completed,
       (SELECT percentile_cont(0.95) WITHIN GROUP(ORDER BY latency_ms) FROM decisions d WHERE d.seller_id=s.id AND d.status='succeeded' AND d.created_at>now()-interval '24 hours') AS p95_ms
       FROM sellers s JOIN accounts owner ON owner.id=s.payout_account_id
       WHERE s.enabled AND NOT s.paused AND NOT owner.disabled ORDER BY s.price_nanos,s.id`);
-    return sellers.rows.map(s => ({id:s.id,name:s.name,model:s.model,deliveryMode:s.delivery_mode,priceNanos:s.price_nanos,questionTypes:['choice','score','noul'],available:s.delivery_ready===true&&(!s.circuit_until || new Date(s.circuit_until).getTime()<=Date.now()),completed:s.completed,p95LatencyMs:s.p95_ms===null?null:Math.round(s.p95_ms),confidenceProvenance:'provider_reported',protocol:'typesafe-systemone-v1'}));
+    return sellers.rows.map(s => ({id:s.id,name:s.name,model:s.model,deliveryMode:s.delivery_mode,priceNanos:s.price_nanos,questionTypes:s.inference_contract?.questionTypes??['choice','score','noul'],inferenceContract:s.inference_contract,capacityUntil:s.capacity_until,capacityEvidence:s.inference_contract?'seller_declared_expiring':'legacy_capacity_unverified',availabilityMeaning:'routing_eligibility_not_live_inference_proof',available:s.delivery_ready===true&&(!s.circuit_until || new Date(s.circuit_until).getTime()<=Date.now())&&(!s.inference_contract || new Date(s.capacity_until??0).getTime()>Date.now()),completed:s.completed,p95LatencyMs:s.p95_ms===null?null:Math.round(s.p95_ms),confidenceProvenance:'provider_reported',protocol:'typesafe-systemone-v1'}));
   }
 
   async quote(accountId: string, raw: DecisionInput, rawPolicy: Policy = {}): Promise<Row> {
     const input = DecisionInputSchema.parse(raw), policy = PolicySchema.parse(rawPolicy);
-    return transaction(this.db,async tx => {
+    const excluded: string[] = [];
+    for (let attempt = 0; attempt < MAX_QUOTE_ADMISSIONS; attempt++) {
+      // A failed locked recheck commits no quote and releases its account and
+      // seller locks before the next eligible offer is selected.
+      const outcome = await transaction(this.db,async tx => {
       const initialAccount = await this.account(tx, accountId);
       const maximumPrice = (account:Row) => policy.maxPriceNanos !== undefined && BigInt(policy.maxPriceNanos)<BigInt(account.max_price_nanos)
         ? BigInt(policy.maxPriceNanos) : BigInt(account.max_price_nanos);
@@ -44,8 +54,15 @@ export class Market {
         AND (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
           (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running')))
         AND ($2::text[] IS NULL OR s.id=ANY($2)) AND ($3::text[] IS NULL OR s.id=ANY($3))
-        ORDER BY s.price_nanos,s.id LIMIT 1`, [maximumPrice(initialAccount).toString(), initialAccount.allowed_sellers, policy.allowedSellers ?? null]);
-      if (!selected.rowCount) throw new AppError(503,'no_seller','No active seller offer meets the account and request policy');
+        AND ($4::text IS NULL OR s.model=$4)
+        AND ($5::boolean=false OR s.inference_contract->>'usageRequirement'='backend_reported_required')
+        AND (s.inference_contract IS NULL OR (s.capacity_until>clock_timestamp()
+          AND (s.inference_contract->>'maxInputBytes')::integer >= $6
+          AND s.inference_contract->'questionTypes' ?& $7::text[]
+          AND (SELECT count(*) FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running') < (s.inference_contract->>'maxConcurrency')::integer))
+        AND NOT (s.id=ANY($8::text[]))
+        ORDER BY s.price_nanos,s.id LIMIT 1`, [maximumPrice(initialAccount).toString(), initialAccount.allowed_sellers, policy.allowedSellers ?? null,policy.model??null,policy.usageRequirement!==undefined,Buffer.byteLength(JSON.stringify(input)),[...new Set(Object.values(input.questions).map(q=>q.type))],excluded]);
+      if (!selected.rowCount) return {kind:'none' as const};
       // Agents may be buyers and sellers simultaneously. Acquire every involved
       // account in UUID order before locking the offer or any financial rows.
       const accounts = await this.lockAccounts(tx,[accountId,selected.rows[0].payout_account_id]);
@@ -53,20 +70,36 @@ export class Market {
       const current = await tx.query(`SELECT *, (circuit_until IS NULL OR circuit_until<=clock_timestamp())
         AND (delivery_mode='https' OR (agent_ready_until>clock_timestamp() AND NOT EXISTS
           (SELECT 1 FROM decisions busy WHERE busy.seller_id=sellers.id AND busy.status='running'))) AS accepting
-        FROM sellers WHERE id=$1 FOR SHARE`,[selected.rows[0].id]);
+        FROM sellers WHERE id=$1 FOR UPDATE`,[selected.rows[0].id]);
       const s=current.rows[0];
       if (!this.availableSeller(s,accounts) || BigInt(s.price_nanos)>maximumPrice(account)
+        || policy.model!==undefined && s.model!==policy.model
+        || policy.usageRequirement!==undefined && s.inference_contract?.usageRequirement!==policy.usageRequirement
         || (account.allowed_sellers && !account.allowed_sellers.includes(s.id))) {
-        throw new AppError(503,'no_seller','No active seller offer meets the account and request policy');
+        return {kind:'retry' as const,sellerId:selected.rows[0].id as string};
+      }
+      try { await this.checkContract(tx,s,input); }
+      catch (error) {
+        if (error instanceof AppError && (error.code==='seller_unavailable' || error.code==='seller_schema_mismatch'))
+          return {kind:'retry' as const,sellerId:selected.rows[0].id as string};
+        throw error;
       }
       const id = randomUUID(), requestHash = digest(input), schemaHash = digest(input.questions);
       if(s.delivery_mode==='https')validateEndpoint(s.endpoint, this.config.providerHosts);
-      const timeoutMs = Math.min(policy.maxLatencyMs ?? this.config.providerMaxTimeoutMs, this.config.providerMaxTimeoutMs);
-      const row = await tx.query(`INSERT INTO quotes(id,account_id,seller_id,request_hash,schema_hash,price_nanos,endpoint,api_key_encrypted,model,payout_account_id,fee_bps,timeout_ms,min_confidence,expires_at,delivery_mode)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,clock_timestamp()+$14*interval '1 second',$15) RETURNING expires_at`,
-      [id,accountId,s.id,requestHash,schemaHash,s.price_nanos,s.endpoint,s.api_key_encrypted,s.model,s.payout_account_id,this.config.platformFeeBps,timeoutMs,policy.minConfidence ?? 0,this.config.quoteTtlSeconds,s.delivery_mode]);
-      return {id,sellerId:s.id,model:s.model,deliveryMode:s.delivery_mode,priceNanos:s.price_nanos,schemaHash,requestHash,expiresAt:row.rows[0].expires_at.toISOString(),timeoutMs,minConfidence:policy.minConfidence ?? 0,chargePolicy:'schema_valid_response_including_low_confidence',currency:'nanoXEC'};
-    });
+      const timeoutMs = Math.min(policy.maxLatencyMs ?? this.config.providerMaxTimeoutMs, this.config.providerMaxTimeoutMs,s.inference_contract?.deadlineMs??60000);
+      const row = await tx.query(`INSERT INTO quotes(id,account_id,seller_id,request_hash,schema_hash,price_nanos,endpoint,api_key_encrypted,model,payout_account_id,fee_bps,timeout_ms,min_confidence,expires_at,delivery_mode,inference_contract)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,clock_timestamp()+$14*interval '1 second',$15,$16) RETURNING expires_at`,
+      [id,accountId,s.id,requestHash,schemaHash,s.price_nanos,s.endpoint,s.api_key_encrypted,s.model,s.payout_account_id,this.config.platformFeeBps,timeoutMs,policy.minConfidence ?? 0,this.config.quoteTtlSeconds,s.delivery_mode,s.inference_contract?JSON.stringify(s.inference_contract):null]);
+      return {kind:'quote' as const,quote:{id,sellerId:s.id,model:s.model,deliveryMode:s.delivery_mode,inferenceContract:s.inference_contract,priceNanos:s.price_nanos,schemaHash,requestHash,expiresAt:row.rows[0].expires_at.toISOString(),timeoutMs,minConfidence:policy.minConfidence ?? 0,chargePolicy:'schema_valid_response_including_low_confidence',currency:'nanoXEC'}};
+      });
+      if (outcome.kind==='quote') return outcome.quote;
+      if (outcome.kind==='none') {
+        if (excluded.length===0) throw new AppError(503,'no_seller','No active seller offer meets the account and request policy');
+        throw new AppError(503,'quote_selection_busy','Seller availability changed during bounded quote selection; retry the same request');
+      }
+      excluded.push(outcome.sellerId);
+    }
+    throw new AppError(503,'quote_selection_busy','Seller availability changed during bounded quote selection; retry the same request');
   }
 
   async decide(accountId: string, idempotencyKey: string, body: {quoteId:string} & DecisionInput): Promise<Row> {
@@ -87,7 +120,7 @@ export class Market {
       const sellers = routing ? await tx.query(`SELECT *, (circuit_until IS NULL OR circuit_until<=clock_timestamp())
         AND (delivery_mode='https' OR (agent_ready_until>clock_timestamp() AND NOT EXISTS
           (SELECT 1 FROM decisions busy WHERE busy.seller_id=sellers.id AND busy.status='running'))) AS accepting
-        FROM sellers WHERE id=$1 FOR SHARE`,[routing.seller_id]) : undefined;
+        FROM sellers WHERE id=$1 FOR UPDATE`,[routing.seller_id]) : undefined;
       const quotes = await tx.query('SELECT *,expires_at>clock_timestamp() AS valid FROM quotes WHERE id=$1 AND account_id=$2 FOR UPDATE', [body.quoteId,accountId]);
       if (!quotes.rowCount) throw new AppError(404,'quote_not_found','Quote not found');
       const q = quotes.rows[0];
@@ -102,6 +135,7 @@ export class Market {
       }
       if (BigInt(q.price_nanos)>BigInt(account.max_price_nanos) || (account.allowed_sellers && !account.allowed_sellers.includes(q.seller_id))) throw new AppError(403,'spending_policy','The quote no longer meets the account policy');
       if(q.delivery_mode!==sellers?.rows[0].delivery_mode)throw new AppError(409,'seller_delivery_changed','Seller delivery mode changed');
+      await this.checkContract(tx,sellers!.rows[0],input);
       if(q.delivery_mode==='https')validateEndpoint(q.endpoint,this.config.providerHosts);
       const day = (await tx.query("SELECT (clock_timestamp() AT TIME ZONE 'UTC')::date::text AS day")).rows[0].day;
       await tx.query('INSERT INTO budgets(account_id,day) VALUES($1,$2) ON CONFLICT DO NOTHING',[accountId,day]);
@@ -126,9 +160,13 @@ export class Market {
     const started = performance.now();
     let result: Awaited<ReturnType<Provider>>;
     try {
-      result = await this.provider({endpoint:q.endpoint,apiKey:decrypt(q.api_key_encrypted,this.config.encryptionKey),model:q.model},input,q.timeout_ms);
-    } catch {
-      await this.fail(d.id,accountId,'provider_failure');
+      result = await this.provider({endpoint:q.endpoint,apiKey:decrypt(q.api_key_encrypted,this.config.encryptionKey),model:q.model,...(q.inference_contract?{contract:q.inference_contract}:{})},input,q.timeout_ms);
+      result = validateProviderResult(result,input,q.model,q.inference_contract?.usageRequirement==='backend_reported_optional');
+      if(q.inference_contract && (result.model!==q.model || result.usage?.output_tokens!==null && result.usage?.output_tokens!==undefined && result.usage.output_tokens>q.inference_contract.maxOutputTokens
+        || Buffer.byteLength(JSON.stringify(result))>q.inference_contract.maxOutputBytes))
+        throw new ProviderError('provider_invalid_result','Result exceeds the frozen seller contract');
+    } catch (error) {
+      await this.fail(d.id,accountId,q.inference_contract && error instanceof ProviderError?error.code:'provider_failure');
       throw new AppError(502,'provider_failure','The provider did not return a valid result; reserved funds were released');
     }
     const latencyMs = Math.round(performance.now()-started);
@@ -163,7 +201,8 @@ export class Market {
       if (amount-fee>0n) await transfer(tx,`decision:${d.id}:seller`,`reserved:${accountId}`,`available:${q.payout_account_id}`,amount-fee,{decisionId:d.id,sellerId:q.seller_id});
       await tx.query('UPDATE budgets SET reserved=reserved-$1,spent=spent+$1 WHERE account_id=$2 AND day=(SELECT budget_day FROM decisions WHERE id=$3)',[q.price_nanos,accountId,d.id]);
       const confidence = resultConfidence(result);
-      const response = {id:d.id,status:'succeeded',sellerId:q.seller_id,priceNanos:q.price_nanos,schemaHash:q.schema_hash,requestHash:q.request_hash,result,confidence,accepted:confidence>=q.min_confidence,confidenceProvenance:'provider_reported_or_noul_probability',usageProvenance:q.delivery_mode==='agent'?'unavailable_in_active_agent_session':'provider_reported',latencyMs,createdAt:d.created_at.toISOString()};
+      const missingUsageFields=(['input_tokens','output_tokens'] as const).filter(field=>result.usage===null || result.usage[field]===null);
+      const response = {id:d.id,status:'succeeded',sellerId:q.seller_id,priceNanos:q.price_nanos,schemaHash:q.schema_hash,requestHash:q.request_hash,result,confidence,accepted:confidence>=q.min_confidence,confidenceProvenance:'provider_reported_or_noul_probability',inferenceContract:q.inference_contract??null,usageProvenance:result.usage?'provider_reported':q.delivery_mode==='agent'?'unavailable_in_active_agent_session':'backend_usage_missing',usageEvidence:{actual:result.usage,estimate:null,missingFields:missingUsageFields,source:result.usage?'seller_backend_reported':'missing',model:result.model,modelIdentity:q.inference_contract?.modelIdentity??result.model,verifiedByMarketplace:false},latencyMs,createdAt:d.created_at.toISOString()};
       await tx.query("UPDATE decisions SET status='succeeded',response=$1,latency_ms=$2,completed_at=now() WHERE id=$3",[JSON.stringify(response),latencyMs,d.id]);
       await tx.query('UPDATE sellers SET failures=0,circuit_until=NULL WHERE id=$1',[q.seller_id]);
       return response;
@@ -227,6 +266,16 @@ export class Market {
       await tx.query('UPDATE agent_jobs SET result_hash=$1,completed_at=clock_timestamp() WHERE decision_id=$2',[hash,id]);
       return receipt;
     });
+  }
+
+  private async checkContract(tx:Tx,seller:Row,input:DecisionInput):Promise<void> {
+    const contract=seller.inference_contract as OfferContract|null;
+    if (!contract) return;
+    if (!supportsInput(contract,input)) throw new AppError(409,'seller_schema_mismatch','Input exceeds the seller contract');
+    const capacity=await tx.query(`SELECT capacity_until>clock_timestamp() AS live,
+      (SELECT count(*) FROM decisions WHERE seller_id=$1 AND status='running') AS running FROM sellers WHERE id=$1`,[seller.id]);
+    if (!capacity.rows[0].live || Number(capacity.rows[0].running)>=contract.maxConcurrency)
+      throw new AppError(503,'seller_unavailable','Seller capacity expired or is exhausted');
   }
 
   private async lockAccounts(tx:Tx,ids:Array<string|null|undefined>):Promise<Map<string,Row>> {

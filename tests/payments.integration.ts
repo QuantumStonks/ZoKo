@@ -648,6 +648,8 @@ describe('Programmatic payments: genuine signed bytes and real PostgreSQL persis
     await db.query('ALTER TABLE sellers DROP CONSTRAINT sellers_enabled_requires_owner');
     await db.query('ALTER TABLE sellers DROP COLUMN paused');
     await db.query('DROP TABLE agent_jobs');
+    await db.query('ALTER TABLE sellers DROP COLUMN inference_contract,DROP COLUMN capacity_until');
+    await db.query('ALTER TABLE quotes DROP COLUMN inference_contract');
     await db.query('ALTER TABLE sellers DROP COLUMN delivery_mode,DROP COLUMN agent_ready_until');
     await db.query('ALTER TABLE quotes DROP COLUMN delivery_mode');
     await db.query('DELETE FROM zoko_migrations'); await db.query('INSERT INTO zoko_migrations(version) VALUES(1)');

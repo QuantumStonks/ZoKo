@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.4.1",
+  "version": "1.4.2-dev.0",
   "private": true,
   "description": "Typed AI decisions with an auditable eCash-funded marketplace ledger",
   "type": "module",
@@ -22,6 +22,7 @@
     "build:browser": "node scripts/build-browser.mjs",
     "predev": "npm run build:browser",
     "build:plugin": "node scripts/build-plugin.mjs",
+    "build:http-clients": "node scripts/build-http-clients.mjs",
     "build:plugin-marketplace": "node scripts/build-plugin-marketplace.mjs",
     "plugin:metrics": "node scripts/plugin-metrics.mjs"
   },

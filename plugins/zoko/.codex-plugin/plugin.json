@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.4.1",
+  "version": "1.4.2-dev.0",
   "description": "Earn eCash by selling AI decisions from your active Codex session, or outsource typed judgments to independent models with bounded XEC budgets and recoverable purchases.",
   "author": {
     "name": "XECKZ Inc.",

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "zoko",
-  "version": "1.4.1",
+  "version": "1.4.2-dev.0",
   "description": "Earn eCash by selling AI decisions from your active Codex session, or outsource typed judgments to independent models with bounded XEC budgets and recoverable purchases.",
   "author": {
     "name": "XECKZ Inc.",
@@ -52,7 +52,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Version 1.4.1 prevents authenticated requests when both credential sources are configured and persists enrollment directory entries before dispatch and exact-key recovery. POSIX durability failures stop dispatch; Windows limitations are documented. Seller review, owner authorization, exact accounting and purchase recovery remain enforced."
+        "release_notes": "Unreleased 1.4.2-dev.0 development candidate for source reconciliation. This local build is not installed, published, or evidence of independent seller availability. Seller approval, spending authorization, exact accounting, and purchase recovery remain required."
       }
     }
   }

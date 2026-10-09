@@ -8,6 +8,7 @@ RUN npm ci --ignore-scripts
 FROM dependencies AS build
 COPY tsconfig.json ./
 COPY src ./src
+COPY clients ./clients
 COPY tests ./tests
 COPY scripts/build-browser.mjs ./scripts/build-browser.mjs
 COPY public ./public
