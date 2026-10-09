@@ -13,14 +13,16 @@ import { Payments } from './payments/index.js';
 import { PaymentError } from './payments/money.js';
 import { DecisionInputSchema } from './protocol.js';
 import { SCHEMA_VERSION } from './migration.js';
+import { OfferContractSchema, cancellationSemantics } from './offer-contract.js';
+import { openApiDocument } from './openapi.js';
 
 const Uuid = z.uuid();
 const SellerId = z.string().regex(/^[a-z0-9][a-z0-9_-]{0,63}$/);
 const Names = z.string().trim().min(1).max(120);
 const CreateAccountSchema = z.object({name:Names,dailyLimitNanos:MoneySchema,maxPriceNanos:MoneySchema,allowedSellers:z.array(SellerId).max(100).optional()}).strict();
 const AccountPolicySchema = z.object({dailyLimitNanos:MoneySchema.optional(),maxPriceNanos:MoneySchema.optional(),allowedSellers:z.array(SellerId).max(100).nullable().optional(),disabled:z.boolean().optional()}).strict();
-const AgentOfferSchema = z.object({id:SellerId,name:Names,endpoint:z.string().url().max(2048),apiKey:z.string().min(1).max(4096),model:z.string().min(1).max(100),priceNanos:PositiveMoneySchema}).strict();
-const SessionOfferSchema = AgentOfferSchema.omit({endpoint:true,apiKey:true});
+const AgentOfferSchema = z.object({id:SellerId,name:Names,endpoint:z.string().url().max(2048),apiKey:z.string().min(1).max(4096),model:z.string().min(1).max(100),priceNanos:PositiveMoneySchema,inferenceContract:OfferContractSchema.optional()}).strict();
+const SessionOfferSchema = AgentOfferSchema.omit({endpoint:true,apiKey:true,inferenceContract:true});
 const SellerSchema = AgentOfferSchema.extend({payoutAccountId:Uuid,enabled:z.boolean().optional()});
 const OfferPatchSchema = z.object({priceNanos:PositiveMoneySchema.optional(),apiKey:z.string().min(1).max(4096).optional(),paused:z.boolean().optional()}).strict().refine(value=>Object.keys(value).length>0,'Provide an offer change');
 
@@ -70,15 +72,15 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     return key;
   }
   const accountView=(a:Record<string,any>)=>({id:a.id,name:a.name,dailyLimitNanos:a.daily_limit_nanos,maxPriceNanos:a.max_price_nanos,allowedSellers:a.allowed_sellers,disabled:a.disabled});
-  const offerView=(s:Record<string,any>)=>({id:s.id,name:s.name,endpoint:s.delivery_mode==='agent'?null:s.endpoint,deliveryMode:s.delivery_mode,readyUntil:s.agent_ready_until,model:s.model,priceNanos:s.price_nanos,payoutAccountId:s.payout_account_id,enabled:s.enabled,paused:s.paused,commissionBps:config.platformFeeBps});
+  const offerView=(s:Record<string,any>)=>({id:s.id,name:s.name,endpoint:s.delivery_mode==='agent'?null:s.endpoint,deliveryMode:s.delivery_mode,readyUntil:s.agent_ready_until,model:s.model,priceNanos:s.price_nanos,payoutAccountId:s.payout_account_id,enabled:s.enabled,paused:s.paused,commissionBps:config.platformFeeBps,inferenceContract:s.inference_contract,capacityUntil:s.capacity_until});
   async function createOffer(ownerId:string,offer:z.infer<typeof AgentOfferSchema>,enabled:boolean,actor:string) {
     const endpoint=validateEndpoint(offer.endpoint,config.providerHosts);
     return transaction(db,async tx=>{
       const owner=await tx.query('SELECT id FROM accounts WHERE id=$1 AND NOT disabled FOR UPDATE',[ownerId]);
       if(!owner.rowCount)throw new AppError(400,'invalid_payout_account','Seller account is unavailable');
-      const result=await tx.query(`INSERT INTO sellers(id,name,endpoint,api_key_encrypted,model,price_nanos,payout_account_id,enabled,paused)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,false) ON CONFLICT(id) DO NOTHING RETURNING *`,
-        [offer.id,offer.name,endpoint,encrypt(offer.apiKey,config.encryptionKey),offer.model,offer.priceNanos,ownerId,enabled]);
+      const result=await tx.query(`INSERT INTO sellers(id,name,endpoint,api_key_encrypted,model,price_nanos,payout_account_id,enabled,paused,inference_contract)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,false,$9) ON CONFLICT(id) DO NOTHING RETURNING *`,
+        [offer.id,offer.name,endpoint,encrypt(offer.apiKey,config.encryptionKey),offer.model,offer.priceNanos,ownerId,enabled,offer.inferenceContract?JSON.stringify(offer.inferenceContract):null]);
       if(!result.rowCount)throw new AppError(409,'seller_exists','Seller offer ID already exists');
       await tx.query('INSERT INTO audit_events(actor,action,subject,metadata) VALUES($1,$2,$3,$4)',[actor,'seller.created',offer.id,JSON.stringify({payoutAccountId:ownerId,enabled,priceNanos:offer.priceNanos})]);
       return offerView(result.rows[0]);
@@ -97,13 +99,17 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
       const count = await db.query(`SELECT count(*)::integer AS n FROM sellers s JOIN accounts a ON a.id=s.payout_account_id
         WHERE s.enabled AND NOT s.paused AND NOT a.disabled AND (s.circuit_until IS NULL OR s.circuit_until<=clock_timestamp())
         AND (s.delivery_mode='https' OR (s.agent_ready_until>clock_timestamp() AND NOT EXISTS
-          (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running')))`);
+          (SELECT 1 FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running')))
+        AND (s.inference_contract IS NULL OR (s.capacity_until>clock_timestamp() AND
+          (SELECT count(*) FROM decisions busy WHERE busy.seller_id=s.id AND busy.status='running') < (s.inference_contract->>'maxConcurrency')::integer))`);
       const paymentStatus = payments.status() as {ready?:boolean;enabled?:boolean};
       const ready=!config.payments.enabled || paymentStatus.ready===true;
       reply.code(ready?200:503);
       return {ok:ready,tradingReady:ready&&count.rows[0].n>0,database:'ready',enabledSellers:count.rows[0].n,payments:paymentStatus};
     } catch {reply.code(503);return {ok:false,tradingReady:false,database:'unavailable'};}
   });
+  app.get('/v1/openapi.json',async()=>openApiDocument);
+  app.get('/v1/capabilities',async()=>({version:'zoko.marketplace/1',offerContractVersion:'zoko.inference-offer/1',products:['model_specific_typed_inference'],pricing:'fixed_integer_nanoXEC_per_request',tokens:'model_specific_usage_evidence_not_fungible_assets',cancellation:cancellationSemantics,openapi:'/v1/openapi.json',liveCapacityProof:false}));
   app.get('/v1/catalog',async()=>({sellers:await market.catalog()}));
   app.post('/v1/enroll',{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async(req,reply)=>{
     if (!config.publicEnrollment) throw new AppError(403,'enrollment_closed','Self-service enrollment is not enabled on this marketplace');
@@ -130,7 +136,8 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     return {account,credentialReturned:false,sellerApprovalRequired:true};
   });
   app.get('/.well-known/zoko.json',async()=>({
-    name:'Zoko',version:'1.4.1',protocol:'typesafe-systemone-v1',
+    capabilities:'/v1/capabilities',openapi:'/v1/openapi.json',cancellation:cancellationSemantics,
+    name:'Zoko',version:'1.4.2-dev.0',protocol:'typesafe-systemone-v1',
     catalog:'/v1/catalog',quote:'/v1/quotes',execute:'/v1/decisions',
     authentication:{scheme:'Bearer',provisioning:config.publicEnrollment?'local_key_self_service_enrollment':'operator_issued_scoped_account_key',accountRoles:['buyer','seller'],enrollment:config.publicEnrollment?'/v1/enroll':null,credentials:config.publicEnrollment?'generated_locally_never_returned':'operator_provisioned',defaultPurchaseLimits:'zero_unless_owner_supplies_budget'},
     marketplace:{role:'intermediary',sellerOffers:'/v1/seller/offers',approvalRequired:true,ownership:'authenticated_seller_account',sellerPaysDeliveryCosts:true},
@@ -211,7 +218,18 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     });
     reply.code(201);return created;
   });
-  app.post('/v1/seller/offers/:id/ready',async req=>{
+  app.post('/v1/seller/offers/:id/capacity',async req=>{
+    const ownerId=await agentAccount(req.headers),id=SellerId.parse((req.params as {id:string}).id);
+    const {ready}=z.strictObject({ready:z.boolean()}).parse(req.body);
+    return transaction(db,async tx=>{
+      await tx.query('SELECT id FROM accounts WHERE id=$1 FOR UPDATE',[ownerId]);
+      const found=await tx.query(`UPDATE sellers SET capacity_until=CASE WHEN $3 THEN clock_timestamp()+interval '120 seconds' ELSE NULL END
+        WHERE id=$1 AND payout_account_id=$2 AND inference_contract IS NOT NULL AND delivery_mode='https' RETURNING capacity_until`,[id,ownerId,ready]);
+      if(!found.rowCount)throw new AppError(404,'seller_not_found','Contracted HTTPS offer not found');
+      return {id,capacityUntil:found.rows[0].capacity_until,provenance:'seller_declared',liveInferenceVerified:false};
+    });
+  });
+  app.post('/v1/seller/offers/:id/ready' ,async req=>{
     const ownerId=await agentAccount(req.headers),id=SellerId.parse((req.params as {id:string}).id);
     const {ready}=z.object({ready:z.boolean()}).strict().parse(req.body);
     return market.agentReady(ownerId,id,ready);

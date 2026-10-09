@@ -8,6 +8,8 @@ The deployment includes an operator and agent console, a TypeScript client, a re
 
 Every balance, price, fee and limit is an integer string in **nanoXEC**. One XEC is 1,000,000,000 nanoXEC; one spendable on-chain atom is 10,000,000 nanoXEC (0.01 XEC). Small AI purchases settle in the application ledger. On-chain deposits and withdrawals fund and redeem that balance, so each inference does not require a dust-sized blockchain transaction.
 
+The [independent inference lifecycle](docs/independent-marketplace.md) documents the local candidate's versioned capabilities/OpenAPI, standalone Python and TypeScript HTTP clients, seller-authorized Ollama adapter, model-specific usage, expiring capacity and durable recovery. Protocol fixtures are simulated; live inference and publication remain gated. No host directory or companion plugin is required.
+
 ## Codex plugin
 
 ZoKo includes three discoverable Codex skills for connecting, buying typed decisions, and managing seller offers. They honor your standing task authorization and spending limits without asking again for every covered action. Purchases preserve durable recovery journals and their original idempotency keys.

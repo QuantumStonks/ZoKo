@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { z } from 'zod';
 import { DecisionInputSchema, type DecisionInput, type JsonEntry } from './protocol.js';
+import type { OfferContract } from './offer-contract.js';
 
 export const MAX_PROVIDER_RESPONSE_BYTES = 262_144;
 export const MAX_PROVIDER_TIMEOUT_MS = 60_000;
@@ -13,7 +14,7 @@ export type Answer =
 export interface ProviderResult {
   model: string;
   answers: Record<string, Answer>;
-  usage: { input_tokens: number; output_tokens: number };
+  usage: { input_tokens: number | null; output_tokens: number | null } | null;
 }
 export type AgentResult = Omit<ProviderResult,'usage'> & { usage: null };
 export interface Provider {
@@ -21,6 +22,7 @@ export interface Provider {
   endpoint: string;
   apiKey: string;
   model: string;
+  contract?: OfferContract;
 }
 export class ProviderError extends Error {
   constructor(readonly code: string, message: string, readonly status?: number) {
@@ -66,8 +68,10 @@ function invalidResult(): never {
   throw new ProviderError('provider_invalid_result', 'Provider returned an invalid or inconsistent typed result');
 }
 
-function validateTypedResult(value: unknown, input: DecisionInput, model: string, agent: boolean): ProviderResult | AgentResult {
-  const parsed = (agent ? ResultSchema.extend({usage:z.null()}) : ResultSchema).safeParse(value);
+function validateTypedResult(value: unknown, input: DecisionInput, model: string, agent: boolean, partialUsage=false): ProviderResult | AgentResult {
+  const optionalUsage=z.strictObject({input_tokens:ResultSchema.shape.usage.shape.input_tokens.nullable(),output_tokens:ResultSchema.shape.usage.shape.output_tokens.nullable()})
+    .refine(u=>u.input_tokens!==null || u.output_tokens!==null,'Use usage:null when both counts are missing');
+  const parsed = (agent ? ResultSchema.extend({usage:z.null()}) : partialUsage ? ResultSchema.extend({usage:optionalUsage}) : ResultSchema).safeParse(value);
   if (!parsed.success) invalidResult();
   const result = parsed.data;
   const resolvesAlias = (model === 'jev-latest' || model === 'jev-preview') && /^jev-[0-9]+\.[0-9]+\.[0-9]+$/.test(result.model);
@@ -99,8 +103,10 @@ function validateTypedResult(value: unknown, input: DecisionInput, model: string
   return result as ProviderResult | AgentResult;
 }
 
-function validateResult(value:unknown,input:DecisionInput,model:string):ProviderResult {
-  return validateTypedResult(value,input,model,false) as ProviderResult;
+export function validateProviderResult(value:unknown,input:DecisionInput,model:string,allowMissingUsage=false):ProviderResult {
+  const missing = typeof value === 'object' && value !== null && (value as {usage?:unknown}).usage === null;
+  if (missing && !allowMissingUsage) invalidResult();
+  return validateTypedResult(value,DecisionInputSchema.parse(input),model,missing,allowMissingUsage) as ProviderResult;
 }
 /** Active agents do not expose a reliable per-job token meter. Never invent one. */
 export function validateAgentResult(value:unknown,input:DecisionInput,model:string):AgentResult {
@@ -162,8 +168,9 @@ export async function evaluateProvider(
     if (!response.ok) throw new ProviderError('provider_http_error', `Provider returned HTTP ${response.status}`, response.status);
     const contentType = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase();
     if (contentType !== 'application/json') invalidResult();
+    const responseLimit = provider.contract?.maxOutputBytes ?? MAX_PROVIDER_RESPONSE_BYTES;
     const declaredLength = response.headers.get('content-length');
-    if (declaredLength !== null && (!/^[0-9]+$/.test(declaredLength) || Number(declaredLength) > MAX_PROVIDER_RESPONSE_BYTES)) {
+    if (declaredLength !== null && (!/^[0-9]+$/.test(declaredLength) || Number(declaredLength) > responseLimit)) {
       throw new ProviderError('provider_response_too_large', 'Provider response exceeds the byte limit');
     }
     if (!response.body) invalidResult();
@@ -178,7 +185,7 @@ export async function evaluateProvider(
         if (performance.now() - started >= timeoutMs) throw timeoutError();
         if (chunk.done) break;
         bytes += chunk.value.byteLength;
-        if (bytes > MAX_PROVIDER_RESPONSE_BYTES) {
+        if (bytes > responseLimit) {
           throw new ProviderError('provider_response_too_large', 'Provider response exceeds the byte limit');
         }
         text += decoder.decode(chunk.value, { stream: true });
@@ -192,7 +199,9 @@ export async function evaluateProvider(
     }
     let decoded: unknown;
     try { decoded = JSON.parse(text); } catch { invalidResult(); }
-    const result = validateResult(decoded, snapshot, requestedModel);
+    const result = validateProviderResult(decoded, snapshot, requestedModel,provider.contract?.usageRequirement === 'backend_reported_optional');
+    if (provider.contract && result.model !== requestedModel) invalidResult();
+    if (provider.contract && result.usage?.output_tokens!==null && result.usage?.output_tokens!==undefined && result.usage.output_tokens > provider.contract.maxOutputTokens) invalidResult();
     if (performance.now() - started >= timeoutMs) throw timeoutError();
     return result;
   })();

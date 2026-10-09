@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "status": "local_protocol_slice_tested_live_qualification_gated",
+  "updatedAt": "2026-10-07",
+  "historicalSliceScope": "The original top-level fingerprint, checks, artifacts, receipts, blockers and nextAction below describe the October 7 protocol slice. They are preserved as historical evidence, not the latest candidate results.",
+  "currentCandidate": {
+    "recordedAt": "2026-10-09T10:54:06Z",
+    "status": "local_exact_input_validation_passed_unreleased",
+    "version": "1.4.2-dev.0",
+    "head": "50f7bda67e97d35d7a913df5c30d7f947e7f18d9",
+    "sourceState": "uncommitted_working_tree",
+    "sourceAndDependencyPaths": 97,
+    "sourceAndDependencyFingerprintSha256": "a9f8b751440dc7834fa5b3ff0f7c2062d3ce5973867e44e63b907acf4e389929",
+    "checks": {
+      "typecheck": "passed",
+      "unit": {"passed": 171, "failed": 0},
+      "postgresIntegration": {"passed": 104, "failed": 0, "databaseStopped": true, "sourceUnchangedDuringTests": true},
+      "applicationBuild": "passed",
+      "httpClientDistribution": "passed",
+      "pluginArchiveBuild": "passed",
+      "isolatedArchive": "23_files_extracted_22_integrity_entries_matched_cli_help_passed"
+    },
+    "archive": {"path": "dist/plugins/zoko-1.4.2-dev.0.zip", "sha256": "ca3270949c991fb3ec2de6facc9eca6bd259be02cab3acc43336c7f1d4ba26a3"},
+    "receipts": {
+      "validation": ".local/release-acceptance/validation-receipt-20261009.json",
+      "validationSha256": "0fd13b7aad3e209f4a433e9786ca9ab7a4ffcb2bf87bda8cf83e4248b9bfa579",
+      "integration": ".local/postgres-portable/run-2026-10-09T10-44-40-583Z/receipt.json",
+      "integrationSha256": "a6a5103cfce5309e31749f2ff5504a8371ba90081e03b995e9150e2d0ce4f067"
+    },
+    "publishedPluginVersion": "1.4.1",
+    "productionApiVersion": "1.4.0",
+    "realIndependentInferenceVerified": false,
+    "independentSellerRightsAndCapacityVerified": false,
+    "externalAdoptionVerified": false,
+    "remoteCiVerified": false,
+    "deployed": false,
+    "published": false,
+    "nextAction": "Review the exact candidate paths and current records, then verify live remote state and CI/cost gates before a release decision; independently qualify seller rights/capacity and owner-funded demand before any real paid delivery."
+  },
+  "scope": "independent HTTP buyer/seller model-specific inference lifecycle",
+  "sourceBase": "50f7bda67e97d35d7a913df5c30d7f947e7f18d9",
+  "branch": "codex/growth-release-continuity",
+  "sourceState": "uncommitted_working_tree",
+  "sourceFingerprintSha256": "62c815486593e6f57ec29c6c2847146261428cfc181b8dd28049b9f81bdf7c48",
+  "publicationAuthorizedForThisCandidate": false,
+  "liveInferenceExecuted": false,
+  "realPaymentsExecuted": false,
+  "fixtureEvidence": {"genuine_model_inference": false, "payment": "simulated/payment-not-applicable"},
+  "preservedWork": "Existing discovery, enrollment, plugin continuity and site changes preserved; no commits, pushes or external mutations",
+  "checks": {
+    "harmlessExecution": "passed",
+    "typecheck": "passed",
+    "fullUnit": {"passed": 171, "failed": 0, "skipped": 0},
+    "postgresIntegration": {"passed": 96, "failed": 0, "skipped": 0, "database": "PostgreSQL 17.11 disposable loopback", "databaseStopped": true, "sourceUnchangedDuringTests": true},
+    "applicationBuild": "passed",
+    "httpClientDistribution": "passed",
+    "pluginArchiveBuild": "passed",
+    "finalArchiveIndependentExtraction": "passed_integrity_source_inputs_and_cli_help",
+    "diffWhitespace": "passed",
+    "realInference": "not_run_authorization_gate",
+    "livePayments": "not_run",
+    "remoteCI": "not_run",
+    "publication": "not_run"
+  },
+  "artifacts": {
+    "pluginArchive": {"version": "1.4.0", "path": "dist/plugins/zoko-1.4.0.zip", "sha256": "ddafb47978b0d04499d67113ec6c7ffd83a73a0b9afb52c133f0113b0bc99651"},
+    "independentClients": "dist/http-clients",
+    "typescriptSha256": "0e69f3c36341ed1a38d235bcece3b3ca2c054d25d25e1d1bc78eda5e54dc56e0",
+    "pythonSha256": "1c6c1c51144c328e9454e55479e9702406a2ddeaf2008bdfb7e57071f3548912",
+    "openApiSha256": "f05e60b17979b09699dee07b4d711c28b7d35351cea0f78dc26d03fc7b23cdcd"
+  },
+  "receipts": {
+    "validation": "docs/inference-marketplace-validation.md",
+    "detailed": ".local/inference-evidence/20261007/receipt.json",
+    "integration": ".local/postgres-portable/run-2026-10-07T20-38-41-877Z/receipt.json",
+    "integrationLogSha256": "78cd816939420f2067939855f2be49ac341e232318e5ac25073e22a902e03543",
+    "initialFailuresCorrected": ".local/postgres-portable/run-2026-10-07T20-32-48-428Z/receipt.json"
+  },
+  "blockers": [
+    "No current qualified seller model/resale permission evidence or real inference spending authorization for this slice",
+    "Seller declarations and deterministic protocol tests do not prove live supply or backend license rights",
+    "Cancellation unsupported; aborts recover original purchase identity; ambiguous backend dispatch requires reconciliation",
+    "Windows directory fsync unavailable; protected journals and independent backups required",
+    "Local package/manifests 1.4.0 versus historical published-plugin continuity 1.4.1 requires release-version reconciliation",
+    "Remote CI, real paid delivery, publication, directory eligibility and adoption are unverified for this candidate"
+  ],
+  "nextAction": "Qualify one independently owned, explicitly authorized model backend and resale rights; only within existing inference/transmission/spend authority run a bounded real inference and recovery check. Reconcile release version and validate the resulting immutable release before any authorized publication."
+}
