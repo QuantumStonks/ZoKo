@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.4.2-dev.0",
+  "version": "1.4.2",
   "private": true,
   "description": "Typed AI decisions with an auditable eCash-funded marketplace ledger",
   "type": "module",

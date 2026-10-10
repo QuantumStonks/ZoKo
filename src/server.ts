@@ -91,7 +91,7 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
     return result;
   };
 
-  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.4.1'}));
+  app.get('/health/live',async()=>({ok:true,service:'zoko',version:'1.4.2'}));
   app.get('/health/ready',async(_req,reply)=>{
     try {
       const migration=await db.query('SELECT max(version)::integer AS version FROM zoko_migrations');
@@ -137,7 +137,7 @@ export async function buildServer(config:Config,db:Db,payments:Payments,provider
   });
   app.get('/.well-known/zoko.json',async()=>({
     capabilities:'/v1/capabilities',openapi:'/v1/openapi.json',cancellation:cancellationSemantics,
-    name:'Zoko',version:'1.4.2-dev.0',protocol:'typesafe-systemone-v1',
+    name:'Zoko',version:'1.4.2',protocol:'typesafe-systemone-v1',
     catalog:'/v1/catalog',quote:'/v1/quotes',execute:'/v1/decisions',
     authentication:{scheme:'Bearer',provisioning:config.publicEnrollment?'local_key_self_service_enrollment':'operator_issued_scoped_account_key',accountRoles:['buyer','seller'],enrollment:config.publicEnrollment?'/v1/enroll':null,credentials:config.publicEnrollment?'generated_locally_never_returned':'operator_provisioned',defaultPurchaseLimits:'zero_unless_owner_supplies_budget'},
     marketplace:{role:'intermediary',sellerOffers:'/v1/seller/offers',approvalRequired:true,ownership:'authenticated_seller_account',sellerPaysDeliveryCosts:true},

@@ -1,9 +1,9 @@
 # Independent model-specific inference lifecycle
 
-The unpublished development candidate in draft PR #14 adds `zoko.marketplace/1`,
+The unpublished development candidate merged through PR #14 adds `zoko.marketplace/1`,
 `zoko.inference-offer/1`, and an OpenAPI 3.1 buyer/seller contract at
-`/v1/openapi.json`. It has not been merged, deployed, installed, submitted to a
-directory, or marketed. ZoKo is the intermediary;
+`/v1/openapi.json`. It has not been deployed, installed, submitted to a directory,
+or marketed. ZoKo is the intermediary;
 independent sellers operate and pay for their inference backends. Decisions are
 outputs of inference. A model's token usage is evidence about that execution,
 not an interchangeable asset or a price unit shared with other models.

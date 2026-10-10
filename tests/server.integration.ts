@@ -165,6 +165,10 @@ describe('Fastify API boundaries with real PostgreSQL', {
     const live = await request('GET', '/health/live');
     assert.equal(live.statusCode, 200);
     assert.equal(live.json().ok, true);
+    assert.equal(live.json().version, '1.4.2');
+    const metadata = await request('GET', '/.well-known/zoko.json');
+    assert.equal(metadata.statusCode, 200);
+    assert.equal(metadata.json().version, '1.4.2');
     const empty = await request('GET', '/health/ready');
     assert.equal(empty.statusCode, 200, empty.body);
     assert.equal(empty.json().ok, true);

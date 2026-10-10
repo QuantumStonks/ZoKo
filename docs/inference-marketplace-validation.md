@@ -1,9 +1,9 @@
 # Independent inference marketplace validation
 
-## Current local candidate - 2026-10-09
+## Earlier local development candidate - 2026-10-09 10:44 UTC
 
-The uncommitted `1.4.2-dev.0` candidate is locally validated, not released or
-deployed. HEAD remains `50f7bda67e97d35d7a913df5c30d7f947e7f18d9` on
+At this checkpoint, the uncommitted `1.4.2-dev.0` candidate was locally validated,
+not released or deployed. HEAD was `50f7bda67e97d35d7a913df5c30d7f947e7f18d9` on
 `codex/growth-release-continuity`. The 97 implementation/dependency input paths
 matched fingerprint `a9f8b751440dc7834fa5b3ff0f7c2062d3ce5973867e44e63b907acf4e389929`
 before and after the October 9 checks. The ignored exact-input receipt is
