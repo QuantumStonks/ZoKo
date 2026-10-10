@@ -1,13 +1,13 @@
 {
   "format": "zoko-plugin-marketplace/1",
   "name": "zoko",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "archive": {
-    "name": "zoko-1.4.1.zip",
-    "bytes": 1387952,
-    "sha256": "1aecb7eb2da39fa8bc3734a24276f07c76a7923fdd8afa8e4a5f080c5de32601"
+    "name": "zoko-1.4.2.zip",
+    "bytes": 1388104,
+    "sha256": "366878828b443bf3d18d755e2b873c853ec4b5e2c66b93ab04b74c83dbee518d"
   },
-  "sourceCommit": "dc9990735ef490cd7ef85c6f949e3b84d0de7773",
+  "sourceCommit": "a5867423989a5c84ef0f8054cc47b78b23129a35",
   "packageSourcesClean": true,
   "packageMatchesCheckout": true,
   "files": [
@@ -19,12 +19,12 @@
     {
       "path": "README.md",
       "bytes": 1464,
-      "sha256": "fdfa1ba3e3e67ae821f0b7a827e2a995d8bac954c2a76328623405b1070a46ec"
+      "sha256": "2b06b18b2f4f0a2f7fa10ba9971d40cb63098e8e2241059c7cc98fccaa4ea5a9"
     },
     {
       "path": "plugins/zoko/.codex-plugin/plugin.json",
-      "bytes": 3673,
-      "sha256": "30bd9dda1dccbbdac3cbe1fa910a7888518690b1d804c1d0c7e0c04e22ac7e8b"
+      "bytes": 3763,
+      "sha256": "58e8a81ccfb17fa37afecf6b9eb9ea7635db7492d013115ccd22a26125e0345c"
     },
     {
       "path": "plugins/zoko/LICENSE.txt",
@@ -54,17 +54,17 @@
     {
       "path": "plugins/zoko/integrity.json",
       "bytes": 18878,
-      "sha256": "2ac338645af91327ce8f37605ba4ca0c53bc90d72db846b8a62ff51153cd8456"
+      "sha256": "f680565f7c831d75386d3399f3a8d6b0b1497a0de64b498ec835a58edea58748"
     },
     {
       "path": "plugins/zoko/plugin.json",
-      "bytes": 3888,
-      "sha256": "b0ed4f9154e3536184f5b12a7b63d6b540364de5c3d3b6f940f07b2da8a1267e"
+      "bytes": 3978,
+      "sha256": "388eb45879dc501e4841b4d4f5494c84d539d4fee54ff639a8844b96393509b4"
     },
     {
       "path": "plugins/zoko/runtime/cli.mjs",
-      "bytes": 492166,
-      "sha256": "6ef5973826a8f6569b57c3a911fca01e37732840b92f1ed19106c7d1a88dbbd3"
+      "bytes": 492435,
+      "sha256": "d8bee12dd988629eea9b5a448aedffe5ec51cfb231709e6cf8b12862cfde13e6"
     },
     {
       "path": "plugins/zoko/runtime/client.mjs",

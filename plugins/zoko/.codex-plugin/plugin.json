@@ -1,6 +1,6 @@
 {
   "name": "zoko",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Earn eCash by selling AI decisions from your active Codex session, or outsource typed judgments to independent models with bounded XEC budgets and recoverable purchases.",
   "author": {
     "name": "XECKZ Inc.",
@@ -51,7 +51,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Version 1.4.1 prevents authenticated requests when both credential sources are configured and persists enrollment directory entries before dispatch and exact-key recovery. POSIX durability failures stop dispatch; Windows limitations are documented. Seller review, owner authorization, exact accounting and purchase recovery remain enforced."
+        "release_notes": "Version 1.4.2 adds model-specific typed inference offers, expiring seller capacity, contract-aware quotes, public capabilities and OpenAPI, and standalone Python and TypeScript clients. Seller approval, model rights, buyer spending authorization, exact accounting, and uncertain-purchase recovery remain required. New marketplace features require a compatible ZoKo API; installation supplies no sellers, funds, or proven outcomes."
       }
     }
   }

@@ -1,7 +1,7 @@
 {
   "format": "zoko-plugin-integrity/1",
   "name": "zoko",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "runtime": "Node.js >=24.0.0 <25",
   "compiler": {
     "name": "esbuild",
@@ -410,7 +410,7 @@
     },
     {
       "path": "src/provider.ts",
-      "sha256": "dbd7e9f3106e880c2ebd0bc0baac0e64cfa3081264caa615680f26caa6ee721a"
+      "sha256": "f4bb06a629d03802b0ff5d35d8e31d85e322f54288f40c11d99fb3ffa44f6cb9"
     },
     {
       "path": "src/security.ts",
@@ -420,8 +420,8 @@
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "bytes": 3673,
-      "sha256": "30bd9dda1dccbbdac3cbe1fa910a7888518690b1d804c1d0c7e0c04e22ac7e8b"
+      "bytes": 3763,
+      "sha256": "58e8a81ccfb17fa37afecf6b9eb9ea7635db7492d013115ccd22a26125e0345c"
     },
     {
       "path": "LICENSE.txt",
@@ -450,13 +450,13 @@
     },
     {
       "path": "plugin.json",
-      "bytes": 3888,
-      "sha256": "b0ed4f9154e3536184f5b12a7b63d6b540364de5c3d3b6f940f07b2da8a1267e"
+      "bytes": 3978,
+      "sha256": "388eb45879dc501e4841b4d4f5494c84d539d4fee54ff639a8844b96393509b4"
     },
     {
       "path": "runtime/cli.mjs",
-      "bytes": 492166,
-      "sha256": "6ef5973826a8f6569b57c3a911fca01e37732840b92f1ed19106c7d1a88dbbd3"
+      "bytes": 492435,
+      "sha256": "d8bee12dd988629eea9b5a448aedffe5ec51cfb231709e6cf8b12862cfde13e6"
     },
     {
       "path": "runtime/client.mjs",
