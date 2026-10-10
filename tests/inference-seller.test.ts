@@ -79,8 +79,10 @@ test('directory ownership excludes another process and concurrent dispatch obeys
     release();await Promise.all([first,second]);assert.equal(seller.capacity().available,true);await seller.close();
   }finally{await f.cleanup();}
 });
-test('refusal, truncation, malformed JSON, wrong model, invalid schema and invented usage are rejected',async()=>{
-  for(const mutate of [
+test('refusal, truncation, malformed JSON, wrong model, invalid schema and invented usage are rejected',async(t)=>{
+  // Response validation is the subject here; hold the deadline timer until every mocked response is read.
+  t.mock.timers.enable({apis:['setTimeout']});
+  try{for(const mutate of [
     (v:any)=>({...v,message:{refusal:'fixture refusal',content:''}}),
     (v:any)=>({...v,done_reason:'length'}),
     (v:any)=>({...v,message:{content:'{bad'}}),
@@ -88,7 +90,8 @@ test('refusal, truncation, malformed JSON, wrong model, invalid schema and inven
     (v:any)=>({...v,message:{content:'{"answers":{"urgent":{"type":"noul","noul":2}}}'}}),
     (v:any)=>({...v,prompt_eval_count:-1}),
     (v:any)=>({...v,eval_count:257}),
-  ]){const f=await fixture(mutate);try{await assert.rejects(f.seller.evaluate(input,'fixture-model'),ProviderError);assert.equal(f.calls,1);}finally{await f.cleanup();}}
+  ]){const f=await fixture(mutate);try{await assert.rejects(f.seller.evaluate(input,'fixture-model'),ProviderError);assert.equal(f.calls,1);}finally{await f.cleanup();}}}
+  finally{t.mock.timers.reset();}
 });
 test('ambiguous dispatch quarantines capacity and survives restart; timeout never claims inference stopped',async()=>{
   const directory=await mkdtemp(join(tmpdir(),'zoko-uncertain-'));
